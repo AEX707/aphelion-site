@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List Your Tour — Aphelion Expeditions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon-32.png">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .wide-form { max-width: 820px; }
+  .form-section-label { font-family: var(--serif); font-size: 22px; color: var(--white); margin: 34px 0 16px; padding-top: 24px; border-top: 1px solid var(--border-soft); }
+  .form-section-label:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
+  .highlight-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .highlight-row input { flex: 1; }
+  .remove-highlight { flex-shrink: 0; width: 40px; border: 1px solid var(--border-soft); border-radius: var(--radius); color: var(--coral); font-size: 18px; }
+  .remove-highlight:hover { border-color: var(--coral); }
+  .add-highlight-btn { border: 1px dashed var(--border); color: var(--gold-soft); border-radius: var(--radius); padding: 10px 16px; font-size: 13px; font-weight: 600; margin-top: 4px; }
+  .add-highlight-btn:hover { border-style: solid; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container topbar-content">
+    <span>For travel partners &amp; tour operators worldwide</span>
+    <span>partners@aphelionexpeditions.com</span>
+  </div>
+</div>
+
+<header>
+  <div class="container navbar">
+    <a href="index.html" class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="logo-full-img"></a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="tours.html">Tours</a>
+      <a href="configurator.html">Custom Products</a>
+      <a href="list-tour.html" class="active">List Your Tour</a>
+      <a href="partner.html">Partner With Us</a>
+    </nav>
+    <div class="navbar-right">
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-outline">Partner Login</a>
+      <a href="partner.html" class="btn btn-primary">Become a Partner</a>
+    </div>
+    </div>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">For Suppliers</div>
+    <h1>List Your Tour on Aphelion</h1>
+    <p>Tell us about your experience in detail — our team reviews every submission before it goes live on the marketplace. Payment collection is handled separately once your listing is approved.</p>
+  </div>
+</section>
+
+<section class="form-page-section">
+  <div class="container wide-form">
+    <div class="form-card">
+      <h3>Tour Submission</h3>
+      <div class="success-message" id="successMessage">Thank you! Your tour has been submitted for review. Our team will contact you within one business day.</div>
+      <div class="error-message" id="errorMessage"></div>
+
+      <form id="tourSubmissionForm">
+
+        <div class="form-section-label">Basic Information</div>
+        <div class="form-group">
+          <label for="tourTitle">Tour Title</label>
+          <input type="text" id="tourTitle" name="tourTitle" placeholder="e.g. Sunset Sailing Along the Amalfi Coast" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+              <option value="">Select a category</option>
+              <option value="food">Food &amp; Drink</option>
+              <option value="culture">Culture</option>
+              <option value="cruise">Cruise</option>
+              <option value="nature">Nature</option>
+              <option value="adventure">Adventure</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="languages">Languages Offered</label>
+            <input type="text" id="languages" name="languages" placeholder="e.g. English, Japanese" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="description">Full Description</label>
+          <textarea id="description" name="description" rows="5" placeholder="Describe the experience in detail — what makes it special?" required></textarea>
+        </div>
+
+        <div class="form-section-label">Location &amp; Logistics</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="country">Country</label>
+            <input type="text" id="country" name="country" required>
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" name="city" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="meetingPoint">Meeting Point</label>
+          <input type="text" id="meetingPoint" name="meetingPoint" placeholder="Exact starting location" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="duration">Duration</label>
+            <input type="text" id="duration" name="duration" placeholder="e.g. 3.5 hours" required>
+          </div>
+          <div class="form-group">
+            <label for="groupSize">Group Size (min–max)</label>
+            <input type="text" id="groupSize" name="groupSize" placeholder="e.g. 2–12" required>
+          </div>
+        </div>
+
+        <div class="form-section-label">Pricing</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Price per Person (JPY ¥)</label>
+            <input type="number" id="price" name="price" min="0" step="1" required>
+          </div>
+          <div class="form-group">
+            <label for="cancellationPolicy">Cancellation Policy</label>
+            <select id="cancellationPolicy" name="cancellationPolicy" required>
+              <option value="">Select a policy</option>
+              <option value="Free cancellation up to 24 hours before">Free cancellation up to 24 hours before</option>
+              <option value="Free cancellation up to 48 hours before">Free cancellation up to 48 hours before</option>
+              <option value="Free cancellation up to 7 days before">Free cancellation up to 7 days before</option>
+              <option value="Non-refundable">Non-refundable</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="included">What's Included</label>
+            <textarea id="included" name="included" rows="3" placeholder="e.g. Guide, transport, tastings"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="excluded">What's Not Included</label>
+            <textarea id="excluded" name="excluded" rows="3" placeholder="e.g. Hotel pickup, gratuities"></textarea>
+          </div>
+        </div>
+
+        <div class="form-section-label">Highlights</div>
+        <p class="hint">Add a few short highlights — these appear as bullet points on the tour page.</p>
+        <div id="highlightsList">
+          <div class="highlight-row">
+            <input type="text" class="highlight-input" placeholder="e.g. Skip-the-line entry included">
+            <button type="button" class="remove-highlight">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-highlight-btn" id="addHighlightBtn">+ Add another highlight</button>
+
+        <div class="form-section-label">Photos &amp; Requirements</div>
+        <div class="form-group">
+          <label for="imageUrl">Cover Photo URL</label>
+          <input type="url" id="imageUrl" name="imageUrl" placeholder="https://...">
+          <p class="hint">Link to a high-quality image (Unsplash, Google Drive share link, etc.). Direct photo upload is coming soon.</p>
+        </div>
+        <div class="form-group">
+          <label for="requirements">Special Requirements</label>
+          <textarea id="requirements" name="requirements" rows="3" placeholder="e.g. Minimum age 12, moderate fitness level, no wheelchair access"></textarea>
+        </div>
+
+        <div class="form-section-label">Your Contact Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="companyName">Company / Operator Name</label>
+            <input type="text" id="companyName" name="companyName" required>
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">Contact Email</label>
+            <input type="email" id="contactEmail" name="contactEmail" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%; margin-top:10px;">Submit Tour for Review</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="footer-logo-full-img"></div>
+        <p>Curated journeys for travel partners worldwide — beyond the horizon, beyond the ordinary.</p>
+      </div>
+      <div>
+        <h3>Explore</h3>
+        <a href="tours.html">All Tours</a>
+        <a href="configurator.html">Custom Products</a>
+        <a href="index.html#benefits">Why Us</a>
+      </div>
+      <div>
+        <h3>Partners</h3>
+        <a href="partner.html">Become a Partner</a>
+        <a href="list-tour.html">List Your Tour</a>
+        <a href="login.html">Partner Login</a>
+      </div>
+      <div>
+        <h3>Contact</h3>
+        <a href="mailto:partners@aphelionexpeditions.com">partners@aphelionexpeditions.com</a>
+      </div>
+    </div>
+    <div class="copyright">© 2026 Aphelion Expeditions. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+  const API_BASE = "https://aphelion-expeditions.onrender.com";
+
+  const highlightsList = document.getElementById('highlightsList');
+  document.getElementById('addHighlightBtn').addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'highlight-row';
+    row.innerHTML = `<input type="text" class="highlight-input" placeholder="Another highlight"><button type="button" class="remove-highlight">×</button>`;
+    highlightsList.appendChild(row);
+  });
+  highlightsList.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-highlight')) {
+      if (highlightsList.children.length > 1) e.target.closest('.highlight-row').remove();
+    }
+  });
+
+  const form = document.getElementById('tourSubmissionForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const successMessage = document.getElementById('successMessage');
+  const errorMessage = document.getElementById('errorMessage');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMessage.style.display = 'none';
+    successMessage.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    const highlights = Array.from(document.querySelectorAll('.highlight-input'))
+      .map(i => i.value.trim())
+      .filter(Boolean);
+
+    const payload = {
+      tourTitle: document.getElementById('tourTitle').value,
+      category: document.getElementById('category').value,
+      languages: document.getElementById('languages').value,
+      description: document.getElementById('description').value,
+      country: document.getElementById('country').value,
+      city: document.getElementById('city').value,
+      meetingPoint: document.getElementById('meetingPoint').value,
+      duration: document.getElementById('duration').value,
+      groupSize: document.getElementById('groupSize').value,
+      price: document.getElementById('price').value,
+      cancellationPolicy: document.getElementById('cancellationPolicy').value,
+      included: document.getElementById('included').value,
+      excluded: document.getElementById('excluded').value,
+      highlights: highlights.join(' | '),
+      imageUrl: document.getElementById('imageUrl').value,
+      requirements: document.getElementById('requirements').value,
+      companyName: document.getElementById('companyName').value,
+      contactEmail: document.getElementById('contactEmail').value
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/api/tour-submission`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        successMessage.style.display = 'block';
+        form.reset();
+        window.scrollTo({ top: document.querySelector('.form-card').offsetTop - 100, behavior: 'smooth' });
+      } else {
+        throw new Error(data.error || 'Something went wrong.');
+      }
+    } catch (err) {
+      errorMessage.textContent = 'Could not submit your tour. Please try again or email us directly. (' + err.message + ')';
+      errorMessage.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Tour for Review';
+    }
+  });
+</script>
+<script src="mobile-nav.js"></script>
+</body>
+</html>
