@@ -107,7 +107,9 @@
       updatePrices();
     });
     wrap.appendChild(select);
-    bar.appendChild(wrap);
+    // Sit next to the language picker when it is on the page (i18n.js).
+    const box = window.AEX_topbarControls ? window.AEX_topbarControls() : null;
+    (box || bar).appendChild(wrap);
   }
 
   document.addEventListener('DOMContentLoaded', async () => {

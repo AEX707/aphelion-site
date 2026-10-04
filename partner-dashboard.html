@@ -252,7 +252,7 @@
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
-    window.location.href = 'login.html';
+    window.location.href = 'index.html'; // manual log out → public home page
   });
 
   function showTourStatus(msg, ok) {

@@ -292,9 +292,12 @@
     if (e.key === 'Enter') adminLogin();
   });
 
+  // Manual "Sign out" → back to the public home page.
+  // Automatic sign-out after inactivity → stay here and explain why.
   async function adminSignOut(msg) {
     await supabaseClient.auth.signOut();
     localStorage.removeItem(ADMIN_LAST_ACTIVITY_KEY);
+    if (!msg) { window.location.href = 'index.html'; return; }
     lockAdmin(msg);
   }
 
