@@ -189,6 +189,10 @@ footer h3 { color: var(--white); margin-bottom: 16px; font-family: var(--sans); 
 footer p, footer a { color: var(--muted); font-size: 14px; }
 footer a { display: block; margin-bottom: 10px; transition: color .2s; }
 footer a:hover { color: var(--gold-soft); }
+.footer-bottom { border-top: 1px solid var(--border-soft); padding-top: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.footer-bottom .copyright { margin: 0; border-top: 0; padding-top: 0; }
+footer a.footer-admin-link { display: inline; margin: 0; font-size: 12px; opacity: .45; letter-spacing: .5px; }
+footer a.footer-admin-link:hover { opacity: 1; }
 .copyright { border-top: 1px solid var(--border-soft); padding-top: 22px; color: var(--muted); font-size: 13px; }
 
 .modal { display: none; position: fixed; inset: 0; z-index: 50; background: rgba(5,6,15,.8); backdrop-filter: blur(4px); padding: 25px; overflow-y: auto; }
