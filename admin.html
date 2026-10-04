@@ -721,7 +721,8 @@
     }
   }
 
-  const COMMISSION_RATE = 0.10; // 10% markup on top of the partner's tour price
+  // COMMISSION_RATE (10%) and publicPrice() come from tours-data.js, so the
+  // amount charged always matches the per-person price shown on the site.
 
   async function createPaymentLink(amount, description, buyerEmail, referenceId) {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/create-payment-link`, {
@@ -753,7 +754,7 @@
           const basePrice = tours[0]?.price;
           if (basePrice) {
             // Prices are in yen, which has no smaller unit, so round to a whole yen.
-            const total = Math.round(basePrice * (travelers || 1) * (1 + COMMISSION_RATE));
+            const total = publicPrice(basePrice) * (travelers || 1);
             const link = await createPaymentLink(total, `Aphelion Expeditions — ${tourName}`, email, 'booking-' + id);
             paymentLinkUrl = link.url;
             chargeTotal = total;

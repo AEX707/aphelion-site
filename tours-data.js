@@ -6,6 +6,14 @@ const SUPABASE_KEY = "sb_publishable_vsbAvQlf9in0HDYZeP8asQ_znoG1onN";
 
 let _toursCache = null;
 
+// Aphelion's commission, added on top of the partner's price.
+// Also used by admin.html when it creates the payment link.
+const COMMISSION_RATE = 0.10;
+
+function publicPrice(basePrice) {
+  return Math.round(Number(basePrice) * (1 + COMMISSION_RATE));
+}
+
 // Public-facing: only tours that have been approved by an admin.
 // This is what the storefront (index/tours/tour/booking pages) uses.
 async function getTours() {
@@ -20,8 +28,17 @@ async function getTours() {
     if (!res.ok) throw new Error('Supabase request failed: ' + res.status);
     const data = await res.json();
     // map group_size (database column name) back to "group" so existing
-    // page code (t.group) keeps working unchanged
-    _toursCache = data.map(t => ({ ...t, group: t.group_size }));
+    // page code (t.group) keeps working unchanged.
+    // Visitors see the price WITH Aphelion's commission already included:
+    // price = partner's price + 10%, rounded to a whole yen. The partner's
+    // own price is kept as base_price (admin panel and partner dashboard
+    // load tours separately and keep showing the partner's price).
+    _toursCache = data.map(t => ({
+      ...t,
+      group: t.group_size,
+      base_price: t.price,
+      price: publicPrice(t.price)
+    }));
     return _toursCache;
   } catch (err) {
     console.error('Failed to load tours from database:', err);
