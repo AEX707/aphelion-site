@@ -1,13 +1,13 @@
 // Language switcher — shared by all public pages.
 //
 // How it works: the pages are written in English. When a visitor picks
-// another language, this script loads lang/<code>.js (a list of
+// another language, this script loads <code>.js or lang/<code>.js (a list of
 // "English text" → "translation") and swaps every matching piece of text
 // on the page, including text that appears later (tour cards loaded from
 // the database, "Submitting..." on buttons, error messages).
 // Picking English again restores the original text.
 //
-// To fix or add a translation: edit the matching file in the lang/ folder.
+// To fix or add a translation: edit the matching language file (de.js, ja.js, ...).
 // The English text on the left must match the page text exactly.
 
 (function () {
@@ -145,11 +145,22 @@
   function loadLanguage(code, done) {
     if (code === 'en') { dict = null; done(); return; }
     if (window.AEX_I18N[code]) { dict = window.AEX_I18N[code]; done(); return; }
-    const s = document.createElement('script');
-    s.src = 'lang/' + code + '.js';
-    s.onload = () => { dict = window.AEX_I18N[code] || null; done(); };
-    s.onerror = () => { console.error('Could not load language file', code); dict = null; done(); };
-    document.head.appendChild(s);
+    // Language files may sit next to the pages (de.js) or in a lang/ folder
+    // (lang/de.js) — try both, so either upload layout works.
+    const places = [code + '.js', 'lang/' + code + '.js'];
+    const tryNext = () => {
+      const src = places.shift();
+      if (!src) { console.error('Could not load language file', code); dict = null; done(); return; }
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => {
+        if (window.AEX_I18N[code]) { dict = window.AEX_I18N[code]; done(); }
+        else tryNext();
+      };
+      s.onerror = () => { s.remove(); tryNext(); };
+      document.head.appendChild(s);
+    };
+    tryNext();
   }
 
   function setLanguage(code) {
