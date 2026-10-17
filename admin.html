@@ -30,6 +30,8 @@
   .admin-row .actions button.btn-edit   { background:transparent; color:var(--white); border-color:var(--border); }
   .admin-row .actions button.btn-delete { background:transparent; color:#ff6b6b; border-color:#ff6b6b; }
   .admin-row .actions button.btn-delete:hover { background:#ff6b6b; color:#fff; filter:none; }
+  .admin-row .actions button.btn-translate { background:transparent; color:var(--gold-soft); border-color:rgba(212,175,55,.5); }
+  .admin-row .tr-state { font-size:11px; color:var(--muted); margin-left:6px; }
   /* The button matching the current status is shown faded with a ✓, so you can see the state */
   .admin-row .actions button.is-current { opacity:.35; cursor:default; }
   .admin-row .actions button.is-current::before { content:'✓ '; }
@@ -359,6 +361,36 @@
     }
   }
 
+  // --- Automatic translation of tours (Google, via the translate-tour function) ---
+  function translationState(t) {
+    const tr = t.translations;
+    if (!tr || typeof tr !== 'object') return ' · not translated';
+    const n = Object.keys(tr).filter(k => !k.startsWith('_')).length;
+    return n ? ` · 🌐 translated (${n} languages)` : ' · not translated';
+  }
+
+  // force = translate again even if the text hasn't changed since last time.
+  async function translateTour(id, force) {
+    showStatus('Translating tour into all languages…', true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/translate-tour`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${await getAccessToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tourId: id, force: !!force })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || ('Status ' + res.status));
+      showStatus(data.skipped ? 'Translation is already up to date.' : 'Tour translated into ' + (data.languages || []).length + ' languages.', true);
+      loadList();
+    } catch (err) {
+      showStatus('Saved, but translation failed: ' + err.message, false);
+    }
+  }
+
   async function loadList() {
     const tours = await getAllToursAdmin(await getAccessToken());
     const list = document.getElementById('adminList');
@@ -371,13 +403,14 @@
         <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
         <div class="info">
           <h4>${t.title} <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
-          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}</span>
+          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}<span class="tr-state">${translationState(t)}</span></span>
         </div>
         <div class="actions">
           <button class="btn-go${(t.status || 'approved') === 'approved' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'approved', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Approve</button>
           <button class="btn-wait${t.status === 'pending' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'pending', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Pending</button>
           <button class="btn-stop${t.status === 'rejected' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'rejected', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Reject</button>
           <button class="btn-edit" onclick='editTour(${JSON.stringify(t).replace(/'/g, "&apos;")})'>Edit</button>
+          <button class="btn-translate" title="Translate this tour into all site languages" onclick="translateTour(${t.id}, true)">🌐 Translate</button>
           <button class="btn-delete" onclick="deleteTour(${t.id}, '${(t.title || '').replace(/'/g, "\\'")}')">Delete</button>
         </div>
       </div>
@@ -399,6 +432,7 @@
       if (!res.ok) throw new Error('Status ' + res.status);
       _toursCache = null; // clear public cache so approved changes show up immediately
       showStatus('Tour status updated to "' + status + '".', true);
+      if (status === 'approved') translateTour(id, false); // translate for visitors in other languages
 
       if (partnerId && (status === 'approved' || status === 'rejected')) {
         try {
@@ -596,7 +630,7 @@
             apikey: SUPABASE_KEY,
             Authorization: `Bearer ${await getAccessToken()}`,
             'Content-Type': 'application/json',
-            Prefer: 'return=minimal'
+            Prefer: 'return=representation'
           },
           body: JSON.stringify(payload)
         });
@@ -606,6 +640,10 @@
       showStatus(id ? 'Tour updated.' : 'Tour added.', true);
       closeForm();
       loadList();
+      // Translate the saved tour (only does work if its text changed).
+      let savedId = id ? Number(id) : null;
+      if (!savedId) { const rows = await res.json().catch(() => []); savedId = rows[0] && rows[0].id; }
+      if (savedId) translateTour(savedId, false);
     } catch (err) {
       showStatus('Could not save: ' + err.message, false);
     }

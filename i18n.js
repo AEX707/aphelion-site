@@ -31,7 +31,11 @@
     'Request: ',
     'Could not submit your request. Please try again or email us directly. (',
     'Could not create your account: ',
-    'Login failed: '
+    'Login failed: ',
+    'Could not load your tours: ',
+    'Could not upload: ',
+    'Could not delete: ',
+    'Could not save: '
   ];
 
   // Every language file adds itself here: window.AEX_I18N['fr'] = {...}
@@ -60,17 +64,38 @@
   let lang = detectLanguage();
   let dict = null;
   let originalTitle = null;
+  // Visitor clicked "Show original" on a tour: show the partner's own text.
+  let showOriginal = false;
+
+  // Tour translations come from tours-data.js (see registerTourTranslations).
+  function tourDict() {
+    if (showOriginal) return null;
+    const all = window.AEX_TOUR_I18N;
+    return all && all[lang] ? all[lang] : null;
+  }
 
   function norm(s) { return s.replace(/\s+/g, ' ').trim(); }
 
+  function has(d, k) { return d && Object.prototype.hasOwnProperty.call(d, k); }
+
   function lookup(english) {
-    if (!dict) return null;
-    if (Object.prototype.hasOwnProperty.call(dict, english)) return dict[english];
+    if (has(dict, english)) return dict[english];
+    const tours = tourDict();
+    if (has(tours, english)) return tours[english];
     for (const p of PREFIXES) {
-      if (english.startsWith(p) && dict[p]) return dict[p] + english.slice(p.length);
+      if (!english.startsWith(p)) continue;
+      const rest = english.slice(p.length);
+      if (!has(dict, p) && !has(tours, rest)) continue;
+      return (has(dict, p) ? dict[p] : p) + (has(tours, rest) ? tours[rest] : rest);
     }
     return null;
   }
+
+  // For page scripts: translate a fixed English message (e.g. in a confirm box).
+  window.AEX_t = function (english) {
+    const t = lookup(norm(english));
+    return t != null ? t : english;
+  };
 
   function skip(el) {
     return !el || el.closest('script, style, [translate="no"], .lang-wrap, .currency-select');
@@ -81,7 +106,7 @@
     const current = node.nodeValue;
     if (node.__aexSrc === undefined || current !== node.__aexOut) {
       // first time we see this text, or the page's own code changed it
-      if (!/[A-Za-zÀ-ÿ]/.test(current)) return;
+      if (!/\p{L}/u.test(current)) return; // no letters (numbers, symbols) → nothing to translate
       node.__aexSrc = current;
     }
     const src = node.__aexSrc;
@@ -165,8 +190,11 @@
 
   function setLanguage(code) {
     lang = code;
+    showOriginal = false;
     safeSet(STORE_KEY, code);
     loadLanguage(code, translatePage);
+    // Let other scripts react — currency.js switches to this language's currency.
+    window.dispatchEvent(new CustomEvent('aex:languagechange', { detail: code }));
   }
 
   function addStyles() {
@@ -202,6 +230,17 @@
   }
   window.AEX_topbarControls = topbarControls;
 
+  // Used by tours-data.js when tour translations arrive, and by the
+  // "Show original / Show translation" link on the tour page.
+  window.AEX_refreshTranslations = function () { if (document.body) translateTree(document.body); };
+  window.AEX_getLanguage = function () { return lang; };
+  window.AEX_setShowOriginal = function (on) {
+    showOriginal = !!on;
+    translateTree(document.body);
+    window.dispatchEvent(new CustomEvent('aex:originaltoggle', { detail: showOriginal }));
+  };
+  window.AEX_isShowingOriginal = function () { return showOriginal; };
+
   function addSelector() {
     const box = topbarControls();
     if (!box) return;
@@ -230,7 +269,7 @@
     loadLanguage(lang, translatePage);
     // Translate text that appears later (tour cards, messages, buttons).
     new MutationObserver(records => {
-      if (lang === 'en') return;
+      if (lang === 'en' && !tourDict()) return;
       for (const r of records) {
         if (r.type === 'characterData') translateTree(r.target);
         else r.addedNodes.forEach(translateTree);

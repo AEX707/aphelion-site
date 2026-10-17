@@ -110,6 +110,7 @@
               <span>📍 ${tour.location}</span>
             </div>
             <p class="detail-body">${tour.description}</p>
+            <p class="mt-note" id="mtNote" style="display:none; font-size:12px; color:var(--muted); margin:-6px 0 22px;"><span>Translated automatically</span> · <a href="#" id="mtToggle" style="color:var(--gold-soft);">Show original</a></p>
             <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
               <div class="price"><small>From</small><strong style="font-size:32px;">¥${Number(tour.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${tour.price}"></span></div>
               <a href="booking.html?id=${tour.id}" class="btn btn-primary">Request This Tour</a>
@@ -118,6 +119,25 @@
           </div>
         </section>
       `;
+
+      // "Translated automatically · Show original" under the description,
+      // shown only when this tour has a machine translation for the chosen language.
+      const updateTranslationNote = () => {
+        const note = document.getElementById('mtNote');
+        const toggle = document.getElementById('mtToggle');
+        if (!note || !window.AEX_getLanguage) return;
+        const ids = (window.AEX_TOUR_TRANSLATED_IDS || {})[window.AEX_getLanguage()] || {};
+        note.style.display = ids[tour.id] ? 'block' : 'none';
+        document.title = (window.AEX_t ? window.AEX_t(tour.title) : tour.title) + ' — Aphelion Expeditions';
+        toggle.textContent = window.AEX_isShowingOriginal() ? 'Show translation' : 'Show original';
+      };
+      document.getElementById('mtToggle').addEventListener('click', e => {
+        e.preventDefault();
+        window.AEX_setShowOriginal(!window.AEX_isShowingOriginal());
+      });
+      window.addEventListener('aex:languagechange', updateTranslationNote);
+      window.addEventListener('aex:originaltoggle', updateTranslationNote);
+      updateTranslationNote();
     }
   })();
 

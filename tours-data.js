@@ -39,6 +39,7 @@ async function getTours() {
       base_price: t.price,
       price: publicPrice(t.price)
     }));
+    registerTourTranslations(_toursCache);
     return _toursCache;
   } catch (err) {
     console.error('Failed to load tours from database:', err);
@@ -65,4 +66,36 @@ async function getAllToursAdmin(accessToken) {
     console.error('Failed to load tours from database:', err);
     return [];
   }
+}
+
+// --- Automatic tour translations ---
+// When the admin approves a tour, the "translate-tour" function stores
+// translations of its text in tours.translations, e.g.
+//   { "ja": { "title": "...", "description": "..." }, "fr": {...}, "_lang": "en" }
+// Here we hand them to the language switcher (i18n.js), which swaps the
+// partner's original text for the visitor's language on the page.
+const TOUR_TEXT_FIELDS = ['title', 'description', 'location', 'duration', 'group_size', 'tag'];
+// Some fields are shown with an icon in front, e.g. "⏱ 3 hours".
+const TOUR_FIELD_PREFIXES = { duration: ['⏱ '], group_size: ['👥 '], location: ['📍 '] };
+
+function registerTourTranslations(tours) {
+  const all = window.AEX_TOUR_I18N = window.AEX_TOUR_I18N || {};
+  window.AEX_TOUR_TRANSLATED_IDS = window.AEX_TOUR_TRANSLATED_IDS || {};
+  tours.forEach(t => {
+    const tr = t.translations;
+    if (!tr || typeof tr !== 'object') return;
+    Object.keys(tr).forEach(lang => {
+      if (lang.startsWith('_') || !tr[lang]) return;
+      const dict = all[lang] = all[lang] || {};
+      TOUR_TEXT_FIELDS.forEach(f => {
+        const original = (t[f] == null ? '' : String(t[f])).replace(/\s+/g, ' ').trim();
+        const translated = tr[lang][f];
+        if (!original || !translated) return;
+        dict[original] = translated;
+        (TOUR_FIELD_PREFIXES[f] || []).forEach(p => { dict[p + original] = p + translated; });
+      });
+      (window.AEX_TOUR_TRANSLATED_IDS[lang] = window.AEX_TOUR_TRANSLATED_IDS[lang] || {})[t.id] = true;
+    });
+  });
+  if (window.AEX_refreshTranslations) window.AEX_refreshTranslations();
 }

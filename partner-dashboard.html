@@ -403,7 +403,8 @@
   }
 
   async function deleteMyTour(id, title) {
-    if (!confirm('Delete "' + title + '"? This cannot be undone.')) return;
+    const t = window.AEX_t || (x => x);
+    if (!confirm(t('Delete this tour?') + '\n\n"' + title + '"\n\n' + t('This cannot be undone.'))) return;
     const { error } = await supabaseClient.from('tours').delete().eq('id', id).eq('partner_id', currentUserId);
     if (error) {
       showTourStatus('Could not delete: ' + error.message, false);
@@ -448,5 +449,6 @@
     loadMyTours();
   });
 </script>
+<script src="i18n.js"></script>
 </body>
 </html>
