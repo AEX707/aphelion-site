@@ -94,6 +94,14 @@
   .td-modal-box { position: relative; width: min(640px, 100%); height: min(760px, 92vh); background: var(--void); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
   .td-modal-box iframe { width: 100%; height: 100%; border: 0; display: block; }
   .td-modal-close { position: absolute; top: 10px; right: 12px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; background: #fff; font-size: 24px; line-height: 1; color: var(--white); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+  .td-stage { position: relative; cursor: pointer; border-radius: 20px; overflow: hidden; }
+  .td-stage .td-main { transition: opacity .18s ease; }
+  .td-stage .td-main.fade { opacity: .25; }
+  .td-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.9); color: #15213D; font-size: 28px; line-height: 1; display: grid; place-items: center; box-shadow: 0 6px 18px rgba(0,0,0,.18); opacity: 0; transition: opacity .2s; }
+  .td-prev { left: 14px; } .td-next { right: 14px; }
+  .td-stage:hover .td-arrow { opacity: 1; }
+  .td-count { position: absolute; right: 14px; bottom: 14px; background: rgba(12,18,36,.65); color: #fff; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; }
+  @media (hover: none) { .td-arrow { opacity: 1; width: 38px; height: 38px; font-size: 24px; } }
 </style>
 </head>
 <body>
@@ -229,8 +237,14 @@
               ${tour.duration || tour.location ? `<div class="td-meta">${tour.duration ? `<span>⏱ ${esc(tour.duration)}</span>` : ''}${tour.location ? `<span>📍 ${esc(tour.location)}</span>` : ''}</div>` : ''}
             </div>
             <div class="td-gallery${photos.length > 1 ? '' : ' single'}">
-              <img id="detailHero" class="td-main" src="${esc(photos[0] || '')}" alt="${esc(tour.title)}">
-              ${photos.length > 1 ? `<div class="td-thumbs">${photos.slice(0, 6).map((img, i) => `<img src="${esc(img)}" alt="${esc(tour.title)}" class="td-thumb${i === 0 ? ' active' : ''}" onclick="setHeroPhoto(this.src, this)">`).join('')}</div>` : ''}
+              <div class="td-stage" id="tdStage">
+                <img id="detailHero" class="td-main" src="${esc(photos[0] || '')}" alt="${esc(tour.title)}">
+                ${photos.length > 1 ? `
+                  <button type="button" class="td-arrow td-prev" aria-label="Previous photo" onclick="event.stopPropagation(); stepPhoto(-1)">‹</button>
+                  <button type="button" class="td-arrow td-next" aria-label="Next photo" onclick="event.stopPropagation(); stepPhoto(1)">›</button>
+                  <span class="td-count" id="tdCount">1 / ${photos.length}</span>` : ''}
+              </div>
+              ${photos.length > 1 ? `<div class="td-thumbs">${photos.slice(0, 6).map((img, i) => `<img src="${esc(img)}" alt="${esc(tour.title)}" class="td-thumb${i === 0 ? ' active' : ''}" onclick="showPhoto(${i})">`).join('')}</div>` : ''}
             </div>
           </div>
         </section>
@@ -308,6 +322,8 @@
       };
       renderTour();
       window.AEX_TOUR = tour;
+      window.AEX_PHOTOS = (Array.isArray(tour.images) && tour.images.length ? tour.images : [tour.image]).filter(Boolean);
+      initGallery();
       loadReviews(tour.id);
 
       // "Translated automatically · Show original" under the description,
@@ -328,6 +344,7 @@
       const rerender = () => {
         const y = window.scrollY;
         renderTour();
+        initGallery();
         loadReviews(tour.id);
         if (document.getElementById('mtToggle')) document.getElementById('mtToggle').addEventListener('click', e => {
           e.preventDefault();
@@ -430,11 +447,48 @@
     });
   }
 
-  function setHeroPhoto(url, thumbEl) {
-    document.getElementById('detailHero').src = url;
-    document.querySelectorAll('.td-thumb').forEach(el => el.classList.remove('active'));
-    thumbEl.classList.add('active');
+  // ---- Photo gallery: click the big photo / arrows / swipe / keyboard; plays by itself ----
+  let photoIndex = 0, photoTimer = null;
+  function showPhoto(i) {
+    const photos = window.AEX_PHOTOS || [];
+    if (!photos.length) return;
+    photoIndex = (i + photos.length) % photos.length;
+    const hero = document.getElementById('detailHero');
+    hero.classList.add('fade');
+    setTimeout(() => { hero.src = photos[photoIndex]; hero.classList.remove('fade'); }, 180);
+    document.querySelectorAll('.td-thumb').forEach((el, k) => el.classList.toggle('active', k === photoIndex));
+    const c = document.getElementById('tdCount');
+    if (c) c.textContent = (photoIndex + 1) + ' / ' + photos.length;
+    restartAutoplay();
   }
+  function stepPhoto(d) { showPhoto(photoIndex + d); }
+  function setHeroPhoto(url, thumbEl) { showPhoto((window.AEX_PHOTOS || []).indexOf(url)); }
+  function restartAutoplay() {
+    clearInterval(photoTimer);
+    if ((window.AEX_PHOTOS || []).length > 1) photoTimer = setInterval(() => stepPhoto(1), 5000);
+  }
+  function initGallery() {
+    photoIndex = 0;
+    const stage = document.getElementById('tdStage');
+    if (!stage || (window.AEX_PHOTOS || []).length < 2) return;
+    stage.addEventListener('click', () => stepPhoto(1));
+    stage.addEventListener('mouseenter', () => clearInterval(photoTimer));
+    stage.addEventListener('mouseleave', restartAutoplay);
+    let x0 = null;
+    stage.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+    stage.addEventListener('touchend', e => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 40) stepPhoto(dx < 0 ? 1 : -1);
+      x0 = null;
+    });
+    restartAutoplay();
+  }
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('bookingModal') && document.getElementById('bookingModal').classList.contains('open')) return;
+    if (e.key === 'ArrowRight') stepPhoto(1);
+    if (e.key === 'ArrowLeft') stepPhoto(-1);
+  });
 </script>
 <script src="mobile-nav.js"></script>
 <script src="currency.js"></script>

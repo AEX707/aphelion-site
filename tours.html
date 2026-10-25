@@ -188,7 +188,7 @@
     }
     noResults.style.display = 'none';
     grid.innerHTML = list.map(t => `
-      <div class="tour-card">
+      <div class="tour-card" role="link" tabindex="0" style="cursor:pointer;" onclick="openTour(${t.id})" onkeydown="if(event.key==='Enter')openTour(${t.id})">
         <div class="tour-image" style="background-image:url('${t.image}')">
           <span class="tour-tag">${t.tag}</span>
         </div>
@@ -198,7 +198,7 @@
           <div class="tour-meta"><span>⏱ ${t.duration}</span><span>👥 ${t.group}</span></div>
           <div class="tour-footer">
             <div class="price"><small>From</small><strong>¥${Number(t.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${t.price}"></span></div>
-            <a href="tour.html?id=${t.id}" class="btn btn-outline" target="_blank" rel="noopener">View Details</a>
+            <a href="tour.html?id=${t.id}" class="btn btn-outline" target="_blank" rel="noopener" onclick="event.stopPropagation()">View Details</a>
           </div>
         </div>
       </div>
@@ -237,6 +237,10 @@
     // Came here from the homepage search? Show the results straight away.
     if (qVal || destVal || typeVal || location.hash === '#results') setTimeout(scrollToResults, 150);
   })();
+</script>
+<script>
+  // The whole tour card opens the tour page in a new tab.
+  function openTour(id) { window.open('tour.html?id=' + id, '_blank', 'noopener'); }
 </script>
 <script src="mobile-nav.js"></script>
 <script src="currency.js"></script>
