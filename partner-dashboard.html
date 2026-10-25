@@ -412,6 +412,7 @@
   });
 
   function openTourForm() {
+    editingTourStatus = null;
     document.getElementById('tourFormTitle').textContent = 'Add Tour';
     document.getElementById('myTourForm').reset();
     document.getElementById('t_id').value = '';
@@ -425,7 +426,9 @@
     document.getElementById('tourFormCard').style.display = 'none';
   }
 
+  let editingTourStatus = null;
   function editMyTour(t) {
+    editingTourStatus = t.status || null;
     document.getElementById('tourFormTitle').textContent = 'Edit Tour';
     document.getElementById('t_id').value = t.id;
     document.getElementById('t_title').value = t.title || '';
@@ -483,8 +486,16 @@
       meeting_point: document.getElementById('t_meeting_point').value,
       agency_notes: document.getElementById('t_agency_notes').value,
       partner_id: currentUserId,
-      status: 'pending' // every new or edited tour goes back to admin review before it appears on the site
+      status: 'pending'
     };
+
+    // New tours wait for admin review. Changes to a tour that is already live
+    // stay live; the admin just sees an "edited" note to check them.
+    const keepLive = id && editingTourStatus === 'approved';
+    if (keepLive) {
+      delete payload.status;
+      payload.edited_at = new Date().toISOString();
+    }
 
     let error;
     if (id) {
@@ -497,7 +508,7 @@
       showTourStatus('Could not save: ' + error.message, false);
       return;
     }
-    showTourStatus(id ? 'Tour updated — sent for review again.' : 'Tour added — pending review before it goes live.', true);
+    showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
     closeTourForm();
     loadMyTours();
   });

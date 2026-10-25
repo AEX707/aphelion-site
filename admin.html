@@ -222,6 +222,18 @@
   <div id="bookingList" class="admin-list">
     <p style="color:var(--muted);">Loading booking requests…</p>
   </div>
+
+  <hr class="section-divider">
+
+  <div class="admin-header">
+    <h1 style="font-size:32px;">Reviews</h1>
+  </div>
+
+  <div id="reviewStatusMsg" class="status-msg"></div>
+
+  <div id="reviewList" class="admin-list">
+    <p style="color:var(--muted);">Loading reviews…</p>
+  </div>
 </div>
 
 <footer>
@@ -261,6 +273,7 @@
     loadList();
     loadPartners();
     loadBookings();
+    loadReviewsAdmin();
   }
 
   function lockAdmin(msg) {
@@ -406,7 +419,7 @@
         <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
         <div class="info">
           <h4>${t.title} <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
-          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}<span class="tr-state">${translationState(t)}</span></span>
+          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}${t.edited_at ? ` · <span style="color:#E0482D; font-weight:600;">✏ edited by partner ${new Date(t.edited_at).toLocaleDateString('en-GB')} — check &amp; Approve</span>` : ''}<span class="tr-state">${translationState(t)}</span></span>
         </div>
         <div class="actions">
           <button class="btn-go${(t.status || 'approved') === 'approved' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'approved', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Approve</button>
@@ -429,7 +442,7 @@
           'Content-Type': 'application/json',
           Prefer: 'return=minimal'
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify(status === 'approved' ? { status, edited_at: null } : { status })
       });
       if (!res.ok) throw new Error('Status ' + res.status);
       _toursCache = null; // clear public cache so approved changes show up immediately
@@ -845,6 +858,60 @@
     el.textContent = msg;
     el.className = 'status-msg ' + (ok ? 'ok' : 'err');
     setTimeout(() => { el.className = 'status-msg'; }, 4000);
+  }
+
+  function showReviewStatus(msg, ok) {
+    const el = document.getElementById('reviewStatusMsg');
+    el.textContent = msg;
+    el.className = 'status-msg ' + (ok ? 'ok' : 'err');
+    setTimeout(() => { el.className = 'status-msg'; }, 4000);
+  }
+
+  async function loadReviewsAdmin() {
+    const list = document.getElementById('reviewList');
+    try {
+      const h = { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` };
+      const [rRes, tRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/tour_reviews?select=*&order=created_at.desc`, { headers: h }),
+        fetch(`${SUPABASE_URL}/rest/v1/tours?select=id,title`, { headers: h })
+      ]);
+      if (!rRes.ok) throw new Error('Status ' + rRes.status);
+      const reviews = await rRes.json();
+      const titles = {};
+      (tRes.ok ? await tRes.json() : []).forEach(t => { titles[t.id] = t.title; });
+      if (!reviews.length) { list.innerHTML = '<p style="color:var(--muted);">No reviews yet.</p>'; return; }
+      const e = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      list.innerHTML = reviews.map(r => `
+        <div class="admin-row">
+          <div class="info">
+            <h4>${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} · ${e(titles[r.tour_id] || 'Tour #' + r.tour_id)}</h4>
+            <span>${e(r.company || 'Agency')} · ${new Date(r.created_at).toLocaleDateString('en-GB')}${r.comment ? ' · “' + e(r.comment.length > 160 ? r.comment.slice(0, 160) + '…' : r.comment) + '”' : ''}</span>
+          </div>
+          <div class="actions">
+            <a class="btn-go" href="tour.html?id=${r.tour_id}#reviews" target="_blank" rel="noopener" style="text-decoration:none; padding:8px 14px; border-radius:8px;">View</a>
+            <button class="btn-delete" onclick="deleteReview(${r.id})">Delete</button>
+          </div>
+        </div>`).join('');
+    } catch (err) {
+      list.innerHTML = '<p style="color:#f19a9a;">Could not load reviews: ' + err.message + '</p>';
+    }
+  }
+
+  async function deleteReview(id) {
+    if (!confirm('Delete this review? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/tour_reviews?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}`, Prefer: 'return=representation' }
+      });
+      if (!res.ok) throw new Error('Status ' + res.status);
+      const del = await res.json();
+      if (!del.length) throw new Error('not allowed');
+      showReviewStatus('Review deleted.', true);
+      loadReviewsAdmin();
+    } catch (err) {
+      showReviewStatus('Could not delete: ' + err.message, false);
+    }
   }
 
   async function loadBookings() {
