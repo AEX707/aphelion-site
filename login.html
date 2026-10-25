@@ -59,6 +59,17 @@
           <input type="password" id="password" name="password" required>
         </div>
         <button type="submit" class="btn btn-primary" style="width:100%;">Log In</button>
+        <p style="margin-top:14px; font-size:13px; text-align:center;"><a href="#" id="forgotLink" style="color:var(--gold-soft);">Forgot password?</a></p>
+      </form>
+      <form id="forgotForm" style="display:none;">
+        <p style="font-size:14px; color:var(--muted); margin-bottom:16px;">Enter your partner email and we'll send you a link to set a new password.</p>
+        <div class="form-group">
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" name="forgotEmail" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Send Reset Link</button>
+        <p id="forgotMsg" style="display:none; margin-top:14px; font-size:14px; text-align:center; color:var(--gold-soft);"></p>
+        <p style="margin-top:14px; font-size:13px; text-align:center;"><a href="#" id="backToLogin" style="color:var(--gold-soft);">&larr; Back to login</a></p>
       </form>
       <p style="margin-top:20px; font-size:13px; color:var(--muted); text-align:center;">Not a partner yet? <a href="partner.html" style="color:var(--gold-soft);">Apply here</a></p>
     </div>
@@ -121,6 +132,42 @@
       submitBtn.disabled = false;
       submitBtn.textContent = 'Log In';
     }
+  });
+</script>
+<script>
+  const forgotForm = document.getElementById('forgotForm');
+  const forgotMsg = document.getElementById('forgotMsg');
+  document.getElementById('forgotLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    form.style.display = 'none';
+    errorMessage.style.display = 'none';
+    forgotForm.style.display = 'block';
+    document.getElementById('forgotEmail').value = document.getElementById('email').value;
+  });
+  document.getElementById('backToLogin').addEventListener('click', (e) => {
+    e.preventDefault();
+    forgotForm.style.display = 'none';
+    form.style.display = 'block';
+  });
+  forgotForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = forgotForm.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    const email = document.getElementById('forgotEmail').value.trim();
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password.html'
+    });
+    forgotMsg.style.display = 'block';
+    if (error) {
+      forgotMsg.style.color = '#f19a9a';
+      forgotMsg.textContent = 'Could not send the link: ' + error.message;
+    } else {
+      forgotMsg.style.color = 'var(--gold-soft)';
+      forgotMsg.textContent = 'If this email is registered, a reset link is on its way. Please check your inbox (and spam folder).';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Send Reset Link';
   });
 </script>
 <script src="mobile-nav.js"></script>
