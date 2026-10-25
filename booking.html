@@ -8,8 +8,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
+<style>
+  /* Opened inside the tour page's booking window */
+  body.embed .topbar, body.embed header, body.embed .page-hero, body.embed footer { display: none !important; }
+  body.embed .form-page-section { padding: 28px 0; }
+  body.embed .form-layout { grid-template-columns: 1fr; gap: 0; }
+  body.embed .form-layout > div:first-child { display: none; }
+  body.embed .form-card { box-shadow: none; padding: 8px 4px; background: transparent; }
+</style>
+<script>if (/[?&]embed=1/.test(location.search)) document.documentElement.classList.add('embed-mode');</script>
 </head>
 <body>
+<script>if (/[?&]embed=1/.test(location.search)) document.body.classList.add("embed");</script>
 
 <div class="topbar">
   <div class="container topbar-content">

@@ -409,23 +409,19 @@ header .btn-primary:hover { background: #fff; }
 html[lang="ja"] .home h1.hero-title, html[lang="zh-CN"] .home h1.hero-title,
 html[lang="zh-TW"] .home h1.hero-title, html[lang="ko"] .home h1.hero-title { font-size: clamp(38px, 5vw, 64px); line-height: 1.2; }
 
-/* ---------------- Same menu on every page ----------------
-   Top: the homepage photo as a strip ("curtain"). After scrolling: page colour + soft shadow. */
-body:not(.home) .topbar,
-body:not(.home) header {
-  background: linear-gradient(180deg, rgba(12,18,36,.55) 0%, rgba(12,18,36,.30) 100%),
-    url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center 68%/cover no-repeat;
-  background-attachment: fixed;
-  border-bottom: 0;
-}
-body:not(.home) .topbar { border-bottom: 1px solid rgba(255,255,255,.15); }
-body:not(.home) header { transition: background-color .35s ease, box-shadow .35s ease; }
-body:not(.home) header nav a { text-shadow: 0 1px 8px rgba(0,0,0,.35); }
-body:not(.home) header.scrolled { background: #F8F7F3; box-shadow: 0 6px 22px rgba(21,33,61,.12); }
-body:not(.home) header.scrolled .logo-full-img { filter: brightness(0); opacity: .85; }
-body:not(.home) header.scrolled nav a { color: #15213D; text-shadow: none; }
-body:not(.home) header.scrolled nav a:hover, body:not(.home) header.scrolled nav a.active { color: #E0482D; }
-body:not(.home) header.scrolled .btn-outline { color: #15213D; border-color: rgba(21,33,61,.45); }
-body:not(.home) header.scrolled .menu-toggle { border-color: rgba(21,33,61,.45); }
-body:not(.home) header.scrolled .menu-toggle span { background: #15213D; }
-@media (max-width: 900px) { body:not(.home) header nav.nav-open { background: rgba(21,33,61,.94); border-radius: 14px; padding: 12px 16px; } body:not(.home) header.scrolled nav.nav-open a { color: #fff; } }
+/* ---------------- Inner pages: light menu from the start ----------------
+   Beige like the page, dark logo and links; a soft shadow appears when scrolling. */
+body:not(.home) .topbar { background: #F8F7F3; color: #555E73; border-bottom: 1px solid rgba(21,33,61,.08); }
+body:not(.home) .topbar select, body:not(.home) .topbar .lang-select, body:not(.home) .topbar .currency-select { color: #15213D !important; border-color: rgba(21,33,61,.25) !important; }
+body:not(.home) .topbar .lang-select option, body:not(.home) .topbar .currency-select option { background: #fff !important; color: #15213D !important; }
+body:not(.home) .topbar label { color: #555E73; }
+body:not(.home) header { background: #F8F7F3; border-bottom: 0; transition: box-shadow .3s ease; }
+body:not(.home) header.scrolled { box-shadow: 0 6px 22px rgba(21,33,61,.12); }
+body:not(.home) .logo-full-img { filter: brightness(0); opacity: .85; }
+body:not(.home) header nav a { color: #15213D; text-shadow: none; }
+body:not(.home) header nav a:hover, body:not(.home) header nav a.active { color: #E0482D; }
+body:not(.home) header .btn-outline { color: #15213D; border-color: rgba(21,33,61,.45); }
+body:not(.home) header .btn-outline:hover { background: rgba(21,33,61,.06); color: #15213D; }
+body:not(.home) .menu-toggle { border-color: rgba(21,33,61,.45); }
+body:not(.home) .menu-toggle span { background: #15213D; }
+@media (max-width: 900px) { body:not(.home) header nav.nav-open { background: #fff; border-radius: 14px; padding: 12px 16px; box-shadow: 0 10px 30px rgba(21,33,61,.12); } }

@@ -8,6 +8,93 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
+<style>
+  /* Tour detail page */
+  .td-top { padding: 36px 0 0; background: var(--void); }
+  .td-back { display: inline-block; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .td-back:hover { color: var(--spice, #E0482D); }
+  .td-head h1 { font-size: clamp(34px, 4.5vw, 54px); line-height: 1.08; margin: 6px 0 10px; color: var(--white); }
+  .td-meta { display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+  .td-tag { display: inline-block; background: #FDE6E0; color: #B8361F; border-radius: 999px; padding: 6px 14px; font-size: 11px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; margin-bottom: 12px; }
+  .td-gallery { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  .td-gallery.single { grid-template-columns: 1fr; }
+  .td-main { width: 100%; height: 460px; object-fit: cover; border-radius: 20px; display: block; background: #e9e6df; }
+  .td-thumbs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+  .td-thumb { width: 100%; height: 145px; object-fit: cover; border-radius: 14px; cursor: pointer; opacity: .82; transition: opacity .2s, box-shadow .2s; }
+  .td-thumb:hover, .td-thumb.active { opacity: 1; box-shadow: 0 0 0 3px var(--gold); }
+  .td-body { padding: 40px 0 100px; }
+  .td-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 48px; align-items: start; }
+  .td-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 36px; }
+  .td-fact { display: flex; gap: 12px; align-items: flex-start; background: #fff; border-radius: 16px; padding: 16px 18px; box-shadow: 0 6px 20px rgba(21,33,61,.05); }
+  .td-fact-icon { font-size: 20px; line-height: 1.2; }
+  .td-fact small { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  .td-fact strong { font-size: 15px; font-weight: 600; color: var(--white); }
+  .td-block { padding: 30px 0; border-top: 1px solid var(--border-soft); }
+  .td-block:first-child { border-top: 0; padding-top: 0; }
+  .td-block h2 { font-size: 30px; margin-bottom: 16px; color: var(--white); }
+  .td-block .detail-body { font-size: 17px; line-height: 1.8; max-width: none; margin: 0; color: var(--white); }
+  .td-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .td-list li { position: relative; padding-left: 30px; font-size: 15px; line-height: 1.6; color: var(--white); }
+  .td-list li::before { position: absolute; left: 0; top: 0; font-weight: 700; }
+  .td-check li::before { content: "✓"; color: #2E7D5B; }
+  .td-cross li::before { content: "✕"; color: #B8361F; }
+  .td-info li::before { content: "•"; color: var(--gold); font-size: 20px; line-height: 1.1; }
+  .td-two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .td-steps { list-style: none; position: relative; display: flex; flex-direction: column; gap: 18px; }
+  .td-steps::before { content: ""; position: absolute; left: 27px; top: 8px; bottom: 8px; width: 2px; background: var(--border-soft); }
+  .td-steps li { display: flex; gap: 18px; align-items: flex-start; position: relative; font-size: 15px; line-height: 1.6; color: var(--white); }
+  .td-time { min-width: 56px; text-align: center; background: var(--wood, #15213D); color: #fff; border-radius: 999px; padding: 3px 0; font-size: 13px; font-weight: 600; position: relative; z-index: 1; }
+  .td-dot { min-width: 56px; display: flex; justify-content: center; position: relative; z-index: 1; padding-top: 6px; }
+  .td-dot::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px var(--void); }
+  .td-meet { font-size: 15px; margin-bottom: 14px; color: var(--white); }
+  .td-map { border-radius: 16px; overflow: hidden; height: 300px; background: #e9e6df; }
+  .td-map iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .td-maplink { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--gold); font-weight: 600; }
+  .td-side { position: sticky; top: 110px; }
+  .td-book { background: #fff; border-radius: 22px; padding: 28px; box-shadow: 0 18px 50px rgba(21,33,61,.12); }
+  .td-book .price strong { font-size: 34px; }
+  .td-per { font-size: 13px; color: var(--muted); margin: -2px 0 20px; }
+  .td-book-btn { width: 100%; text-align: center; padding: 16px; font-size: 14px; }
+  .td-assure { list-style: none; margin: 20px 0 0; display: flex; flex-direction: column; gap: 10px; }
+  .td-assure li { font-size: 14px; color: var(--white); padding-left: 26px; position: relative; }
+  .td-assure li::before { content: "✓"; position: absolute; left: 0; color: #2E7D5B; font-weight: 700; }
+  .td-agency { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border-soft); font-size: 13px; color: var(--muted); }
+  .td-mobilebar { display: none; }
+  @media (max-width: 900px) {
+    .td-layout { grid-template-columns: 1fr; }
+    .td-side { position: static; }
+    .td-gallery { grid-template-columns: 1fr; }
+    .td-thumbs { grid-template-columns: repeat(4, 1fr); }
+    .td-thumb { height: 80px; }
+    .td-main { height: 300px; }
+    .td-two { grid-template-columns: 1fr; }
+    .td-mobilebar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: #fff; padding: 12px 16px; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 -8px 24px rgba(21,33,61,.12); }
+    .td-mobilebar .price strong { font-size: 22px; }
+    .td-body { padding-bottom: 120px; }
+  }
+  .td-agency-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .td-agency-item { background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 6px 20px rgba(21,33,61,.05); }
+  .td-agency-item small { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+  .td-agency-item span { font-size: 15px; color: var(--white); }
+  .td-rating { font-family: var(--sans); font-size: 16px; font-weight: 600; color: var(--gold); margin-left: 8px; }
+  .td-review { background: #fff; border-radius: 16px; padding: 18px 20px; margin-bottom: 12px; box-shadow: 0 6px 20px rgba(21,33,61,.05); }
+  .td-review-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .td-review p { font-size: 15px; line-height: 1.6; color: var(--white); margin-bottom: 6px; }
+  .td-review small { color: var(--muted); font-size: 12px; }
+  .td-stars { color: #D9A436; letter-spacing: 2px; }
+  .td-review-login { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  .td-review-login a { color: var(--gold); font-weight: 600; }
+  .td-review-form { margin-top: 20px; background: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 6px 20px rgba(21,33,61,.06); }
+  .td-review-form h3 { font-size: 22px; margin-bottom: 10px; }
+  .td-star-pick { display: flex; gap: 4px; margin-bottom: 14px; }
+  .td-star { font-size: 30px; color: #D8D3C8; background: none; border: 0; cursor: pointer; padding: 0 2px; line-height: 1; }
+  .td-star.on { color: #D9A436; }
+  .td-modal { position: fixed; inset: 0; z-index: 100; background: rgba(12,18,36,.55); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .td-modal.open { display: flex; }
+  .td-modal-box { position: relative; width: min(640px, 100%); height: min(760px, 92vh); background: var(--void); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+  .td-modal-box iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .td-modal-close { position: absolute; top: 10px; right: 12px; z-index: 2; width: 40px; height: 40px; border-radius: 50%; background: #fff; font-size: 24px; line-height: 1; color: var(--white); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+</style>
 </head>
 <body>
 
@@ -74,6 +161,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 <script src="tours-data.js"></script>
 <script>
   (async () => {
@@ -86,39 +175,127 @@
       document.getElementById('notFound').style.display = 'block';
     } else {
       document.title = tour.title + ' — Aphelion Expeditions';
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const lines = v => String(v || '').split(/\r?\n/).map(s => s.replace(/^[-•*·]\s*/, '').trim()).filter(Boolean);
+      const photos = (Array.isArray(tour.images) && tour.images.length ? tour.images : [tour.image]).filter(Boolean);
+      const highlights = lines(tour.highlights);
+      const included = lines(tour.included);
+      const notIncluded = lines(tour.not_included);
+      const important = lines(tour.important_info);
+      const steps = lines(tour.itinerary).map(s => {
+        const m = s.match(/^(\d{1,2}[:.]\d{2})\s*[-–—:]?\s*(.*)$/);
+        return m ? { time: m[1].replace('.', ':'), text: m[2] } : { time: '', text: s };
+      });
+      const groupText = tour.min_travelers || tour.max_travelers
+        ? [tour.min_travelers ? 'Min. ' + tour.min_travelers : '', tour.max_travelers ? 'max. ' + tour.max_travelers + ' travelers' : ''].filter(Boolean).join(' · ')
+        : tour.group;
+      const facts = [
+        tour.duration && { icon: '⏱', label: 'Duration', value: tour.duration },
+        groupText && { icon: '👥', label: 'Group size', value: groupText },
+        tour.languages && { icon: '🗣', label: 'Guide languages', value: tour.languages },
+        tour.start_times && { icon: '🕒', label: 'Start times', value: tour.start_times },
+        tour.location && { icon: '📍', label: 'Location', value: tour.location }
+      ].filter(Boolean);
+      const agencyInfo = [
+        { label: 'Confirmation', value: 'Within 1 business day' },
+        tour.availability && { label: 'Availability', value: tour.availability },
+        tour.booking_notice && { label: 'Book in advance', value: tour.booking_notice },
+        tour.private_option && { label: 'Private groups', value: tour.private_option },
+        tour.children_policy && { label: 'Children', value: tour.children_policy },
+        tour.dietary && { label: 'Dietary needs', value: tour.dietary },
+        tour.accessibility && { label: 'Accessibility', value: tour.accessibility },
+        { label: 'White label', value: 'Can be sold under your agency brand' }
+      ].filter(Boolean);
+      const mapQuery = encodeURIComponent(tour.meeting_point || tour.location || '');
+
       document.getElementById('tourContent').innerHTML = `
-        <section class="page-hero">
+        <section class="td-top">
           <div class="container">
-            <span class="tour-tag" style="position:static; display:inline-block; margin-bottom:16px;">${tour.tag}</span>
-            <div class="tour-location">${tour.location}</div>
-            <h1>${tour.title}</h1>
+            <a href="tours.html#results" class="td-back">← All experiences</a>
+            <div class="td-head">
+              ${tour.tag ? `<span class="td-tag">${esc(tour.tag)}</span>` : ''}
+              <h1>${esc(tour.title)}</h1>
+              ${tour.duration || tour.location ? `<div class="td-meta">${tour.duration ? `<span>⏱ ${esc(tour.duration)}</span>` : ''}${tour.location ? `<span>📍 ${esc(tour.location)}</span>` : ''}</div>` : ''}
+            </div>
+            <div class="td-gallery${photos.length > 1 ? '' : ' single'}">
+              <img id="detailHero" class="td-main" src="${esc(photos[0] || '')}" alt="${esc(tour.title)}">
+              ${photos.length > 1 ? `<div class="td-thumbs">${photos.slice(0, 6).map((img, i) => `<img src="${esc(img)}" alt="${esc(tour.title)}" class="td-thumb${i === 0 ? ' active' : ''}" onclick="setHeroPhoto(this.src, this)">`).join('')}</div>` : ''}
+            </div>
           </div>
         </section>
-        <section>
-          <div class="container">
-            <div class="detail-frame">
-              <img id="detailHero" src="${tour.image}" alt="${tour.title}">
-            </div>
-            ${Array.isArray(tour.images) && tour.images.length > 1 ? `
-              <div class="tour-gallery">
-                ${tour.images.map((img, i) => `<img src="${img}" alt="${tour.title}" class="tour-gallery-thumb${img === tour.image ? ' active' : ''}" onclick="setHeroPhoto('${img.replace(/'/g, "\\'")}', this)">`).join('')}
+
+        <section class="td-body">
+          <div class="container td-layout">
+            <div class="td-main-col">
+              ${tour.description ? `<div class="td-block"><h2>About this experience</h2><p class="detail-body td-story">${esc(tour.description).replace(/\n/g, '<br>')}</p>
+                <p class="mt-note" id="mtNote" style="display:none; font-size:12px; color:var(--muted); margin-top:10px;"><span>Translated automatically</span> · <a href="#" id="mtToggle" style="color:var(--gold);">Show original</a></p></div>` : ''}
+
+              ${highlights.length ? `<div class="td-block"><h2>Highlights</h2><ul class="td-list td-check">${highlights.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div>` : ''}
+
+              ${included.length || notIncluded.length ? `<div class="td-block"><h2>What's included</h2><div class="td-two">
+                ${included.length ? `<ul class="td-list td-check">${included.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+                ${notIncluded.length ? `<ul class="td-list td-cross">${notIncluded.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+              </div></div>` : ''}
+
+              ${tour.meeting_point || tour.location ? `<div class="td-block"><h2>Meeting point</h2>
+                ${tour.meeting_point ? `<p class="td-meet">📍 ${esc(tour.meeting_point)}</p>` : ''}
+                <div class="td-map"><iframe title="Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery}&output=embed"></iframe></div>
+                <a class="td-maplink" href="https://www.google.com/maps/search/?api=1&query=${mapQuery}" target="_blank" rel="noopener">Open in Google Maps ↗</a>
+              </div>` : ''}
+
+              <div class="td-block"><h2>For travel agencies</h2>
+                <ul class="td-list td-check">
+                  <li>Confirmation within 1 business day</li>
+                  <li>Can be sold under your own agency brand and included in your itineraries</li>
+                  ${lines(tour.agency_notes).map(x => `<li>${esc(x)}</li>`).join('')}
+                </ul>
               </div>
-            ` : ''}
-            <div class="detail-meta">
-              <span>⏱ ${tour.duration}</span>
-              <span>👥 ${tour.group}</span>
-              <span>📍 ${tour.location}</span>
+
+              <div class="td-block"><h2>Cancellation policy</h2>
+                <ul class="td-list td-info">
+                  <li>Full refund if cancelled more than 72 hours before the start</li>
+                  <li>50% refund if cancelled 24–72 hours before the start</li>
+                  <li>No refund if cancelled less than 24 hours before the start, or no-show</li>
+                </ul>
+              </div>
+
+              <div class="td-block" id="reviews"><h2>Reviews from agencies <span class="td-rating" id="ratingSummary"></span></h2>
+                <div id="reviewList"><p style="color:var(--muted);">Loading reviews…</p></div>
+                <div id="reviewFormBox"></div>
+              </div>
             </div>
-            <p class="detail-body">${tour.description}</p>
-            <p class="mt-note" id="mtNote" style="display:none; font-size:12px; color:var(--muted); margin:-6px 0 22px;"><span>Translated automatically</span> · <a href="#" id="mtToggle" style="color:var(--gold-soft);">Show original</a></p>
-            <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-              <div class="price"><small>From</small><strong style="font-size:32px;">¥${Number(tour.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${tour.price}"></span></div>
-              <a href="booking.html?id=${tour.id}" class="btn btn-primary">Request This Tour</a>
-              <a href="tours.html" class="btn btn-outline">← Back to Catalogue</a>
-            </div>
+
+            <aside class="td-side">
+              <div class="td-book">
+                <div class="price"><small>From</small><strong>¥${Number(tour.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${tour.price}"></span></div>
+                <div class="td-per">per person</div>
+                <a href="booking.html?id=${tour.id}" class="btn btn-primary td-book-btn" onclick="openBooking(event)">Request This Tour</a>
+                <ul class="td-assure">
+                  <li>Confirmation within 1 business day</li>
+                  <li>Free cancellation up to 72 hours before</li>
+                  <li>Pay securely after confirmation</li>
+                </ul>
+                <div class="td-agency">For travel agencies: available under your own brand in our ready-made itineraries.</div>
+              </div>
+            </aside>
           </div>
         </section>
+
+        <div class="td-mobilebar">
+          <div class="price"><small>From</small><strong>¥${Number(tour.price).toLocaleString('ja-JP')}</strong></div>
+          <a href="booking.html?id=${tour.id}" class="btn btn-primary" onclick="openBooking(event)">Request This Tour</a>
+        </div>
+
+        <div class="td-modal" id="bookingModal" aria-hidden="true">
+          <div class="td-modal-box" role="dialog" aria-modal="true" aria-label="Request this tour">
+            <button type="button" class="td-modal-close" aria-label="Close" onclick="closeBooking()">×</button>
+            <iframe id="bookingFrame" title="Booking request" data-src="booking.html?id=${tour.id}&amp;embed=1"></iframe>
+          </div>
+        </div>
       `;
+
+      window.AEX_TOUR = tour;
+      loadReviews(tour.id);
 
       // "Translated automatically · Show original" under the description,
       // shown only when this tour has a machine translation for the chosen language.
@@ -131,7 +308,7 @@
         document.title = (window.AEX_t ? window.AEX_t(tour.title) : tour.title) + ' — Aphelion Expeditions';
         toggle.textContent = window.AEX_isShowingOriginal() ? 'Show translation' : 'Show original';
       };
-      document.getElementById('mtToggle').addEventListener('click', e => {
+      if (document.getElementById('mtToggle')) document.getElementById('mtToggle').addEventListener('click', e => {
         e.preventDefault();
         window.AEX_setShowOriginal(!window.AEX_isShowingOriginal());
       });
@@ -141,9 +318,97 @@
     }
   })();
 
+  // ---- Booking in a small window on the same page ----
+  function openBooking(e) {
+    if (e) e.preventDefault();
+    const modal = document.getElementById('bookingModal');
+    const frame = document.getElementById('bookingFrame');
+    if (!frame.src) frame.src = frame.dataset.src;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeBooking() {
+    const modal = document.getElementById('bookingModal');
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBooking(); });
+  document.addEventListener('click', e => { if (e.target && e.target.id === 'bookingModal') closeBooking(); });
+
+  // ---- Reviews from agencies ----
+  const escR = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const stars = n => '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
+  async function loadReviews(tourId) {
+    const list = document.getElementById('reviewList');
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/tour_reviews?select=*&tour_id=eq.${tourId}&order=created_at.desc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      const reviews = res.ok ? await res.json() : [];
+      if (reviews.length) {
+        const avg = reviews.reduce((a, r) => a + r.rating, 0) / reviews.length;
+        document.getElementById('ratingSummary').textContent = `★ ${avg.toFixed(1)} · ${reviews.length}`;
+        list.innerHTML = reviews.map(r => `
+          <div class="td-review">
+            <div class="td-review-head"><strong>${escR(r.company || 'Travel agency')}</strong><span class="td-stars" aria-label="${r.rating} out of 5">${stars(r.rating)}</span></div>
+            ${r.comment ? `<p>${escR(r.comment).replace(/\n/g, '<br>')}</p>` : ''}
+            <small>${new Date(r.created_at).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })}</small>
+          </div>`).join('');
+      } else {
+        list.innerHTML = '<p style="color:var(--muted);">No reviews yet — be the first agency to share your experience.</p>';
+      }
+    } catch (e) {
+      list.innerHTML = '';
+    }
+    renderReviewForm(tourId);
+  }
+  async function renderReviewForm(tourId) {
+    const box = document.getElementById('reviewFormBox');
+    let session = null;
+    try { session = (await supabaseClient.auth.getSession()).data.session; } catch (e) {}
+    if (!session) {
+      box.innerHTML = '<p class="td-review-login">Are you a travel agency? <a href="login.html">Log in</a> to leave a review.</p>';
+      return;
+    }
+    let company = '';
+    try {
+      const { data } = await supabaseClient.from('partners').select('company_name').eq('id', session.user.id).maybeSingle();
+      company = (data && data.company_name) || '';
+    } catch (e) {}
+    box.innerHTML = `
+      <form class="td-review-form" id="reviewForm">
+        <h3>Leave a review</h3>
+        <div class="td-star-pick" role="radiogroup" aria-label="Rating">
+          ${[1,2,3,4,5].map(n => `<button type="button" class="td-star" data-n="${n}" aria-label="${n} stars">★</button>`).join('')}
+        </div>
+        <div class="form-group"><label for="rvCompany">Agency name</label><input type="text" id="rvCompany" value="${escR(company)}" required></div>
+        <div class="form-group"><label for="rvComment">Your review</label><textarea id="rvComment" rows="4" placeholder="How was it for your clients?"></textarea></div>
+        <div class="error-message" id="rvError"></div>
+        <button type="submit" class="btn btn-primary">Post Review</button>
+      </form>`;
+    let rating = 0;
+    const paint = () => box.querySelectorAll('.td-star').forEach(b => b.classList.toggle('on', +b.dataset.n <= rating));
+    box.querySelectorAll('.td-star').forEach(b => b.addEventListener('click', () => { rating = +b.dataset.n; paint(); }));
+    document.getElementById('reviewForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const err = document.getElementById('rvError');
+      err.style.display = 'none';
+      if (!rating) { err.textContent = 'Please choose a star rating.'; err.style.display = 'block'; return; }
+      const { error } = await supabaseClient.from('tour_reviews').insert({
+        tour_id: tourId, rating,
+        company: document.getElementById('rvCompany').value.trim(),
+        comment: document.getElementById('rvComment').value.trim()
+      });
+      if (error) { err.textContent = 'Could not post review: ' + error.message; err.style.display = 'block'; return; }
+      loadReviews(tourId);
+    });
+  }
+
   function setHeroPhoto(url, thumbEl) {
     document.getElementById('detailHero').src = url;
-    document.querySelectorAll('.tour-gallery-thumb').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.td-thumb').forEach(el => el.classList.remove('active'));
     thumbEl.classList.add('active');
   }
 </script>
