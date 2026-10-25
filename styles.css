@@ -90,7 +90,7 @@ nav a:hover, nav a.active { color: var(--gold-soft); }
 .page-hero h1 { font-size: clamp(34px, 5vw, 52px); }
 .page-hero p { color: var(--muted); max-width: 600px; margin-top: 14px; }
 
-.hero { min-height: 720px; display: flex; align-items: center; position: relative; background: linear-gradient(180deg, rgba(5,6,15,.35) 0%, rgba(5,6,15,.55) 55%, var(--void) 100%), url("https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=2000&q=80") center/cover; }
+.hero { min-height: 720px; display: flex; align-items: center; position: relative; background: linear-gradient(180deg, rgba(5,6,15,.35) 0%, rgba(5,6,15,.55) 55%, var(--void) 100%), url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2000&q=80") center/cover; }
 .hero::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 20%, rgba(212,175,55,.14), transparent 55%); pointer-events: none; }
 .hero-content { max-width: 720px; padding: 110px 0; position: relative; z-index: 1; }
 .eyebrow { color: var(--gold-soft); text-transform: uppercase; letter-spacing: 3px; font-weight: 600; font-size: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
