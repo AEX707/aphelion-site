@@ -9,45 +9,47 @@
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
 <style>
-  /* Full-screen welcome photo: only the picture, click/tap to enter the site */
-  #splash { position: fixed; inset: 0; z-index: 9999; cursor: pointer; overflow: hidden; background: #05060f;
-    transition: opacity .9s ease, visibility .9s ease; }
-  /* Soft blurred copy of the photo fills the empty sides */
-  #splash::before { content: ""; position: absolute; inset: -40px;
-    background: url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=800&q=60") center/cover no-repeat;
-    filter: blur(28px) brightness(.45); }
-  /* The whole photo, always fully visible */
-  #splash .splash-photo { position: absolute; inset: 0;
-    background: url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center/contain no-repeat;
-    filter: drop-shadow(0 20px 50px rgba(0,0,0,.6)); }
-  #splash .splash-hint { position: absolute; left: 50%; bottom: 7vh; transform: translateX(-50%);
-    color: rgba(245,243,236,.85); font: 500 12px/1 Inter, sans-serif; letter-spacing: 4px; text-transform: uppercase;
-    padding: 12px 22px; border: 1px solid rgba(245,243,236,.35); border-radius: 30px; background: rgba(5,6,15,.25);
-    backdrop-filter: blur(4px); animation: splashPulse 2.4s ease-in-out infinite; }
-  @keyframes splashPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
-  #splash.hide { opacity: 0; visibility: hidden; }
-  body.splash-on { overflow: hidden; }
+  /* Full-screen photo at the top of the page; scrolling rolls it up and the site appears */
+  #splash { position: relative; height: 100vh; height: 100svh; overflow: hidden; cursor: pointer; background: #05060f; }
+  #splash .splash-photo { position: absolute; inset: 0; will-change: transform;
+    background: url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center/cover no-repeat; }
+  #splash::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22%;
+    background: linear-gradient(180deg, transparent, #05060f); pointer-events: none; }
+  #splash .splash-hint { position: absolute; left: 50%; bottom: 6vh; transform: translateX(-50%); z-index: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    color: rgba(245,243,236,.9); font: 500 12px/1 Inter, sans-serif; letter-spacing: 4px; text-transform: uppercase;
+    animation: splashPulse 2.4s ease-in-out infinite; }
+  #splash .splash-hint .arrow { width: 14px; height: 14px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+  @keyframes splashPulse { 0%,100% { opacity: .55; transform: translate(-50%, 0); } 50% { opacity: 1; transform: translate(-50%, 6px); } }
 </style>
 </head>
-<body class="splash-on">
+<body>
 
-<div id="splash" role="button" aria-label="Enter site" tabindex="0"><div class="splash-photo"></div><span class="splash-hint">Click to enter</span></div>
+<div id="splash" role="button" aria-label="Scroll to site" tabindex="0">
+  <div class="splash-photo"></div>
+  <span class="splash-hint">Scroll<span class="arrow"></span></span>
+</div>
 <script>
   (function () {
     var splash = document.getElementById('splash');
-    var seen = false;
-    try { seen = sessionStorage.getItem('aex_splash_seen') === '1'; } catch (e) {}
-    if (seen || location.hash) { splash.remove(); document.body.classList.remove('splash-on'); return; }
-    if ('ontouchstart' in window) splash.querySelector('.splash-hint').textContent = 'Tap to enter';
-    function enter() {
-      splash.classList.add('hide');
-      document.body.classList.remove('splash-on');
-      try { sessionStorage.setItem('aex_splash_seen', '1'); } catch (e) {}
-      setTimeout(function () { splash.remove(); }, 1000);
-    }
-    splash.addEventListener('click', enter);
-    splash.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') enter(); });
-    window.addEventListener('wheel', enter, { once: true, passive: true });
+    var photo = splash.querySelector('.splash-photo');
+    var hint = splash.querySelector('.splash-hint');
+    function goDown() { window.scrollTo({ top: splash.offsetHeight, behavior: 'smooth' }); }
+    splash.addEventListener('click', goDown);
+    splash.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') goDown(); });
+    // Gentle parallax: the photo rolls up a little slower than the page
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return; ticking = true;
+      requestAnimationFrame(function () {
+        var y = window.scrollY, h = splash.offsetHeight;
+        if (y <= h) {
+          photo.style.transform = 'translateY(' + (y * 0.4) + 'px)';
+          hint.style.visibility = y > h * 0.15 ? 'hidden' : 'visible';
+        }
+        ticking = false;
+      });
+    }, { passive: true });
   })();
 </script>
 
