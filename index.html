@@ -20,6 +20,16 @@
   @keyframes splashPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
   #splash.hide { opacity: 0; visibility: hidden; }
   body.splash-on { overflow: hidden; }
+  /* Menu + logo stay at the top while scrolling; transparent over the photo, indigo after */
+  .home .home-top { position: fixed; transition: background .35s ease, box-shadow .35s ease; }
+  .home .home-top .topbar { max-height: 140px; overflow: hidden; transition: max-height .35s ease, padding .35s ease, opacity .25s ease; }
+  .home .home-top.scrolled { background: rgba(21,33,61,.96); box-shadow: 0 8px 30px rgba(12,18,36,.25); backdrop-filter: blur(10px); }
+  .home .home-top.scrolled .topbar { max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom: 0; opacity: 0; pointer-events: none; }
+  .home .home-top .navbar { transition: min-height .35s ease; }
+  .home .home-top.scrolled .navbar { min-height: 70px; }
+  .home .home-top .logo-full-img { transition: height .35s ease; }
+  .home .home-top.scrolled .logo-full-img { height: 56px; }
+  .home .home-top.scrolled nav a { text-shadow: none; }
 </style>
 </head>
 <body class="home splash-on">
@@ -106,6 +116,8 @@
           <option value="">All types</option>
           <option value="food">Food &amp; Drink</option>
           <option value="culture">Culture</option>
+          <option value="crafts">Crafts</option>
+          <option value="night">Tokyo After Dark</option>
           <option value="nature">Nature</option>
         </select>
       </div>
@@ -163,11 +175,11 @@
         <div class="cat-art" style="background:#E3EAF4; color:#15213D;">寺</div>
         <div class="cat-body"><h3>Culture</h3><p>Temples, tea ceremony, traditional arts</p></div>
       </a>
-      <a href="tours.html" class="cat-card">
+      <a href="tours.html?type=crafts" class="cat-card">
         <div class="cat-art" style="background:#F5EBD8; color:#8A6420;">匠</div>
         <div class="cat-body"><h3>Crafts</h3><p>Knives, ceramics, indigo, workshops</p></div>
       </a>
-      <a href="tours.html" class="cat-card">
+      <a href="tours.html?type=night" class="cat-card">
         <div class="cat-art" style="background:#15213D; color:#E8C987;">夜</div>
         <div class="cat-body"><h3>Tokyo After Dark</h3><p>Night food tours, bars, city lights</p></div>
       </a>
@@ -253,6 +265,15 @@
   (async () => {
     const tours = await getTours();
     renderFeatured(tours);
+  })();
+</script>
+<script>
+  (function () {
+    var top = document.querySelector('.home-top');
+    if (!top) return;
+    function onScroll() { top.classList.toggle('scrolled', window.scrollY > 60); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   })();
 </script>
 <script src="mobile-nav.js"></script>

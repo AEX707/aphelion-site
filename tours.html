@@ -49,17 +49,13 @@
     <div class="search-grid">
       <div>
         <label for="q">Search</label>
-        <input type="text" id="q" name="q" placeholder="Search tours, cities, experiences...">
+        <input type="text" id="q" name="q" placeholder="Search experiences in Japan...">
       </div>
       <div>
         <label for="destination">Destination</label>
         <select id="destination" name="destination">
-          <option value="">All destinations</option>
-          <option value="lisbon">Lisbon</option>
-          <option value="barcelona">Barcelona</option>
-          <option value="istanbul">Istanbul</option>
-          <option value="bali">Bali</option>
-          <option value="japan">Japan</option>
+          <option value="">All of Japan</option>
+          <option value="tokyo">Tokyo</option>
         </select>
       </div>
       <div>
@@ -68,7 +64,8 @@
           <option value="">All types</option>
           <option value="food">Food &amp; Drink</option>
           <option value="culture">Culture</option>
-          <option value="cruise">Cruise</option>
+          <option value="crafts">Crafts</option>
+          <option value="night">Tokyo After Dark</option>
           <option value="nature">Nature</option>
         </select>
       </div>
@@ -85,7 +82,8 @@
       <button class="filter-btn active" data-filter="">All</button>
       <button class="filter-btn" data-filter="food">Food &amp; Drink</button>
       <button class="filter-btn" data-filter="culture">Culture</button>
-      <button class="filter-btn" data-filter="cruise">Cruise</button>
+      <button class="filter-btn" data-filter="crafts">Crafts</button>
+      <button class="filter-btn" data-filter="night">Tokyo After Dark</button>
       <button class="filter-btn" data-filter="nature">Nature</button>
     </div>
     <div class="tour-grid" id="tourGrid"></div>
@@ -148,15 +146,31 @@
     });
   });
 
+  // Search is forgiving: any case, partial words, and free-text categories
+  // typed by partners ("Food", "food tour", "Gourmet"...) all match.
+  const CATEGORY_WORDS = {
+    food: ['food', 'drink', 'gourmet', 'culinary', 'sake', 'cooking', 'izakaya', 'market'],
+    culture: ['culture', 'cultural', 'temple', 'shrine', 'tea', 'history', 'tradition', 'art'],
+    crafts: ['craft', 'workshop', 'knife', 'knives', 'ceramic', 'pottery', 'indigo', 'artisan'],
+    night: ['night', 'bar', 'nightlife', 'evening', 'after dark'],
+    nature: ['nature', 'hike', 'hiking', 'mountain', 'onsen', 'garden', 'outdoor'],
+    cruise: ['cruise', 'boat', 'sea', 'ocean']
+  };
+  const norm = v => String(v == null ? '' : v).toLowerCase().trim();
+
   function filterTours() {
-    const q = (document.getElementById('q').value || '').toLowerCase();
-    const destination = document.getElementById('destination').value;
-    const category = activeCategory || document.getElementById('type').value;
+    const q = norm(document.getElementById('q').value);
+    const destination = norm(document.getElementById('destination').value);
+    const category = norm(activeCategory || document.getElementById('type').value);
+    const words = q.split(/\s+/).filter(Boolean);
 
     const filtered = tours.filter(t => {
-      const matchesQ = !q || t.title.toLowerCase().includes(q) || t.location.toLowerCase().includes(q);
-      const matchesDest = !destination || t.destination === destination;
-      const matchesCat = !category || t.category === category;
+      const text = [t.title, t.location, t.destination, t.description, t.category, t.tag].map(norm).join(' ');
+      const place = [t.destination, t.location, t.title].map(norm).join(' ');
+      const cat = [t.category, t.tag, t.title].map(norm).join(' ');
+      const matchesQ = !words.length || words.every(w => text.includes(w));
+      const matchesDest = !destination || destination === 'japan' || place.includes(destination);
+      const matchesCat = !category || (CATEGORY_WORDS[category] || [category]).some(w => cat.includes(w));
       return matchesQ && matchesDest && matchesCat;
     });
 
@@ -190,6 +204,11 @@
     `).join('');
   }
 
+  document.getElementById('type').addEventListener('change', () => {
+    activeCategory = document.getElementById('type').value;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === activeCategory));
+    filterTours();
+  });
   ['q','destination'].forEach(id => {
     document.getElementById(id).addEventListener('input', filterTours);
     document.getElementById(id).addEventListener('change', filterTours);
