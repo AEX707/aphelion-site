@@ -13,3 +13,21 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
+
+// Same menu on every page: photo strip at the top, page colour + shadow after scrolling.
+// (The homepage has its own version of this in index.html.)
+(function () {
+  if (document.body && document.body.classList.contains('home')) return;
+  function init() {
+    var header = document.querySelector('header');
+    if (!header || document.body.classList.contains('home')) return;
+    var topbar = document.querySelector('.topbar');
+    function onScroll() {
+      var limit = topbar ? topbar.offsetHeight + 4 : 4;
+      header.classList.toggle('scrolled', window.scrollY > limit);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

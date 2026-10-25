@@ -20,17 +20,22 @@
   @keyframes splashPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
   #splash.hide { opacity: 0; visibility: hidden; }
   body.splash-on { overflow: hidden; }
-  /* Menu + logo stay fixed at the top, always transparent over the page.
-     Over light sections the logo and links turn dark so they stay readable. */
-  .home .home-top { position: fixed; }
+  /* "Curtain" header: fixed at the top, made of the same photo, so the banner slides under it.
+     After the photo ends, it turns into the page colour with a soft shadow. */
+  .home .home-top { position: fixed; transition: box-shadow .35s ease; }
+  .home .home-top::after { content: ""; position: absolute; inset: 0; z-index: -2; pointer-events: none;
+    background: linear-gradient(180deg, rgba(12,18,36,.55) 0%, rgba(12,18,36,.28) 100%), url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center 68%/cover no-repeat;
+    opacity: 0; transition: opacity .2s ease; }
+  @media (min-width: 901px) { .home .home-top::after { background-attachment: scroll, fixed; } }
+  .home .home-top.scrolled::after { opacity: 1; }
+  .home .home-top.scrolled { box-shadow: 0 8px 24px rgba(12,18,36,.28); }
+  .home .home-top::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: #F8F7F3; opacity: 0; transition: opacity .35s ease; }
+  .home .home-top.on-light::before { opacity: 1; }
+  .home .home-top.on-light { box-shadow: 0 6px 22px rgba(21,33,61,.12); }
   .home .home-top .topbar { max-height: 140px; overflow: hidden; transition: max-height .35s ease, padding .35s ease, opacity .25s ease; }
   .home .home-top.scrolled .topbar { max-height: 0; padding-top: 0; padding-bottom: 0; border-bottom: 0; opacity: 0; pointer-events: none; }
   .home .home-top .logo-full-img, .home .home-top nav a, .home .home-top .btn-outline, .home .home-top .menu-toggle span { transition: filter .35s ease, color .35s ease, border-color .35s ease, background .35s ease, text-shadow .35s ease; }
-  /* Over light sections only: a soft fade in the page colour so the menu does not sit on top of text (no hard edge) */
-  .home .home-top::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 140%; z-index: -1; pointer-events: none;
-    background: linear-gradient(180deg, rgba(248,247,243,.96) 0%, rgba(248,247,243,.85) 55%, rgba(248,247,243,0) 100%);
-    opacity: 0; transition: opacity .35s ease; }
-  .home .home-top.on-light::before { opacity: 1; }
   .home .home-top.on-light .logo-full-img { filter: brightness(0); opacity: .85; }
   .home .home-top.on-light nav a { color: #15213D; text-shadow: none; }
   .home .home-top.on-light nav a:hover, .home .home-top.on-light nav a.active { color: #E0482D; }
@@ -278,18 +283,11 @@
   (function () {
     var top = document.querySelector('.home-top');
     if (!top) return;
-    function darkUnderHeader() {
-      var y = top.getBoundingClientRect().bottom - 20;
-      var dark = document.querySelectorAll('.hero, .founding-box, footer');
-      for (var i = 0; i < dark.length; i++) {
-        var r = dark[i].getBoundingClientRect();
-        if (r.top <= y && r.bottom >= y) return true;
-      }
-      return false;
-    }
+    var hero = document.querySelector('.hero');
     function onScroll() {
-      top.classList.toggle('scrolled', window.scrollY > 60);
-      top.classList.toggle('on-light', !darkUnderHeader());
+      top.classList.toggle('scrolled', window.scrollY > 10);
+      var pastPhoto = hero ? hero.getBoundingClientRect().bottom <= top.getBoundingClientRect().bottom : true;
+      top.classList.toggle('on-light', pastPhoto);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
