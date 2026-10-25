@@ -10,9 +10,16 @@
 <link rel="stylesheet" href="styles.css">
 <style>
   /* Full-screen welcome photo: only the picture, click/tap to enter the site */
-  #splash { position: fixed; inset: 0; z-index: 9999; cursor: pointer;
-    background: #05060f url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center/cover no-repeat;
+  #splash { position: fixed; inset: 0; z-index: 9999; cursor: pointer; overflow: hidden; background: #05060f;
     transition: opacity .9s ease, visibility .9s ease; }
+  /* Soft blurred copy of the photo fills the empty sides */
+  #splash::before { content: ""; position: absolute; inset: -40px;
+    background: url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=800&q=60") center/cover no-repeat;
+    filter: blur(28px) brightness(.45); }
+  /* The whole photo, always fully visible */
+  #splash .splash-photo { position: absolute; inset: 0;
+    background: url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center/contain no-repeat;
+    filter: drop-shadow(0 20px 50px rgba(0,0,0,.6)); }
   #splash .splash-hint { position: absolute; left: 50%; bottom: 7vh; transform: translateX(-50%);
     color: rgba(245,243,236,.85); font: 500 12px/1 Inter, sans-serif; letter-spacing: 4px; text-transform: uppercase;
     padding: 12px 22px; border: 1px solid rgba(245,243,236,.35); border-radius: 30px; background: rgba(5,6,15,.25);
@@ -24,7 +31,7 @@
 </head>
 <body class="splash-on">
 
-<div id="splash" role="button" aria-label="Enter site" tabindex="0"><span class="splash-hint">Click to enter</span></div>
+<div id="splash" role="button" aria-label="Enter site" tabindex="0"><div class="splash-photo"></div><span class="splash-hint">Click to enter</span></div>
 <script>
   (function () {
     var splash = document.getElementById('splash');
