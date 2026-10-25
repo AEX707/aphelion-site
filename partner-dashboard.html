@@ -190,8 +190,9 @@
           <label>Notes for agencies (anything they should know)</label>
           <textarea id="t_agency_notes" rows="3" placeholder="Private groups on request · vegetarian options · book 48 hours ahead"></textarea>
         </div>
+        <div id="formSaveMsg" class="status-msg" style="margin-bottom:12px;"></div>
         <div style="display:flex; gap:12px;">
-          <button type="submit" class="btn btn-primary">Save Tour</button>
+          <button type="submit" class="btn btn-primary" id="saveTourBtn">Save Tour</button>
           <button type="button" class="btn btn-outline" onclick="closeTourForm()">Cancel</button>
         </div>
       </form>
@@ -280,11 +281,15 @@
     window.location.href = 'index.html'; // manual log out → public home page
   });
 
+  // Messages appear where the partner is looking: next to the Save button while
+  // the form is open, otherwise above the tour list. Errors stay until fixed.
   function showTourStatus(msg, ok) {
-    const el = document.getElementById('tourStatusMsg');
+    const formOpen = document.getElementById('tourFormCard').style.display !== 'none';
+    const el = document.getElementById(formOpen ? 'formSaveMsg' : 'tourStatusMsg');
     el.textContent = msg;
     el.className = 'status-msg ' + (ok ? 'ok' : 'err');
-    setTimeout(() => { el.className = 'status-msg'; }, 4000);
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (ok) setTimeout(() => { el.className = 'status-msg'; }, 6000);
   }
 
   async function loadMyTours() {
@@ -466,6 +471,10 @@
 
   document.getElementById('myTourForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const saveBtn = document.getElementById('saveTourBtn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    try {
     addPhotoLinks(); // include links pasted but not yet added
     const id = document.getElementById('t_id').value;
     const payload = {
@@ -508,9 +517,15 @@
       showTourStatus('Could not save: ' + error.message, false);
       return;
     }
-    showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
     closeTourForm();
+    showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
     loadMyTours();
+    } catch (err) {
+      showTourStatus('Could not save: ' + (err && err.message ? err.message : err), false);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Tour';
+    }
   });
 </script>
 <script src="i18n.js"></script>
