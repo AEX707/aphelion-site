@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aphelion Expeditions — Beyond the Horizon</title>
+<title>Aphelion Expeditions — Japan, beyond the guidebook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -20,14 +20,9 @@
   @keyframes splashPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
   #splash.hide { opacity: 0; visibility: hidden; }
   body.splash-on { overflow: hidden; }
-  /* Same photo, same framing in the main banner, so the switch is seamless */
-  .hero { min-height: calc(100vh - 140px); background-position: center, center 68%; }
-  @media (min-width: 901px) {
-    .hero { background-attachment: scroll, fixed; }
-  }
 </style>
 </head>
-<body class="splash-on">
+<body class="home splash-on">
 
 <div id="splash" role="button" aria-label="Enter site" tabindex="0"><span class="splash-hint">Click to enter</span></div>
 <script>
@@ -52,6 +47,7 @@
   })();
 </script>
 
+<div class="home-top">
 <div class="topbar">
   <div class="container topbar-content">
     <span>For travel partners &amp; tour operators worldwide</span>
@@ -76,14 +72,15 @@
     </div>
   </div>
 </header>
+</div>
 
 <section class="hero">
   <div class="container hero-content">
-    <div class="eyebrow">The farthest point, the finest view</div>
-    <h1 class="hero-title">Beyond <em>The Horizon</em></h1>
-    <p>Aphelion Expeditions curates extraordinary journeys — from ocean sunsets to mountain terraces to the pulse of the world's great cities — for travel partners who demand something rarer than the ordinary.</p>
+    <div class="eyebrow">Japan · Starting in Tokyo</div>
+    <h1 class="hero-title">Japan, <em>beyond</em> the guidebook.</h1>
+    <p>Hand-picked local experiences and ready-made itineraries for travel agencies — under your brand, at net prices.</p>
     <div class="hero-buttons">
-      <a href="tours.html" class="btn btn-primary">Explore Tours</a>
+      <a href="tours.html" class="btn btn-primary">Explore Experiences</a>
       <a href="partner.html" class="btn btn-light">Become a Partner</a>
     </div>
   </div>
@@ -94,17 +91,13 @@
     <div class="search-grid">
       <div>
         <label for="q">Search</label>
-        <input type="text" id="q" name="q" placeholder="Search tours, cities, experiences...">
+        <input type="text" id="q" name="q" placeholder="Search experiences in Japan...">
       </div>
       <div>
         <label for="destination">Destination</label>
         <select id="destination" name="destination">
-          <option value="">All destinations</option>
-          <option value="lisbon">Lisbon</option>
-          <option value="barcelona">Barcelona</option>
-          <option value="istanbul">Istanbul</option>
-          <option value="bali">Bali</option>
-          <option value="japan">Japan</option>
+          <option value="">All of Japan</option>
+          <option value="tokyo">Tokyo</option>
         </select>
       </div>
       <div>
@@ -113,7 +106,6 @@
           <option value="">All types</option>
           <option value="food">Food &amp; Drink</option>
           <option value="culture">Culture</option>
-          <option value="cruise">Cruise</option>
           <option value="nature">Nature</option>
         </select>
       </div>
@@ -124,14 +116,61 @@
   </form>
 </div>
 
+<section class="benefits" id="benefits">
+  <div class="container">
+    <div class="section-heading">
+      <div>
+        <div class="eyebrow">Why Aphelion</div>
+        <h2>Your partner on the ground in <em>Japan</em>.</h2>
+      </div>
+      <p>We don't compete with agencies — we work behind you. We find, check and book the local experiences, so you can sell Japan with confidence.</p>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar">
+        <div class="pillar-icon" style="background:#FDE6E0; color:#E0482D;">選</div>
+        <h3>Hand-picked partners</h3>
+        <p>Every experience is onboarded in person by our team in Tokyo.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon" style="background:#E3EAF4; color:#15213D;">旅</div>
+        <h3>Your brand, our routes</h3>
+        <p>Ready-made 10–14 day itineraries you present to clients as your own.</p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-icon" style="background:#F5EBD8; color:#8A6420;">円</div>
+        <h3>One booking, one payment</h3>
+        <p>Clear prices in yen, email confirmations, local partners paid on time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="tours-section">
   <div class="container">
     <div class="section-heading">
       <div>
-        <div class="eyebrow">Featured Journeys</div>
-        <h2>Handpicked expeditions</h2>
+        <div class="eyebrow">Tokyo experiences</div>
+        <h2>Hand-picked experiences</h2>
       </div>
-      <p>A small selection of our most requested experiences — see the full catalogue for all destinations and categories.</p>
+      <p>A small selection of our most requested experiences — see the full catalogue for everything available.</p>
+    </div>
+    <div class="cat-grid" style="margin-bottom:56px;">
+      <a href="tours.html?type=food" class="cat-card">
+        <div class="cat-art" style="background:#FDE6E0; color:#E0482D;">食</div>
+        <div class="cat-body"><h3>Food &amp; Drink</h3><p>Markets, izakaya, sake, cooking classes</p></div>
+      </a>
+      <a href="tours.html?type=culture" class="cat-card">
+        <div class="cat-art" style="background:#E3EAF4; color:#15213D;">寺</div>
+        <div class="cat-body"><h3>Culture</h3><p>Temples, tea ceremony, traditional arts</p></div>
+      </a>
+      <a href="tours.html" class="cat-card">
+        <div class="cat-art" style="background:#F5EBD8; color:#8A6420;">匠</div>
+        <div class="cat-body"><h3>Crafts</h3><p>Knives, ceramics, indigo, workshops</p></div>
+      </a>
+      <a href="tours.html" class="cat-card">
+        <div class="cat-art" style="background:#15213D; color:#E8C987;">夜</div>
+        <div class="cat-body"><h3>Tokyo After Dark</h3><p>Night food tours, bars, city lights</p></div>
+      </a>
     </div>
     <div class="tour-grid" id="featuredGrid"></div>
     <div style="text-align:center; margin-top:44px;">
@@ -140,57 +179,22 @@
   </div>
 </section>
 
-<section class="benefits" id="benefits">
+<section class="founding" id="contact">
   <div class="container">
-    <div class="section-heading">
+    <div class="founding-box">
       <div>
-        <div class="eyebrow">Why Aphelion</div>
-        <h2>Built for travel partners</h2>
+        <div class="eyebrow">For local experience providers</div>
+        <h2>Become a Founding Partner in Tokyo.</h2>
+        <p>We are inviting a small number of Tokyo providers to join first.</p>
+        <a href="partner.html" class="btn">Apply as a Partner</a>
       </div>
-      <p>Everything you need to offer world-class experiences under your own brand.</p>
-    </div>
-    <div class="benefit-grid">
-      <div class="benefit">
-        <div class="benefit-icon">✦</div>
-        <h3>Curated Network</h3>
-        <p>Vetted local operators across ocean, city and nature destinations worldwide.</p>
-      </div>
-      <div class="benefit">
-        <div class="benefit-icon">✦</div>
-        <h3>Partner Dashboard</h3>
-        <p>List and manage your own tours, photos and prices — every listing is reviewed before it goes live.</p>
-      </div>
-      <div class="benefit">
-        <div class="benefit-icon">✦</div>
-        <h3>Fast Response</h3>
-        <p>Booking and partnership requests reviewed within one business day.</p>
-      </div>
-      <div class="benefit">
-        <div class="benefit-icon">✦</div>
-        <h3>Transparent Pricing</h3>
-        <p>Clear, partner-friendly rates with no hidden commission surprises.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="form-page-section" id="contact">
-  <div class="container form-layout">
-    <div>
-      <div class="eyebrow">Get in touch</div>
-      <h2>Ready to expand your catalogue?</h2>
-      <p>Join our network of travel partners and offer your customers journeys beyond the ordinary.</p>
-      <ul class="check-list">
-        <li>Access to our full tour catalogue</li>
-        <li>Dedicated partner support</li>
-        <li>Your own dashboard to list and manage tours</li>
+      <ul class="founding-list">
+        <li>0% commission for founding partners</li>
+        <li>Exclusive in your category</li>
+        <li>A place in our ready-made itineraries</li>
+        <li>Guaranteed payment</li>
+        <li>12 months of free promotion</li>
       </ul>
-      <a href="partner.html" class="btn btn-primary">Apply to Partner</a>
-    </div>
-    <div class="form-card">
-      <h3>Explore the catalogue</h3>
-      <p style="color:var(--muted); margin-bottom:22px;">Browse every tour and experience currently available to partners.</p>
-      <a href="tours.html" class="btn btn-outline" style="width:100%; text-align:center;">View All Tours</a>
     </div>
   </div>
 </section>
@@ -200,7 +204,7 @@
     <div class="footer-grid">
       <div>
         <div class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="footer-logo-full-img"></div>
-        <p>Curated journeys for travel partners worldwide — beyond the horizon, beyond the ordinary.</p>
+        <p>Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.</p>
       </div>
       <div>
         <h3>Explore</h3>
