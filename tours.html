@@ -143,6 +143,7 @@
       btn.classList.add('active');
       document.getElementById('type').value = activeCategory;
       filterTours();
+      scrollToResults();
     });
   });
 
@@ -213,14 +214,28 @@
     document.getElementById(id).addEventListener('input', filterTours);
     document.getElementById(id).addEventListener('change', filterTours);
   });
+  // After a search, glide down to the results (just below the sticky menu).
+  function scrollToResults() {
+    const target = document.getElementById('filterRow') || document.getElementById('tourGrid');
+    const header = document.querySelector('header');
+    const offset = (header ? header.offsetHeight : 0) + 16;
+    const y = target.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  }
+
   document.getElementById('searchForm').addEventListener('submit', (e) => {
     e.preventDefault();
     filterTours();
+    scrollToResults();
   });
+  document.getElementById('type').addEventListener('change', scrollToResults);
+  document.getElementById('destination').addEventListener('change', scrollToResults);
 
   (async () => {
     tours = await getTours();
     filterTours();
+    // Came here from the homepage search? Show the results straight away.
+    if (qVal || destVal || typeVal || location.hash === '#results') setTimeout(scrollToResults, 150);
   })();
 </script>
 <script src="mobile-nav.js"></script>
