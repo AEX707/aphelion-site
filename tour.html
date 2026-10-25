@@ -178,12 +178,20 @@
       document.getElementById('notFound').style.display = 'block';
     } else {
       document.title = tour.title + ' — Aphelion Expeditions';
+      // Partner-written detail fields shown in the visitor's language when a translation exists.
+      const T = f => {
+        const lang = window.AEX_getLanguage ? window.AEX_getLanguage() : 'en';
+        const showOriginal = window.AEX_isShowingOriginal ? window.AEX_isShowingOriginal() : false;
+        const tr = tour.translations && tour.translations[lang];
+        return (!showOriginal && tr && tr[f]) || tour[f];
+      };
+      const renderTour = () => {
       const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       const lines = v => String(v || '').split(/\r?\n/).map(s => s.replace(/^[-•*·]\s*/, '').trim()).filter(Boolean);
       const photos = (Array.isArray(tour.images) && tour.images.length ? tour.images : [tour.image]).filter(Boolean);
-      const highlights = lines(tour.highlights);
-      const included = lines(tour.included);
-      const notIncluded = lines(tour.not_included);
+      const highlights = lines(T('highlights'));
+      const included = lines(T('included'));
+      const notIncluded = lines(T('not_included'));
       const important = lines(tour.important_info);
       const steps = lines(tour.itinerary).map(s => {
         const m = s.match(/^(\d{1,2}[:.]\d{2})\s*[-–—:]?\s*(.*)$/);
@@ -241,7 +249,7 @@
               </div></div>` : ''}
 
               ${tour.meeting_point || tour.location ? `<div class="td-block"><h2>Meeting point</h2>
-                ${tour.meeting_point ? `<p class="td-meet">📍 ${esc(tour.meeting_point)}</p>` : ''}
+                ${tour.meeting_point ? `<p class="td-meet">📍 ${esc(T('meeting_point'))}</p>` : ''}
                 <div class="td-map"><iframe title="Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery}&output=embed"></iframe></div>
                 <a class="td-maplink" href="https://www.google.com/maps/search/?api=1&query=${mapQuery}" target="_blank" rel="noopener">Open in Google Maps ↗</a>
               </div>` : ''}
@@ -250,7 +258,7 @@
                 <ul class="td-list td-check">
                   <li>Confirmation within 1 business day</li>
                   <li>Can be sold under your own agency brand and included in your itineraries</li>
-                  ${lines(tour.agency_notes).map(x => `<li>${esc(x)}</li>`).join('')}
+                  ${lines(T('agency_notes')).map(x => `<li>${esc(x)}</li>`).join('')}
                 </ul>
               </div>
 
@@ -297,6 +305,8 @@
         </div>
       `;
 
+      };
+      renderTour();
       window.AEX_TOUR = tour;
       loadReviews(tour.id);
 
@@ -315,8 +325,19 @@
         e.preventDefault();
         window.AEX_setShowOriginal(!window.AEX_isShowingOriginal());
       });
-      window.addEventListener('aex:languagechange', updateTranslationNote);
-      window.addEventListener('aex:originaltoggle', updateTranslationNote);
+      const rerender = () => {
+        const y = window.scrollY;
+        renderTour();
+        loadReviews(tour.id);
+        if (document.getElementById('mtToggle')) document.getElementById('mtToggle').addEventListener('click', e => {
+          e.preventDefault();
+          window.AEX_setShowOriginal(!window.AEX_isShowingOriginal());
+        });
+        updateTranslationNote();
+        window.scrollTo(0, y);
+      };
+      window.addEventListener('aex:languagechange', rerender);
+      window.addEventListener('aex:originaltoggle', rerender);
       updateTranslationNote();
     }
   })();
