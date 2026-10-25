@@ -162,8 +162,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-client.js"></script>
 <script src="tours-data.js"></script>
+<script>
+  // Login session (for reviews). tours-data.js already holds the project address and key.
+  const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+</script>
 <script>
   (async () => {
     const params = new URLSearchParams(window.location.search);

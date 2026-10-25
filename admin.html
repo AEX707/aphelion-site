@@ -152,13 +152,18 @@
         <input type="number" step="1" min="0" id="f_price" required>
       </div>
       <div class="form-group">
-        <label>Photos (select one or more — first one becomes the cover photo)</label>
+        <label>Photos — upload one or more (first one is the cover)</label>
         <input type="file" id="f_photos" accept="image/*" multiple>
         <div id="f_photos_preview" class="photo-preview-grid"></div>
       </div>
       <div class="form-group">
-        <label>Or paste an Image URL instead (optional, used only if no photos uploaded above)</label>
-        <input type="text" id="f_image">
+        <label>Or add photo links (Unsplash etc.) — paste one or several, one per line</label>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <textarea id="f_image_links" rows="2" placeholder="https://images.unsplash.com/photo-…" style="flex:1;"></textarea>
+          <button type="button" class="btn btn-outline" onclick="addPhotoLinks()" style="white-space:nowrap;">+ Add</button>
+        </div>
+        <input type="hidden" id="f_image">
+        <p style="font-size:12px; color:var(--muted); margin-top:6px;">All photos are shown in the same 3:2 format. Click a photo below to make it the cover (first photo).</p>
       </div>
       <div class="form-group">
         <label>Description (tell the story of the experience)</label>
@@ -459,11 +464,26 @@
 
   let editingImages = [];
 
+  // Add one or several photo links (one per line) to the tour's photos.
+  function addPhotoLinks() {
+    const box = document.getElementById('f_image_links');
+    const links = box.value.split(/[\s,]+/).map(s => s.trim()).filter(s => /^https?:\/\//i.test(s));
+    links.forEach(l => { if (!editingImages.includes(l)) editingImages.push(l); });
+    box.value = '';
+    renderPhotoPreview();
+  }
+  function makeCover(i) {
+    if (i <= 0) return;
+    const [img] = editingImages.splice(i, 1);
+    editingImages.unshift(img);
+    renderPhotoPreview();
+  }
+
   function renderPhotoPreview() {
     const el = document.getElementById('f_photos_preview');
     el.innerHTML = editingImages.map((url, i) => `
       <div class="photo-thumb">
-        <img src="${url}" onerror="this.style.opacity=0.2">
+        <img src="${url}" onerror="this.style.opacity=0.2" onclick="makeCover(${i})" title="${i === 0 ? 'Cover photo' : 'Click to make this the cover'}" style="cursor:pointer;${i === 0 ? ' outline:3px solid var(--gold); outline-offset:-3px;' : ''}">
         <button type="button" onclick="removeEditingImage(${i})">&times;</button>
       </div>
     `).join('');
@@ -478,7 +498,9 @@
   // eat the free storage quota or slow the site down. Every photo ends up
   // at most 1600px wide, saved as a JPEG — this also makes gallery photos
   // a consistent size regardless of what device they were taken on.
-  function resizeImage(file, maxWidth = 1600, quality = 0.82) {
+  // Every uploaded photo is cropped to the same 3:2 shape (1600 × 1067 px, centred)
+  // and saved as a JPEG, so all tour photos look uniform on the site.
+  function resizeImage(file, outW = 1600, outH = 1067, quality = 0.84) {
     return new Promise((resolve) => {
       if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif') {
         resolve(file); // leave GIFs and non-images untouched
@@ -488,15 +510,15 @@
       const url = URL.createObjectURL(file);
       img.onload = () => {
         URL.revokeObjectURL(url);
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = Math.round(height * (maxWidth / width));
-          width = maxWidth;
-        }
+        const target = outW / outH;
+        let sw = img.width, sh = img.height, sx = 0, sy = 0;
+        if (sw / sh > target) { sw = Math.round(sh * target); sx = Math.round((img.width - sw) / 2); }
+        else { sh = Math.round(sw / target); sy = Math.round((img.height - sh) / 2); }
+        const scale = Math.min(1, outW / sw);
         const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.width = Math.round(sw * scale);
+        canvas.height = Math.round(sh * scale);
+        canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
         canvas.toBlob((blob) => resolve(blob || file), 'image/jpeg', quality);
       };
       img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
@@ -597,6 +619,7 @@
 
   document.getElementById('tourForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    addPhotoLinks(); // include links pasted but not yet added
     const id = document.getElementById('f_id').value;
     const payload = {
       title: document.getElementById('f_title').value,
@@ -607,7 +630,7 @@
       duration: document.getElementById('f_duration').value,
       group_size: document.getElementById('f_group').value,
       price: parseFloat(document.getElementById('f_price').value),
-      image: editingImages[0] || document.getElementById('f_image').value || '',
+      image: (editingImages[0]) || document.getElementById('f_image').value || '',
       images: editingImages.length ? editingImages : (document.getElementById('f_image').value ? [document.getElementById('f_image').value] : []),
       description: document.getElementById('f_description').value,
       highlights: document.getElementById('f_highlights').value,
