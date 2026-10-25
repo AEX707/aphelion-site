@@ -648,19 +648,111 @@
       }
       list.innerHTML = partners.map(p => `
         <div class="admin-row">
-          <div class="info">
+          <div class="info" style="cursor:pointer;" onclick="togglePartnerDetails('${p.id}')" title="Click to see partner details">
             <h4>${p.company_name} <span class="status-pill ${p.status}">${p.status}</span></h4>
-            <span>${p.contact_person || ''} · ${p.email} · ${p.country || ''}</span>
+            <span>${p.contact_person || ''} · ${p.email} · ${p.country || ''} · <span style="color:var(--gold-soft);">Details ▾</span></span>
           </div>
           <div class="actions">
             <button class="btn-go${p.status === 'approved' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'approved', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Approve</button>
             <button class="btn-wait${p.status === 'pending' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'pending', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Pending</button>
             <button class="btn-stop${p.status === 'rejected' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'rejected', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Reject</button>
+            <button class="btn-delete" onclick="deletePartner('${p.id}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Delete</button>
           </div>
+          <div class="partner-details" id="pd-${p.id}" style="display:none; flex-basis:100%; width:100%; margin-top:14px; padding:16px 18px; border:1px solid var(--border-soft); border-radius:var(--radius); background:rgba(245,243,236,.03); font-size:13px; line-height:1.7;"></div>
         </div>
       `).join('');
+      list.querySelectorAll('.admin-row').forEach(r => r.style.flexWrap = 'wrap');
+      _partnersCache = partners;
     } catch (err) {
       list.innerHTML = '<p style="color:#f19a9a;">Could not load partners: ' + err.message + '</p>';
+    }
+  }
+
+  let _partnersCache = [];
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtDate(v) {
+    if (!v) return '—';
+    const d = new Date(v);
+    return isNaN(d) ? esc(v) : d.toLocaleString('en-GB', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+
+  async function togglePartnerDetails(id) {
+    const box = document.getElementById('pd-' + id);
+    if (box.style.display === 'block') { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = '<span style="color:var(--muted);">Loading...</span>';
+    const p = _partnersCache.find(x => String(x.id) === String(id)) || {};
+    const labels = {
+      company_name: 'Company', contact_person: 'Person in charge', email: 'Email', phone: 'Phone',
+      country: 'Country', website: 'Website', partner_type: 'Partner type', message: 'About / message',
+      status: 'Status', created_at: 'Registered', updated_at: 'Last updated'
+    };
+    const skip = ['id'];
+    const rows = [];
+    Object.keys(labels).forEach(k => { if (k in p) rows.push([k, p[k]]); });
+    Object.keys(p).forEach(k => { if (!(k in labels) && !skip.includes(k)) rows.push([k, p[k]]); });
+    const fmt = (k, v) => {
+      if (v == null || v === '') return '<span style="color:var(--muted);">—</span>';
+      if (/(_at|date)$/.test(k)) return fmtDate(v);
+      if (k === 'email') return `<a href="mailto:${esc(v)}" style="color:var(--gold-soft);">${esc(v)}</a>`;
+      if (k === 'phone') return `<a href="tel:${esc(v)}" style="color:var(--gold-soft);">${esc(v)}</a>`;
+      if (typeof v === 'string' && /^https?:\/\//.test(v)) return `<a href="${esc(v)}" target="_blank" style="color:var(--gold-soft);">${esc(v)} ↗</a>`;
+      if (typeof v === 'object') return esc(JSON.stringify(v));
+      return esc(v).replace(/\n/g, '<br>');
+    };
+    let html = '<div style="display:grid; grid-template-columns:170px 1fr; gap:4px 16px;">' +
+      rows.map(([k, v]) => `<div style="color:var(--muted);">${esc(labels[k] || k.replace(/_/g, ' '))}</div><div>${fmt(k, v)}</div>`).join('') +
+      '</div>';
+
+    // Partner's tours and bookings history
+    try {
+      const h = { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` };
+      const tRes = await fetch(`${SUPABASE_URL}/rest/v1/tours?select=id,title,status,price,created_at&partner_id=eq.${id}&order=created_at.desc`, { headers: h });
+      const tours = tRes.ok ? await tRes.json() : [];
+      html += `<h5 style="margin:18px 0 6px; color:var(--gold-soft); font-size:13px; letter-spacing:.5px;">TOURS (${tours.length})</h5>`;
+      html += tours.length
+        ? tours.map(t => `<div>• ${esc(t.title)} — ¥${Number(t.price || 0).toLocaleString('ja-JP')} · ${esc(t.status || 'approved')} · added ${fmtDate(t.created_at)}</div>`).join('')
+        : '<div style="color:var(--muted);">No tours yet.</div>';
+      let bookings = [];
+      if (tours.length) {
+        const bRes = await fetch(`${SUPABASE_URL}/rest/v1/bookings?select=id,tour_name,status,payment_status,requested_date,travelers,company,created_at&tour_id=in.(${tours.map(t => t.id).join(',')})&order=created_at.desc`, { headers: h });
+        bookings = bRes.ok ? await bRes.json() : [];
+      }
+      html += `<h5 style="margin:18px 0 6px; color:var(--gold-soft); font-size:13px; letter-spacing:.5px;">BOOKINGS FOR THEIR TOURS (${bookings.length})</h5>`;
+      html += bookings.length
+        ? bookings.map(b => `<div>• ${fmtDate(b.created_at)} — ${esc(b.tour_name)} · ${esc(b.company || '')} · ${b.travelers || '?'} travelers · ${esc(b.status)}${b.payment_status === 'paid' ? ' · paid' : ''}</div>`).join('')
+        : '<div style="color:var(--muted);">No bookings yet.</div>';
+    } catch (e) {
+      html += '<div style="color:#f19a9a; margin-top:10px;">Could not load tours/bookings: ' + esc(e.message) + '</div>';
+    }
+    box.innerHTML = html;
+  }
+
+  async function deletePartner(id, companyName) {
+    if (!confirm('Delete partner "' + companyName + '"?\n\nThis removes the partner account, its login and all of its tours. Booking requests stay in the list. This cannot be undone.')) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_delete_partner`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${await getAccessToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ pid: id })
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error('Status ' + res.status + (t ? ' — ' + t : ''));
+      }
+      showPartnerStatus('Partner deleted.', true);
+      _toursCache = null;
+      loadPartners();
+      loadList();
+    } catch (err) {
+      showPartnerStatus('Could not delete: ' + err.message, false);
     }
   }
 

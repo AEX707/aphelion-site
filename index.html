@@ -8,8 +8,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
+<style>
+  /* Full-screen welcome photo: only the picture, click/tap to enter the site */
+  #splash { position: fixed; inset: 0; z-index: 9999; cursor: pointer;
+    background: #05060f url("https://images.unsplash.com/photo-1582111318300-a8cb5f0a66e3?auto=format&fit=crop&w=2400&q=85") center/cover no-repeat;
+    transition: opacity .9s ease, visibility .9s ease; }
+  #splash .splash-hint { position: absolute; left: 50%; bottom: 7vh; transform: translateX(-50%);
+    color: rgba(245,243,236,.85); font: 500 12px/1 Inter, sans-serif; letter-spacing: 4px; text-transform: uppercase;
+    padding: 12px 22px; border: 1px solid rgba(245,243,236,.35); border-radius: 30px; background: rgba(5,6,15,.25);
+    backdrop-filter: blur(4px); animation: splashPulse 2.4s ease-in-out infinite; }
+  @keyframes splashPulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+  #splash.hide { opacity: 0; visibility: hidden; }
+  body.splash-on { overflow: hidden; }
+</style>
 </head>
-<body>
+<body class="splash-on">
+
+<div id="splash" role="button" aria-label="Enter site" tabindex="0"><span class="splash-hint">Click to enter</span></div>
+<script>
+  (function () {
+    var splash = document.getElementById('splash');
+    var seen = false;
+    try { seen = sessionStorage.getItem('aex_splash_seen') === '1'; } catch (e) {}
+    if (seen || location.hash) { splash.remove(); document.body.classList.remove('splash-on'); return; }
+    if ('ontouchstart' in window) splash.querySelector('.splash-hint').textContent = 'Tap to enter';
+    function enter() {
+      splash.classList.add('hide');
+      document.body.classList.remove('splash-on');
+      try { sessionStorage.setItem('aex_splash_seen', '1'); } catch (e) {}
+      setTimeout(function () { splash.remove(); }, 1000);
+    }
+    splash.addEventListener('click', enter);
+    splash.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') enter(); });
+    window.addEventListener('wheel', enter, { once: true, passive: true });
+  })();
+</script>
 
 <div class="topbar">
   <div class="container topbar-content">
