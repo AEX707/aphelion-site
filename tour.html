@@ -29,6 +29,16 @@
   .td-fact-icon { font-size: 20px; line-height: 1.2; }
   .td-fact small { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
   .td-fact strong { font-size: 15px; font-weight: 600; color: var(--white); }
+  .td-plan { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--border); }
+  .td-plan li { display: flex; gap: 16px; padding: 8px 0 8px 18px; position: relative; font-size: 15px; line-height: 1.6; color: var(--white); }
+  .td-plan li::before { content: ""; position: absolute; left: -6px; top: 15px; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); }
+  .td-plan-time { font-weight: 600; min-width: 52px; color: var(--wood); font-variant-numeric: tabular-nums; }
+  .td-seasons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .td-seasons span { background: var(--plum-light); border-radius: 999px; padding: 6px 14px; font-size: 13px; color: var(--wood); }
+  .td-planb { font-size: 15px; line-height: 1.7; color: var(--white); margin: 0; }
+  .td-prices { list-style: none; margin: 14px 0 18px; padding: 12px 0 0; border-top: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: 8px; }
+  .td-prices li { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--muted); }
+  .td-prices li strong { color: var(--white); font-weight: 600; }
   .td-block { padding: 30px 0; border-top: 1px solid var(--border-soft); }
   .td-block:first-child { border-top: 0; padding-top: 0; }
   .td-block h2 { font-size: 30px; margin-bottom: 16px; color: var(--white); }
@@ -226,6 +236,16 @@
         { label: 'White label', value: 'Can be sold under your agency brand' }
       ].filter(Boolean);
       const mapQuery = encodeURIComponent(tour.meeting_point || tour.location || '');
+      const FORMAT_LABELS = { half_day: 'Half-day', full_day: 'Full-day', evening: 'Evening', flexible: 'Flexible' };
+      const SEASON_LABELS = { all_year: 'All year', spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter' };
+      const program = (Array.isArray(tour.day_program) ? tour.day_program : []).filter(p => p && p.activity);
+      const seasons = (Array.isArray(tour.seasons) ? tour.seasons : []).map(x => SEASON_LABELS[x] || x);
+      const yenTxt = n => '¥' + Number(n).toLocaleString('ja-JP');
+      const priceOptions = [
+        tour.child_price && { label: 'Child', value: yenTxt(publicPrice(tour.child_price)) + ' / person' },
+        tour.private_price && { label: 'Private group', value: yenTxt(publicPrice(tour.private_price)) + ' / group' },
+        (tour.min_travelers || tour.max_travelers) && { label: 'Group size', value: [tour.min_travelers, tour.max_travelers].filter(Boolean).join('–') + ' guests' }
+      ].filter(Boolean);
 
       document.getElementById('tourContent').innerHTML = `
         <section class="td-top">
@@ -234,7 +254,7 @@
             <div class="td-head">
               ${tour.tag ? `<span class="td-tag">${esc(tour.tag)}</span>` : ''}
               <h1>${esc(tour.title)}</h1>
-              ${tour.duration || tour.location ? `<div class="td-meta">${tour.duration ? `<span>⏱ ${esc(tour.duration)}</span>` : ''}${tour.location ? `<span>📍 ${esc(tour.location)}</span>` : ''}</div>` : ''}
+              ${tour.duration || tour.location || tour.tour_format ? `<div class="td-meta">${tour.tour_format ? `<span>☀ ${esc(FORMAT_LABELS[tour.tour_format] || tour.tour_format)}</span>` : ''}${tour.start_time ? `<span>🕒 ${esc(tour.start_time)}</span>` : ''}${tour.duration ? `<span>⏱ ${esc(tour.duration)}</span>` : ''}${tour.location ? `<span>📍 ${esc(tour.location)}</span>` : ''}</div>` : ''}
             </div>
             <div class="td-gallery${photos.length > 1 ? '' : ' single'}">
               <div class="td-stage" id="tdStage">
@@ -256,6 +276,13 @@
                 <p class="mt-note" id="mtNote" style="display:none; font-size:12px; color:var(--muted); margin-top:10px;"><span>Translated automatically</span> · <a href="#" id="mtToggle" style="color:var(--gold);">Show original</a></p></div>` : ''}
 
               ${highlights.length ? `<div class="td-block"><h2>Highlights</h2><ul class="td-list td-check">${highlights.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div>` : ''}
+
+              ${program.length ? `<div class="td-block"><h2>Day plan</h2><ol class="td-plan">${program.map(p => `<li><span class="td-plan-time">${p.time ? esc(p.time) : '·'}</span><span>${esc(p.activity)}</span></li>`).join('')}</ol></div>` : ''}
+
+              ${seasons.length || tour.plan_b ? `<div class="td-block"><h2>Season &amp; Plan B</h2>
+                ${seasons.length ? `<div class="td-seasons">${seasons.map(x => `<span>${esc(x)}</span>`).join('')}</div>` : ''}
+                ${tour.plan_b ? `<p class="td-planb"><strong>Plan B:</strong> ${esc(tour.plan_b)}</p>` : ''}
+              </div>` : ''}
 
               ${included.length || notIncluded.length ? `<div class="td-block"><h2>What's included</h2><div class="td-two">
                 ${included.length ? `<ul class="td-list td-check">${included.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
@@ -294,6 +321,7 @@
               <div class="td-book">
                 <div class="price"><small>From</small><strong>¥${Number(tour.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${tour.price}"></span></div>
                 <div class="td-per">per person</div>
+                ${priceOptions.length ? `<ul class="td-prices">${priceOptions.map(o => `<li><span>${esc(o.label)}</span><strong>${esc(o.value)}</strong></li>`).join('')}</ul>` : ''}
                 <a href="booking.html?id=${tour.id}" class="btn btn-primary td-book-btn" onclick="openBooking(event)">Request This Tour</a>
                 <ul class="td-assure">
                   <li>Confirmation within 1 business day</li>
@@ -325,6 +353,7 @@
       window.AEX_PHOTOS = (Array.isArray(tour.images) && tour.images.length ? tour.images : [tour.image]).filter(Boolean);
       initGallery();
       loadReviews(tour.id);
+      logTourView(tour.id);
 
       // "Translated automatically · Show original" under the description,
       // shown only when this tour has a machine translation for the chosen language.
@@ -445,6 +474,20 @@
       if (error) { err.textContent = 'Could not post review: ' + error.message; err.style.display = 'block'; return; }
       loadReviews(tourId);
     });
+  }
+
+  // Counts one view per tour per browser session (for the partner's analytics).
+  function logTourView(tourId) {
+    try {
+      const key = 'aex_viewed_' + tourId;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch (e) {}
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/log_tour_view`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_tour_id: tourId })
+    }).catch(() => {});
   }
 
   // ---- Photo gallery: click the big photo / arrows / swipe / keyboard; plays by itself ----

@@ -10,42 +10,121 @@
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .dash-wrap { max-width: 900px; margin: 0 auto; padding: 60px 20px 100px; }
+  .dash-wrap { max-width: 1040px; margin: 0 auto; padding: 50px 20px 100px; }
   .status-pill { display:inline-block; padding:5px 14px; border-radius:20px; font-size:11px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
-  .status-pill.pending { background:rgba(212,175,55,.15); color:var(--gold-soft); border:1px solid rgba(212,175,55,.4); }
-  .status-pill.approved { background:rgba(64,180,120,.15); color:#7ee0a8; border:1px solid rgba(64,180,120,.4); }
-  .status-pill.rejected { background:rgba(224,86,86,.15); color:#f19a9a; border:1px solid rgba(224,86,86,.4); }
-  .info-grid { display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:24px; }
-  .info-item { background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:20px; }
-  .info-item .label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:6px; }
-  .info-item .value { font-size:16px; color:var(--white); }
+  .status-pill.pending { background:rgba(166,124,46,.12); color:var(--gold); border:1px solid rgba(166,124,46,.4); }
+  .status-pill.approved, .status-pill.confirmed { background:rgba(46,125,91,.10); color:#2E7D5B; border:1px solid rgba(46,125,91,.4); }
+  .status-pill.rejected, .status-pill.declined { background:rgba(180,35,24,.08); color:#B42318; border:1px solid rgba(180,35,24,.35); }
   #loadingMsg { color: var(--muted); }
-  .section-divider { border:none; border-top:1px solid var(--border); margin:50px 0 30px; }
+
+  /* Header + tabs */
+  .dash-head { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+  .dash-head h1 { font-size:34px; margin:0; }
+  .dash-head p { color:var(--muted); margin:4px 0 0; font-size:14px; }
+  .dash-tabs { display:flex; gap:6px; border-bottom:1px solid var(--border-soft); margin-bottom:28px; overflow-x:auto; }
+  .dash-tab { background:none; border:0; border-bottom:2px solid transparent; padding:12px 18px; font:600 13px var(--sans); letter-spacing:.4px; text-transform:uppercase; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .dash-tab.active { color:var(--wood); border-bottom-color:var(--gold); }
+  .dash-pane { display:none; padding:0; }
+  .dash-pane.active { display:block; }
+
+  /* Overview: stat tiles */
+  .kpi-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  .kpi { background:var(--panel); border:1px solid var(--border-soft); border-radius:16px; padding:20px 22px; }
+  .kpi .k-label { font-size:12px; color:var(--muted); letter-spacing:.3px; }
+  .kpi .k-value { font:600 30px var(--sans); color:var(--wood); margin-top:6px; font-variant-numeric:tabular-nums; }
+  .kpi .k-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+  .dash-card { background:var(--panel); border:1px solid var(--border-soft); border-radius:16px; padding:22px 24px; margin-top:20px; }
+  .dash-card h3 { font-size:22px; margin:0 0 4px; }
+  .dash-card .sub { font-size:13px; color:var(--muted); margin:0 0 16px; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .two-col .dash-card { margin-top:20px; }
+
+  /* Simple bar chart (one series per chart) */
+  .bars { display:flex; align-items:flex-end; gap:10px; height:150px; padding-top:22px; border-bottom:1px solid var(--border-soft); position:relative; }
+  .bar-col { flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative; cursor:default; }
+  .bar { width:60%; max-width:34px; background:var(--gold); border-radius:4px 4px 0 0; min-height:2px; transition:opacity .15s; }
+  .bars:hover .bar { opacity:.45; }
+  .bar-col:hover .bar { opacity:1; }
+  .bar-val { position:absolute; top:-20px; font-size:12px; font-weight:600; color:var(--wood); font-variant-numeric:tabular-nums; }
+  .bar-labels { display:flex; gap:10px; margin-top:6px; }
+  .bar-labels span { flex:1; text-align:center; font-size:11px; color:var(--muted); }
+  .bar-tip { position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--wood); color:#fff; font-size:12px; padding:6px 10px; border-radius:8px; white-space:nowrap; pointer-events:none; opacity:0; transition:opacity .12s; z-index:2; }
+  .bar-col:hover .bar-tip { opacity:1; }
+
+  /* Tables / lists */
+  .perf-table { width:100%; border-collapse:collapse; font-size:14px; }
+  .perf-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--border-soft); }
+  .perf-table td { padding:12px 10px; border-bottom:1px solid var(--border-soft); color:var(--white); }
+  .perf-table td.num, .perf-table th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .perf-table tr:last-child td { border-bottom:0; }
+  .table-scroll { overflow-x:auto; }
+  .mini-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+  .mini-list li { padding:12px 0; border-bottom:1px solid var(--border-soft); font-size:14px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+  .mini-list li:last-child { border-bottom:0; }
+  .mini-list .m-sub { font-size:12px; color:var(--muted); }
+  .stars { color:var(--gold); letter-spacing:1px; }
+  .empty { color:var(--muted); font-size:14px; margin:0; }
+  .tips { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+  .tips li { background:var(--plum-light); border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.5; }
+  .tips li b { color:var(--wood); }
+
+  /* My tours */
   .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
   .tour-admin-list { display:flex; flex-direction:column; gap:14px; margin-bottom:30px; }
-  .tour-admin-row { background: var(--panel); border:1px solid var(--border); border-radius: var(--radius); padding:16px 20px; display:flex; align-items:center; gap:16px; }
-  .tour-admin-row img { width:70px; height:50px; object-fit:cover; border-radius:6px; flex-shrink:0; background:#111; }
+  .tour-admin-row { background: var(--panel); border:1px solid var(--border-soft); border-radius: 14px; padding:16px 20px; display:flex; align-items:center; gap:16px; }
+  .tour-admin-row img { width:84px; height:56px; object-fit:cover; border-radius:8px; flex-shrink:0; background:#eee; }
   .tour-admin-row .info { flex:1; min-width:0; }
   .tour-admin-row .info h4 { font-size:16px; margin:0 0 4px; color:var(--white); }
   .tour-admin-row .info span { font-size:12px; color:var(--muted); }
+  .quality { display:flex; align-items:center; gap:8px; margin-top:8px; font-size:12px; color:var(--muted); }
+  .quality-track { width:120px; height:6px; background:var(--sage-light); border-radius:4px; overflow:hidden; }
+  .quality-fill { height:100%; background:var(--gold); border-radius:4px; }
   .tour-admin-row .actions { display:flex; gap:8px; flex-shrink:0; }
-  .tour-admin-row .actions button { border:1px solid var(--border); background:transparent; color:var(--muted); padding:8px 14px; border-radius:6px; font-size:12px; cursor:pointer; text-transform:uppercase; letter-spacing:.4px; }
-  .tour-admin-row .actions button:hover { border-color: var(--gold-soft); color: var(--gold-soft); }
-  .tour-admin-row .actions button.danger:hover { border-color:#e05656; color:#e05656; }
+  .tour-admin-row .actions button { border:1px solid var(--border); background:transparent; color:var(--muted); padding:8px 14px; border-radius:8px; font-size:12px; cursor:pointer; text-transform:uppercase; letter-spacing:.4px; }
+  .tour-admin-row .actions button:hover { border-color: var(--gold); color: var(--gold); }
+  .tour-admin-row .actions button.danger:hover { border-color:#B42318; color:#B42318; }
   .status-msg { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:20px; display:none; }
-  .status-msg.ok { background:rgba(64,180,120,.12); border:1px solid rgba(64,180,120,.4); color:#7ee0a8; display:block; }
-  .status-msg.err { background:rgba(224,86,86,.12); border:1px solid rgba(224,86,86,.4); color:#f19a9a; display:block; }
+  .status-msg.ok { background:rgba(46,125,91,.10); border:1px solid rgba(46,125,91,.4); color:#2E7D5B; display:block; }
+  .status-msg.err { background:rgba(180,35,24,.08); border:1px solid rgba(180,35,24,.35); color:#B42318; display:block; }
   .photo-preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
   .photo-thumb { position: relative; width: 80px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
   .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .photo-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.75); color: #fff; font-size: 14px; line-height: 1; border: none; cursor: pointer; }
 
-  @media (max-width: 640px) {
-    .info-grid { grid-template-columns: 1fr; }
+  /* Tour form additions */
+  .form-step { margin:30px 0 8px; font-size:19px; display:flex; align-items:baseline; gap:10px; }
+  .form-step .n { font:600 12px var(--sans); color:#fff; background:var(--wood); border-radius:50%; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; transform:translateY(-2px); }
+  .form-hint { font-size:12px; color:var(--muted); margin:-4px 0 12px; line-height:1.5; }
+  .choice-row { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+  .choice { position:relative; }
+  .choice input { position:absolute; opacity:0; pointer-events:none; }
+  .choice span { display:block; border:1px solid var(--border-soft); border-radius:12px; padding:10px 16px; font-size:14px; cursor:pointer; background:#fff; line-height:1.35; }
+  .choice span small { display:block; font-size:11px; color:var(--muted); }
+  .choice input:checked + span { border-color:var(--gold); background:var(--plum-light); box-shadow:0 0 0 1px var(--gold) inset; }
+  .choice input:focus-visible + span { outline:2px solid var(--gold); outline-offset:2px; }
+  .program-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .program-row { display:grid; grid-template-columns:110px 1fr 36px; gap:8px; align-items:center; }
+  .program-row input { margin:0; }
+  .program-row button { border:1px solid var(--border-soft); background:#fff; border-radius:8px; height:40px; cursor:pointer; color:var(--muted); font-size:18px; }
+  .program-row button:hover { color:#B42318; border-color:#B42318; }
+  .link-btn { background:none; border:0; color:var(--gold); font:600 13px var(--sans); cursor:pointer; padding:4px 0; margin-right:16px; }
+  .price-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; }
+  .field-warn { font-size:12px; color:#B42318; margin-top:4px; display:none; }
+
+  .info-grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .info-item { background: var(--panel); border:1px solid var(--border-soft); border-radius: 14px; padding:18px 20px; }
+  .info-item .label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:6px; }
+  .info-item .value { font-size:16px; color:var(--white); }
+
+  @media (max-width: 760px) {
+    .kpi-grid { grid-template-columns:repeat(2, 1fr); }
+    .two-col, .info-grid, .price-grid { grid-template-columns:1fr; }
     .tour-admin-row { flex-wrap: wrap; }
     .tour-admin-row .actions { width: 100%; flex-wrap: wrap; }
     .tour-admin-row .actions button { flex: 1 1 auto; }
     .section-header { align-items: stretch; }
+    .program-row { grid-template-columns:86px 1fr 36px; }
+    .kpi .k-value { font-size:24px; }
   }
 </style>
 </head>
@@ -75,128 +154,254 @@
   <p id="loadingMsg">Loading your dashboard…</p>
 
   <div id="dashContent" style="display:none;">
-    <h1 style="font-size:32px; margin-bottom:6px;">Welcome, <span id="companyNameOut"></span></h1>
-    <p style="color:var(--muted);">This is your partner dashboard.</p>
-
-    <div class="info-grid">
-      <div class="info-item">
-        <div class="label">Status</div>
-        <div class="value"><span id="statusOut" class="status-pill"></span></div>
+    <div class="dash-head">
+      <div>
+        <h1><span id="companyNameOut"></span></h1>
+        <p>Partner dashboard · <span id="statusOut" class="status-pill"></span></p>
       </div>
-      <div class="info-item">
-        <div class="label">Contact Person</div>
-        <div class="value" id="contactOut"></div>
-      </div>
-      <div class="info-item">
-        <div class="label">Email</div>
-        <div class="value" id="emailOut"></div>
-      </div>
-      <div class="info-item">
-        <div class="label">Country</div>
-        <div class="value" id="countryOut"></div>
-      </div>
+      <button class="btn btn-primary" onclick="showTab('tours'); openTourForm()">+ Add New Tour</button>
     </div>
 
-    <hr class="section-divider">
-
-    <div class="section-header">
-      <h2 style="font-size:26px;">My Tours</h2>
-      <button class="btn btn-primary" onclick="openTourForm()">+ Add New Tour</button>
+    <div class="dash-tabs" role="tablist">
+      <button class="dash-tab active" data-tab="overview" onclick="showTab('overview')">Overview</button>
+      <button class="dash-tab" data-tab="tours" onclick="showTab('tours')">My Tours</button>
+      <button class="dash-tab" data-tab="account" onclick="showTab('account')">Account</button>
     </div>
 
-    <div id="tourStatusMsg" class="status-msg"></div>
+    <!-- ===== OVERVIEW / ANALYTICS ===== -->
+    <section class="dash-pane active" id="pane-overview">
+      <div id="statsError" class="status-msg"></div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="k-label">Tour page views · 30 days</div><div class="k-value" id="kViews">—</div><div class="k-sub" id="kViewsSub"></div></div>
+        <div class="kpi"><div class="k-label">Booking requests · 30 days</div><div class="k-value" id="kReq">—</div><div class="k-sub" id="kReqSub"></div></div>
+        <div class="kpi"><div class="k-label">Confirmed bookings</div><div class="k-value" id="kConf">—</div><div class="k-sub" id="kConfSub"></div></div>
+        <div class="kpi"><div class="k-label">Guests confirmed</div><div class="k-value" id="kGuests">—</div><div class="k-sub">all time</div></div>
+        <div class="kpi"><div class="k-label">Your earnings (confirmed)</div><div class="k-value" id="kEarn">—</div><div class="k-sub" id="kEarnSub"></div></div>
+        <div class="kpi"><div class="k-label">Agency rating</div><div class="k-value" id="kRating">—</div><div class="k-sub" id="kRatingSub"></div></div>
+      </div>
 
-    <div id="myToursList" class="tour-admin-list">
-      <p style="color:var(--muted);">Loading your tours…</p>
-    </div>
+      <div class="two-col">
+        <div class="dash-card">
+          <h3>Booking requests</h3>
+          <p class="sub">Per month, last 6 months</p>
+          <div id="chartBookings"></div>
+        </div>
+        <div class="dash-card">
+          <h3>Tour page views</h3>
+          <p class="sub">Per month, last 6 months</p>
+          <div id="chartViews"></div>
+        </div>
+      </div>
 
-    <div class="form-card" id="tourFormCard" style="display:none;">
-      <h3 id="tourFormTitle">Add Tour</h3>
-      <form id="myTourForm">
-        <input type="hidden" id="t_id">
-        <div class="form-group">
-          <label>Title</label>
-          <input type="text" id="t_title" required>
+      <div class="dash-card">
+        <h3>How each tour performs</h3>
+        <p class="sub">Views are for the last 30 days; bookings and reviews are all time.</p>
+        <div class="table-scroll" id="perfTable"><p class="empty">Loading…</p></div>
+      </div>
+
+      <div class="two-col">
+        <div class="dash-card">
+          <h3>Upcoming bookings</h3>
+          <p class="sub">Confirmed and waiting requests</p>
+          <ul class="mini-list" id="upcomingList"><li class="empty">Loading…</li></ul>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Location</label>
-            <input type="text" id="t_location" required>
-          </div>
-          <div class="form-group">
-            <label>Area (e.g. tokyo, kyoto)</label>
-            <input type="text" id="t_destination" required>
-          </div>
+        <div class="dash-card">
+          <h3>Latest reviews</h3>
+          <p class="sub">What travel agencies say</p>
+          <ul class="mini-list" id="reviewsList"><li class="empty">Loading…</li></ul>
         </div>
-        <div class="form-row">
+      </div>
+
+      <div class="dash-card">
+        <h3>Tips to get more bookings</h3>
+        <p class="sub">Based on your tours right now</p>
+        <ul class="tips" id="tipsList"></ul>
+      </div>
+    </section>
+
+    <!-- ===== MY TOURS ===== -->
+    <section class="dash-pane" id="pane-tours">
+      <div class="section-header">
+        <h2 style="font-size:26px;">My Tours</h2>
+        <button class="btn btn-primary" onclick="openTourForm()">+ Add New Tour</button>
+      </div>
+
+      <div id="tourStatusMsg" class="status-msg"></div>
+
+      <div id="myToursList" class="tour-admin-list">
+        <p style="color:var(--muted);">Loading your tours…</p>
+      </div>
+
+      <div class="form-card" id="tourFormCard" style="display:none;">
+        <h3 id="tourFormTitle">Add Tour</h3>
+        <form id="myTourForm">
+          <input type="hidden" id="t_id">
+
+          <h4 class="form-step"><span class="n">1</span> The basics</h4>
           <div class="form-group">
-            <label>Category (food / culture / crafts / night / nature)</label>
-            <input type="text" id="t_category" required>
+            <label>Title</label>
+            <input type="text" id="t_title" required placeholder="Tsukiji Market Morning &amp; Sushi Workshop">
           </div>
-          <div class="form-group">
-            <label>Tag (e.g. Popular, Best Seller)</label>
-            <input type="text" id="t_tag">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Location</label>
+              <input type="text" id="t_location" required placeholder="Chuo, Tokyo">
+            </div>
+            <div class="form-group">
+              <label>Area (e.g. tokyo, kyoto)</label>
+              <input type="text" id="t_destination" required placeholder="tokyo">
+            </div>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Duration (e.g. 3 hours)</label>
-            <input type="text" id="t_duration">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Category</label>
+              <select id="t_category" required>
+                <option value="">Choose…</option>
+                <option value="food">Food &amp; drink</option>
+                <option value="culture">Culture</option>
+                <option value="crafts">Crafts &amp; workshops</option>
+                <option value="night">Night Tokyo</option>
+                <option value="nature">Nature &amp; outdoors</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tag (e.g. Popular, Best Seller)</label>
+              <input type="text" id="t_tag">
+            </div>
+          </div>
+
+          <h4 class="form-step"><span class="n">2</span> Format</h4>
+          <p class="form-hint">What kind of experience is this? Agencies build itineraries from half-days, full days and evenings.</p>
+          <div class="choice-row" id="formatChoices">
+            <label class="choice"><input type="radio" name="t_format" value="half_day"><span>Half-day<small>up to 4 hours</small></span></label>
+            <label class="choice"><input type="radio" name="t_format" value="full_day"><span>Full-day<small>6–8 hours, a complete day</small></span></label>
+            <label class="choice"><input type="radio" name="t_format" value="evening"><span>Evening<small>after 17:00</small></span></label>
+            <label class="choice"><input type="radio" name="t_format" value="flexible"><span>Flexible<small>any time / on request</small></span></label>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Duration (e.g. 3 hours)</label>
+              <input type="text" id="t_duration">
+            </div>
+            <div class="form-group">
+              <label>Usual start time</label>
+              <input type="time" id="t_start_time">
+            </div>
           </div>
           <input type="hidden" id="t_group">
-        </div>
-        <div class="form-group">
-          <label>Price per person (JPY ¥, number only)</label>
-          <input type="number" step="1" min="0" id="t_price" required>
-        </div>
-        <div class="form-group">
-          <label>Photos — upload one or more (first one is the cover)</label>
-          <input type="file" id="t_photos" accept="image/*" multiple>
-          <div id="t_photos_preview" class="photo-preview-grid"></div>
-        </div>
-        <div class="form-group">
-          <label>Or add photo links (Unsplash etc.) — paste one or several, one per line</label>
-          <div style="display:flex; gap:10px; align-items:flex-start;">
-            <textarea id="t_image_links" rows="2" placeholder="https://images.unsplash.com/photo-…" style="flex:1;"></textarea>
-            <button type="button" class="btn btn-outline" onclick="addPhotoLinks()" style="white-space:nowrap;">+ Add</button>
+
+          <h4 class="form-step"><span class="n">3</span> Day program</h4>
+          <p class="form-hint">Plan the whole experience step by step, so the traveler doesn't have to organize anything. For a full day, combine several activities — for example a market walk, a workshop and lunch.</p>
+          <div class="program-list" id="programList"></div>
+          <div>
+            <button type="button" class="link-btn" onclick="addProgramRow()">+ Add step</button>
+            <button type="button" class="link-btn" onclick="fillProgramTemplate()">Use a template for this format</button>
           </div>
-          <input type="hidden" id="t_image">
-          <p style="font-size:12px; color:var(--muted); margin-top:6px;">All photos are shown in the same 3:2 format. Click a photo below to make it the cover (first photo).</p>
-        </div>
-        <div class="form-group">
-          <label>Description (tell the story of the experience)</label>
-          <textarea id="t_description" rows="5"></textarea>
-        </div>
-        <h4 style="margin:26px 0 6px; font-size:18px;">More about the tour <span style="font-weight:400; font-size:13px; color:var(--muted);">— optional, but it helps agencies sell it</span></h4>
-        <div class="form-group">
-          <label>Highlights (one per line)</label>
-          <textarea id="t_highlights" rows="3" placeholder="Taste 13 dishes in 4 local eateries&#10;Explore Omoide Yokocho alleys"></textarea>
-        </div>
-        <div class="form-row">
+
+          <h4 class="form-step"><span class="n">4</span> Prices <span style="font:400 13px var(--sans); color:var(--muted);">— your price, in yen</span></h4>
+          <p class="form-hint">Enter the price you want to receive. Keep prices simple and clear: one adult price, and optionally a child price and a price for a private group.</p>
+          <div class="price-grid">
+            <div class="form-group">
+              <label>Price per adult (JPY ¥, number only)</label>
+              <input type="number" step="1" min="0" id="t_price" required>
+            </div>
+            <div class="form-group">
+              <label>Price per child (optional)</label>
+              <input type="number" step="1" min="0" id="t_child_price" placeholder="e.g. 5000">
+              <div class="field-warn" id="childWarn">The child price should not be higher than the adult price.</div>
+            </div>
+            <div class="form-group">
+              <label>Private group — price for the whole group (optional)</label>
+              <input type="number" step="1" min="0" id="t_private_price" placeholder="e.g. 60000">
+              <div class="field-warn" id="privateWarn">A private group usually costs at least as much as the minimum number of guests at the adult price.</div>
+            </div>
+            <div class="form-group">
+              <label>Group size (min – max guests)</label>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <input type="number" min="1" step="1" id="t_min" placeholder="1" style="margin:0;">
+                <span style="color:var(--muted);">–</span>
+                <input type="number" min="1" step="1" id="t_max" placeholder="8" style="margin:0;">
+              </div>
+              <div class="field-warn" id="groupWarn">The maximum should be bigger than the minimum.</div>
+            </div>
+          </div>
+
+          <h4 class="form-step"><span class="n">5</span> Season &amp; Plan B</h4>
+          <p class="form-hint">When is this experience available? And what do you offer instead if it rains or it's out of season — at the same price, so the booking doesn't need to change.</p>
+          <div class="choice-row" id="seasonChoices">
+            <label class="choice"><input type="checkbox" value="all_year"><span>All year</span></label>
+            <label class="choice"><input type="checkbox" value="spring"><span>Spring<small>Mar–May</small></span></label>
+            <label class="choice"><input type="checkbox" value="summer"><span>Summer<small>Jun–Aug</small></span></label>
+            <label class="choice"><input type="checkbox" value="autumn"><span>Autumn<small>Sep–Nov</small></span></label>
+            <label class="choice"><input type="checkbox" value="winter"><span>Winter<small>Dec–Feb</small></span></label>
+          </div>
           <div class="form-group">
-            <label>Included (one per line)</label>
-            <textarea id="t_included" rows="3" placeholder="All food tastings&#10;Local guide"></textarea>
+            <label>Plan B (bad weather / off-season alternative)</label>
+            <textarea id="t_plan_b" rows="2" placeholder="If it rains, the garden walk is replaced by an indoor tea ceremony at the same place and price."></textarea>
+          </div>
+
+          <h4 class="form-step"><span class="n">6</span> Photos &amp; story</h4>
+          <div class="form-group">
+            <label>Photos — upload one or more (first one is the cover)</label>
+            <input type="file" id="t_photos" accept="image/*" multiple>
+            <div id="t_photos_preview" class="photo-preview-grid"></div>
           </div>
           <div class="form-group">
-            <label>Not included (one per line)</label>
-            <textarea id="t_not_included" rows="3" placeholder="Hotel pickup&#10;Extra drinks"></textarea>
+            <label>Or add photo links (Unsplash etc.) — paste one or several, one per line</label>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <textarea id="t_image_links" rows="2" placeholder="https://images.unsplash.com/photo-…" style="flex:1;"></textarea>
+              <button type="button" class="btn btn-outline" onclick="addPhotoLinks()" style="white-space:nowrap;">+ Add</button>
+            </div>
+            <input type="hidden" id="t_image">
+            <p style="font-size:12px; color:var(--muted); margin-top:6px;">All photos are shown in the same 3:2 format. Click a photo below to make it the cover (first photo).</p>
           </div>
-        </div>
-        <div class="form-group">
-          <label>Meeting point (shown on a map)</label>
-          <input type="text" id="t_meeting_point" placeholder="Shinjuku Station, East Exit, Tokyo">
-        </div>
-        <div class="form-group">
-          <label>Notes for agencies (anything they should know)</label>
-          <textarea id="t_agency_notes" rows="3" placeholder="Private groups on request · vegetarian options · book 48 hours ahead"></textarea>
-        </div>
-        <div id="formSaveMsg" class="status-msg" style="margin-bottom:12px;"></div>
-        <div style="display:flex; gap:12px;">
-          <button type="submit" class="btn btn-primary" id="saveTourBtn">Save Tour</button>
-          <button type="button" class="btn btn-outline" onclick="closeTourForm()">Cancel</button>
-        </div>
-      </form>
-    </div>
+          <div class="form-group">
+            <label>Description (tell the story of the experience)</label>
+            <textarea id="t_description" rows="5"></textarea>
+          </div>
+
+          <h4 class="form-step"><span class="n">7</span> More about the tour <span style="font:400 13px var(--sans); color:var(--muted);">— optional, but it helps agencies sell it</span></h4>
+          <div class="form-group">
+            <label>Highlights (one per line)</label>
+            <textarea id="t_highlights" rows="3" placeholder="Taste 13 dishes in 4 local eateries&#10;Explore Omoide Yokocho alleys"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Included (one per line)</label>
+              <textarea id="t_included" rows="3" placeholder="All food tastings&#10;Local guide"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Not included (one per line)</label>
+              <textarea id="t_not_included" rows="3" placeholder="Hotel pickup&#10;Extra drinks"></textarea>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Meeting point (shown on a map)</label>
+            <input type="text" id="t_meeting_point" placeholder="Shinjuku Station, East Exit, Tokyo">
+          </div>
+          <div class="form-group">
+            <label>Notes for agencies (anything they should know)</label>
+            <textarea id="t_agency_notes" rows="3" placeholder="Private groups on request · vegetarian options · book 48 hours ahead"></textarea>
+          </div>
+          <div id="formSaveMsg" class="status-msg" style="margin-bottom:12px;"></div>
+          <div style="display:flex; gap:12px;">
+            <button type="submit" class="btn btn-primary" id="saveTourBtn">Save Tour</button>
+            <button type="button" class="btn btn-outline" onclick="closeTourForm()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== ACCOUNT ===== -->
+    <section class="dash-pane" id="pane-account">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">Company</div><div class="value" id="companyOut2"></div></div>
+        <div class="info-item"><div class="label">Contact Person</div><div class="value" id="contactOut"></div></div>
+        <div class="info-item"><div class="label">Email</div><div class="value" id="emailOut"></div></div>
+        <div class="info-item"><div class="label">Country</div><div class="value" id="countryOut"></div></div>
+      </div>
+      <p style="color:var(--muted); font-size:14px; margin-top:20px;">To change these details, write to partners@aphelionexpeditions.com.</p>
+    </section>
   </div>
 </div>
 
@@ -210,79 +415,184 @@
 <script src="supabase-client.js"></script>
 <script>
   let currentUserId = null;
+  let myTours = [];
+  const tr = s => (window.AEX_t ? window.AEX_t(s) : s);
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const yen = n => '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP');
+  const FORMAT_LABELS = { half_day: 'Half-day', full_day: 'Full-day', evening: 'Evening', flexible: 'Flexible' };
 
-  // --- Auto logout after 5 minutes of inactivity ---
-  // Closing the tab or refreshing no longer keeps you logged in forever;
-  // if there's no click/keypress/scroll for 5 minutes, you're signed out
-  // and sent back to the login page automatically.
-  const IDLE_LIMIT_MS = 5 * 60 * 1000; // 5 minutes
-  const LAST_ACTIVITY_KEY = 'aex_last_activity';
-
-  function markActivity() {
-    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+  // --- Tabs (remembers the last tab in the address, e.g. #tours) ---
+  function showTab(name) {
+    document.querySelectorAll('.dash-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.dash-pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + name));
+    if (history.replaceState) history.replaceState(null, '', '#' + name);
   }
 
+  // --- Auto logout after 5 minutes of inactivity ---
+  const IDLE_LIMIT_MS = 5 * 60 * 1000;
+  const LAST_ACTIVITY_KEY = 'aex_last_activity';
+  function markActivity() { try { localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString()); } catch (e) {} }
   async function checkIdleAndLogout() {
-    const last = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || '0', 10);
+    let last = 0;
+    try { last = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || '0', 10); } catch (e) { return; }
     if (Date.now() - last > IDLE_LIMIT_MS) {
       await supabaseClient.auth.signOut();
       window.location.href = 'login.html';
     }
   }
-
   ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(evt => {
     document.addEventListener(evt, markActivity, { passive: true });
   });
   markActivity();
-  setInterval(checkIdleAndLogout, 15000); // check every 15s
 
   (async () => {
-    // if the tab was closed/idle past the limit before this page even loaded,
-    // log out immediately instead of showing the dashboard first
     await checkIdleAndLogout();
-
     const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      window.location.href = 'login.html';
-      return;
-    }
+    if (!session) { window.location.href = 'login.html'; return; }
     currentUserId = session.user.id;
     markActivity();
+    setInterval(checkIdleAndLogout, 15000);
 
     const { data: profile, error } = await supabaseClient
-      .from('partners')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
+      .from('partners').select('*').eq('id', session.user.id).single();
 
     document.getElementById('loadingMsg').style.display = 'none';
     document.getElementById('dashContent').style.display = 'block';
+    const startTab = (location.hash || '').replace('#', '');
+    if (['overview', 'tours', 'account'].includes(startTab)) showTab(startTab);
 
     if (error || !profile) {
       document.getElementById('companyNameOut').textContent = session.user.email;
       document.getElementById('statusOut').textContent = 'No profile found';
       return;
     }
-
     document.getElementById('companyNameOut').textContent = profile.company_name;
+    document.getElementById('companyOut2').textContent = profile.company_name || '—';
     document.getElementById('contactOut').textContent = profile.contact_person || '—';
     document.getElementById('emailOut').textContent = profile.email;
     document.getElementById('countryOut').textContent = profile.country || '—';
-
     const statusEl = document.getElementById('statusOut');
     statusEl.textContent = profile.status;
     statusEl.classList.add(profile.status);
 
-    loadMyTours();
+    await loadMyTours();
+    loadStats();
   })();
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
-    window.location.href = 'index.html'; // manual log out → public home page
+    window.location.href = 'index.html';
   });
 
-  // Messages appear where the partner is looking: next to the Save button while
-  // the form is open, otherwise above the tour list. Errors stay until fixed.
+  // =================== ANALYTICS ===================
+  function setText(id, v) { document.getElementById(id).textContent = v; }
+
+  function renderBars(elId, rows, key, unit) {
+    const el = document.getElementById(elId);
+    const max = Math.max(1, ...rows.map(r => r[key] || 0));
+    const monthName = m => new Date(m + '-01T00:00:00').toLocaleDateString(undefined, { month: 'short' });
+    const last = rows.length - 1;
+    el.innerHTML = `
+      <div class="bars" role="img" aria-label="${esc(tr(unit))} per month">
+        ${rows.map((r, i) => {
+          const v = r[key] || 0;
+          const h = v ? Math.max(3, Math.round(v / max * 100)) : 0;
+          return `<div class="bar-col">
+            ${i === last ? `<span class="bar-val">${v}</span>` : ''}
+            <span class="bar-tip">${monthName(r.month)} ${r.month.slice(0, 4)}: <b>${v}</b> ${esc(tr(unit))}</span>
+            <div class="bar" style="height:${h}%"></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="bar-labels">${rows.map(r => `<span>${monthName(r.month)}</span>`).join('')}</div>`;
+  }
+
+  function stars(n) {
+    const r = Math.round(n || 0);
+    return '★'.repeat(r) + '☆'.repeat(5 - r);
+  }
+
+  async function loadStats() {
+    const { data: s, error } = await supabaseClient.rpc('partner_stats');
+    if (error || !s) {
+      const box = document.getElementById('statsError');
+      box.textContent = tr('Analytics are not available yet.') + (error ? ' (' + error.message + ')' : '');
+      box.className = 'status-msg err';
+      renderTips(null);
+      return;
+    }
+    setText('kViews', (s.views_30d || 0).toLocaleString());
+    setText('kViewsSub', tr('all time') + ': ' + (s.views_total || 0).toLocaleString());
+    setText('kReq', s.bookings_30d || 0);
+    setText('kReqSub', tr('all time') + ': ' + (s.bookings_total || 0));
+    setText('kConf', s.bookings_confirmed || 0);
+    setText('kConfSub', (s.bookings_pending || 0) + ' ' + tr('waiting for confirmation'));
+    setText('kGuests', (s.guests_confirmed || 0).toLocaleString());
+    setText('kEarn', yen(s.earnings_confirmed));
+    setText('kEarnSub', tr('already paid') + ': ' + yen(s.earnings_paid));
+    if (s.reviews_count) {
+      setText('kRating', '★ ' + Number(s.rating_avg).toFixed(1));
+      setText('kRatingSub', s.reviews_count + ' ' + tr('reviews'));
+    } else {
+      setText('kRating', '—');
+      setText('kRatingSub', tr('no reviews yet'));
+    }
+
+    renderBars('chartBookings', s.monthly || [], 'bookings', 'requests');
+    renderBars('chartViews', s.monthly || [], 'views', 'views');
+
+    const per = s.per_tour || [];
+    document.getElementById('perfTable').innerHTML = per.length ? `
+      <table class="perf-table">
+        <thead><tr><th>Tour</th><th>Status</th><th class="num">Views</th><th class="num">Requests</th><th class="num">Confirmed</th><th class="num">Conversion</th><th class="num">Rating</th></tr></thead>
+        <tbody>${per.map(t => `<tr>
+          <td>${esc(t.title)}</td>
+          <td><span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></td>
+          <td class="num">${t.views}</td>
+          <td class="num">${t.bookings}</td>
+          <td class="num">${t.confirmed}</td>
+          <td class="num">${t.views ? Math.round(t.bookings / t.views * 100) + '%' : '—'}</td>
+          <td class="num">${t.reviews ? '<span class="stars">★</span> ' + Number(t.rating).toFixed(1) + ' <span style="color:var(--muted)">(' + t.reviews + ')</span>' : '—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>` : `<p class="empty">${esc(tr('You have no tours yet. Add your first one above.'))}</p>`;
+
+    const up = s.upcoming || [];
+    document.getElementById('upcomingList').innerHTML = up.length
+      ? up.map(u => `<li><div><div>${esc(u.tour)}</div><div class="m-sub">${esc(u.requested_date)} · ${u.travelers} ${esc(tr('travelers'))}</div></div><span class="status-pill ${esc(u.status)}">${esc(u.status)}</span></li>`).join('')
+      : `<li class="empty">${esc(tr('No upcoming bookings yet.'))}</li>`;
+
+    const rv = s.recent_reviews || [];
+    document.getElementById('reviewsList').innerHTML = rv.length
+      ? rv.map(r => `<li style="display:block;"><div><span class="stars">${stars(r.rating)}</span> · <span class="m-sub">${esc(r.title)}</span></div>${r.comment ? `<div style="margin-top:4px;">${esc(r.comment)}</div>` : ''}<div class="m-sub" style="margin-top:2px;">${esc(r.company || tr('Travel agency'))} · ${new Date(r.created_at).toLocaleDateString()}</div></li>`).join('')
+      : `<li class="empty">${esc(tr('No reviews yet.'))}</li>`;
+
+    renderTips(s);
+  }
+
+  // Practical advice, worked out from the partner's own tours and numbers.
+  function renderTips(s) {
+    const tips = [];
+    if (!myTours.length) {
+      tips.push('<b>' + tr('Add your first tour.') + '</b> ' + tr('Agencies can only book what they can see.'));
+    }
+    if (myTours.length && !myTours.some(t => t.status === 'approved')) {
+      tips.push('<b>' + tr('Your tours are being reviewed.') + '</b> ' + tr('We usually check new tours within 1–2 business days.'));
+    }
+    myTours.forEach(t => {
+      const q = tourQuality(t);
+      if (q.missing.length) tips.push('<b>' + esc(t.title) + ':</b> ' + tr('add') + ' ' + q.missing.slice(0, 3).map(m => tr(m)).join(', ') + '.');
+    });
+    if (s) {
+      (s.per_tour || []).forEach(t => {
+        if (t.views >= 30 && t.bookings === 0) tips.push('<b>' + esc(t.title) + ':</b> ' + tr('many agencies look at this tour but nobody books it yet. Check the price and add a clear day program.'));
+      });
+      if (s.bookings_pending > 0) tips.push('<b>' + s.bookings_pending + ' ' + tr('request(s) waiting.') + '</b> ' + tr('Fast confirmation brings more repeat bookings from agencies.'));
+    }
+    if (!tips.length) tips.push('<b>' + tr('Everything looks great.') + '</b> ' + tr('Keep your photos and seasons up to date.'));
+    document.getElementById('tipsList').innerHTML = tips.slice(0, 6).map(t => `<li>${t}</li>`).join('');
+  }
+
+  // =================== MY TOURS ===================
   function showTourStatus(msg, ok) {
     const formOpen = document.getElementById('tourFormCard').style.display !== 'none';
     const el = document.getElementById(formOpen ? 'formSaveMsg' : 'tourStatusMsg');
@@ -292,40 +602,62 @@
     if (ok) setTimeout(() => { el.className = 'status-msg'; }, 6000);
   }
 
+  // How complete a tour listing is — shown as a bar, and used for tips.
+  function tourQuality(t) {
+    const photos = Array.isArray(t.images) ? t.images.length : (t.image ? 1 : 0);
+    const program = Array.isArray(t.day_program) ? t.day_program.filter(p => p && p.activity).length : 0;
+    const checks = [
+      [!!t.tour_format, 'a format'],
+      [photos >= 3, 'at least 3 photos'],
+      [(t.description || '').length >= 200, 'a longer description'],
+      [program >= 2, 'a day program'],
+      [!!(t.highlights || '').trim(), 'highlights'],
+      [!!(t.included || '').trim(), "what's included"],
+      [!!(t.meeting_point || '').trim(), 'a meeting point'],
+      [Array.isArray(t.seasons) && t.seasons.length > 0, 'seasons'],
+      [!!(t.plan_b || '').trim(), 'a Plan B'],
+      [!!t.max_travelers, 'group size']
+    ];
+    const done = checks.filter(c => c[0]).length;
+    return { pct: Math.round(done / checks.length * 100), missing: checks.filter(c => !c[0]).map(c => c[1]) };
+  }
+
   async function loadMyTours() {
     const list = document.getElementById('myToursList');
     const { data: tours, error } = await supabaseClient
-      .from('tours')
-      .select('*')
-      .eq('partner_id', currentUserId)
-      .order('id', { ascending: false });
-
+      .from('tours').select('*').eq('partner_id', currentUserId).order('id', { ascending: false });
     if (error) {
-      list.innerHTML = '<p style="color:#f19a9a;">Could not load your tours: ' + error.message + '</p>';
+      list.innerHTML = '<p style="color:#B42318;">Could not load your tours: ' + esc(error.message) + '</p>';
       return;
     }
-    if (!tours.length) {
+    myTours = tours || [];
+    if (!myTours.length) {
       list.innerHTML = '<p style="color:var(--muted);">You have no tours yet. Add your first one above.</p>';
       return;
     }
-    list.innerHTML = tours.map(t => `
+    list.innerHTML = myTours.map((t, i) => {
+      const q = tourQuality(t);
+      return `
       <div class="tour-admin-row">
-        <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
+        <img src="${esc(t.image || '')}" alt="" onerror="this.style.opacity=0.2">
         <div class="info">
-          <h4>${t.title} <span class="status-pill ${t.status || 'pending'}">${t.status || 'pending'}</span></h4>
-          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} · ${t.category}</span>
+          <h4>${esc(t.title)} <span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></h4>
+          <span>${esc(t.location)} · ${yen(t.price)} · ${esc(t.category)}${t.tour_format ? ' · ' + esc(tr(FORMAT_LABELS[t.tour_format] || t.tour_format)) : ''}</span>
+          <div class="quality" title="${esc(q.missing.length ? tr('Missing') + ': ' + q.missing.map(m => tr(m)).join(', ') : '')}">
+            <div class="quality-track"><div class="quality-fill" style="width:${q.pct}%"></div></div>
+            <span>${esc(tr('Listing complete'))}: ${q.pct}%</span>
+          </div>
         </div>
         <div class="actions">
-          <button onclick='editMyTour(${JSON.stringify(t).replace(/'/g, "&apos;")})'>Edit</button>
-          <button class="danger" onclick="deleteMyTour(${t.id}, '${(t.title || '').replace(/'/g, "\\'")}')">Delete</button>
+          <button onclick="editMyTour(${i})">Edit</button>
+          <button class="danger" onclick="deleteMyTour(${i})">Delete</button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   }
 
+  // ---------- Photos ----------
   let editingTourImages = [];
-
-  // Add one or several photo links (one per line) to the tour's photos.
   function addPhotoLinks() {
     const box = document.getElementById('t_image_links');
     const links = box.value.split(/[\s,]+/).map(s => s.trim()).filter(s => /^https?:\/\//i.test(s));
@@ -339,34 +671,21 @@
     editingTourImages.unshift(img);
     renderTourPhotoPreview();
   }
-
   function renderTourPhotoPreview() {
     const el = document.getElementById('t_photos_preview');
     el.innerHTML = editingTourImages.map((url, i) => `
       <div class="photo-thumb">
-        <img src="${url}" onerror="this.style.opacity=0.2" onclick="makeCover(${i})" title="${i === 0 ? 'Cover photo' : 'Click to make this the cover'}" style="cursor:pointer;${i === 0 ? ' outline:3px solid var(--gold); outline-offset:-3px;' : ''}">
+        <img src="${esc(url)}" onerror="this.style.opacity=0.2" onclick="makeCover(${i})" title="${i === 0 ? 'Cover photo' : 'Click to make this the cover'}" style="cursor:pointer;${i === 0 ? ' outline:3px solid var(--gold); outline-offset:-3px;' : ''}">
         <button type="button" onclick="removeEditingTourImage(${i})">&times;</button>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
+  function removeEditingTourImage(i) { editingTourImages.splice(i, 1); renderTourPhotoPreview(); }
 
-  function removeEditingTourImage(i) {
-    editingTourImages.splice(i, 1);
-    renderTourPhotoPreview();
-  }
-
-  // Shrinks/compresses a photo before upload so a large phone photo doesn't
-  // eat the free storage quota or slow the site down. Every photo ends up
-  // at most 1600px wide, saved as a JPEG — this also makes gallery photos
-  // a consistent size regardless of what device they were taken on.
   // Every uploaded photo is cropped to the same 3:2 shape (1600 × 1067 px, centred)
   // and saved as a JPEG, so all tour photos look uniform on the site.
   function resizeImage(file, outW = 1600, outH = 1067, quality = 0.84) {
     return new Promise((resolve) => {
-      if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif') {
-        resolve(file); // leave GIFs and non-images untouched
-        return;
-      }
+      if (!file.type || !file.type.startsWith('image/') || file.type === 'image/gif') { resolve(file); return; }
       const img = new Image();
       const url = URL.createObjectURL(file);
       img.onload = () => {
@@ -386,28 +705,21 @@
       img.src = url;
     });
   }
-
   async function uploadTourImage(file) {
     const resized = await resizeImage(file);
     const ext = resized.type === 'image/jpeg' ? 'jpg' : (file.name.split('.').pop() || 'jpg');
     const path = `${currentUserId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabaseClient.storage.from('tour-images').upload(path, resized, {
-      contentType: resized.type || 'application/octet-stream'
-    });
+    const { error } = await supabaseClient.storage.from('tour-images').upload(path, resized, { contentType: resized.type || 'application/octet-stream' });
     if (error) throw error;
     const { data } = supabaseClient.storage.from('tour-images').getPublicUrl(path);
     return data.publicUrl;
   }
-
   document.getElementById('t_photos').addEventListener('change', async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     showTourStatus('Uploading photo(s)…', true);
     try {
-      for (const file of files) {
-        const url = await uploadTourImage(file);
-        editingTourImages.push(url);
-      }
+      for (const file of files) editingTourImages.push(await uploadTourImage(file));
       renderTourPhotoPreview();
       showTourStatus('Photo(s) uploaded.', true);
     } catch (err) {
@@ -416,6 +728,77 @@
     e.target.value = '';
   });
 
+  // ---------- Day program ----------
+  const PROGRAM_TEMPLATES = {
+    half_day: [['09:00', 'Meet your guide at the meeting point'], ['09:15', 'Main activity'], ['11:30', 'Tasting / free time'], ['12:30', 'End of the tour']],
+    full_day: [['09:00', 'Meet your guide at the meeting point'], ['09:30', 'Morning activity (e.g. market walk)'], ['12:00', 'Lunch at a local restaurant'], ['13:30', 'Afternoon activity (e.g. workshop)'], ['15:30', 'Third stop (e.g. temple, garden)'], ['17:00', 'End of the day']],
+    evening: [['18:00', 'Meet your guide'], ['18:15', 'First stop'], ['19:30', 'Dinner / tasting'], ['21:00', 'End of the evening']],
+    flexible: [['', 'Meet your guide'], ['', 'Main activity'], ['', 'End of the experience']]
+  };
+  function addProgramRow(time = '', activity = '') {
+    const row = document.createElement('div');
+    row.className = 'program-row';
+    row.innerHTML = `<input type="time" class="p-time"><input type="text" class="p-act" placeholder="${esc(tr('What happens (e.g. Sushi workshop with a chef)'))}"><button type="button" aria-label="Remove step" title="Remove">×</button>`;
+    row.querySelector('.p-time').value = time;
+    row.querySelector('.p-act').value = activity;
+    row.querySelector('button').onclick = () => row.remove();
+    document.getElementById('programList').appendChild(row);
+  }
+  function setProgram(steps) {
+    document.getElementById('programList').innerHTML = '';
+    (steps && steps.length ? steps : [{}, {}]).forEach(s => addProgramRow(s.time || '', s.activity || ''));
+  }
+  function getProgram() {
+    return Array.from(document.querySelectorAll('#programList .program-row'))
+      .map(r => ({ time: r.querySelector('.p-time').value, activity: r.querySelector('.p-act').value.trim() }))
+      .filter(p => p.activity);
+  }
+  function getFormat() {
+    const c = document.querySelector('input[name="t_format"]:checked');
+    return c ? c.value : '';
+  }
+  function fillProgramTemplate() {
+    const f = getFormat() || 'half_day';
+    if (getProgram().length && !confirm(tr('Replace the current steps with a template?'))) return;
+    setProgram(PROGRAM_TEMPLATES[f].map(([time, activity]) => ({ time, activity: tr(activity) })));
+  }
+  // Picking a format suggests a duration and a start time if they are empty.
+  document.querySelectorAll('input[name="t_format"]').forEach(r => r.addEventListener('change', () => {
+    const d = document.getElementById('t_duration'), st = document.getElementById('t_start_time');
+    const defaults = { half_day: ['3–4 hours', '09:00'], full_day: ['7–8 hours', '09:00'], evening: ['3 hours', '18:00'], flexible: ['', ''] }[r.value];
+    if (!d.value && defaults[0]) d.value = tr(defaults[0]);
+    if (!st.value && defaults[1]) st.value = defaults[1];
+  }));
+  // "All year" and single seasons don't mix.
+  document.querySelectorAll('#seasonChoices input').forEach(cb => cb.addEventListener('change', () => {
+    if (!cb.checked) return;
+    document.querySelectorAll('#seasonChoices input').forEach(o => {
+      if (o !== cb && (cb.value === 'all_year' || o.value === 'all_year')) o.checked = false;
+    });
+  }));
+
+  // ---------- Price checks (keep prices sensible) ----------
+  function checkPrices() {
+    const n = id => { const v = document.getElementById(id).value; return v === '' ? null : Number(v); };
+    const adult = n('t_price'), child = n('t_child_price'), priv = n('t_private_price'), min = n('t_min'), max = n('t_max');
+    const childBad = child != null && adult != null && child > adult;
+    const privBad = priv != null && adult != null && priv < adult * Math.max(1, min || 1);
+    const groupBad = min != null && max != null && max < min;
+    document.getElementById('childWarn').style.display = childBad ? 'block' : 'none';
+    document.getElementById('privateWarn').style.display = privBad ? 'block' : 'none';
+    document.getElementById('groupWarn').style.display = groupBad ? 'block' : 'none';
+    return !(childBad || groupBad); // a low private price is only a warning
+  }
+  ['t_price', 't_child_price', 't_private_price', 't_min', 't_max'].forEach(id => document.getElementById(id).addEventListener('input', checkPrices));
+
+  // ---------- Open / edit / delete ----------
+  let editingTourStatus = null;
+  function resetExtras() {
+    document.querySelectorAll('input[name="t_format"]').forEach(r => r.checked = false);
+    document.querySelectorAll('#seasonChoices input').forEach(c => c.checked = false);
+    setProgram([]);
+    checkPrices();
+  }
   function openTourForm() {
     editingTourStatus = null;
     document.getElementById('tourFormTitle').textContent = 'Add Tour';
@@ -423,103 +806,125 @@
     document.getElementById('t_id').value = '';
     editingTourImages = [];
     renderTourPhotoPreview();
+    resetExtras();
     document.getElementById('tourFormCard').style.display = 'block';
     document.getElementById('tourFormCard').scrollIntoView({ behavior: 'smooth' });
   }
+  function closeTourForm() { document.getElementById('tourFormCard').style.display = 'none'; }
 
-  function closeTourForm() {
-    document.getElementById('tourFormCard').style.display = 'none';
-  }
-
-  let editingTourStatus = null;
-  function editMyTour(t) {
+  function setVal(id, v) { document.getElementById(id).value = v == null ? '' : v; }
+  function editMyTour(i) {
+    const t = myTours[i];
+    if (!t) return;
+    showTab('tours');
     editingTourStatus = t.status || null;
+    document.getElementById('myTourForm').reset();
+    resetExtras();
     document.getElementById('tourFormTitle').textContent = 'Edit Tour';
-    document.getElementById('t_id').value = t.id;
-    document.getElementById('t_title').value = t.title || '';
-    document.getElementById('t_location').value = t.location || '';
-    document.getElementById('t_destination').value = t.destination || '';
-    document.getElementById('t_category').value = t.category || '';
-    document.getElementById('t_tag').value = t.tag || '';
-    document.getElementById('t_duration').value = t.duration || '';
-    document.getElementById('t_group').value = t.group_size || '';
-    document.getElementById('t_price').value = t.price || '';
-    document.getElementById('t_image').value = t.image || '';
-    document.getElementById('t_description').value = t.description || '';
-    document.getElementById('t_highlights').value = t.highlights == null ? '' : t.highlights;
-    document.getElementById('t_included').value = t.included == null ? '' : t.included;
-    document.getElementById('t_not_included').value = t.not_included == null ? '' : t.not_included;
-    document.getElementById('t_meeting_point').value = t.meeting_point == null ? '' : t.meeting_point;
-    document.getElementById('t_agency_notes').value = t.agency_notes == null ? '' : t.agency_notes;
+    setVal('t_id', t.id);
+    setVal('t_title', t.title);
+    setVal('t_location', t.location);
+    setVal('t_destination', t.destination);
+    const cat = document.getElementById('t_category');
+    if (t.category && !Array.from(cat.options).some(o => o.value === t.category)) cat.add(new Option(t.category, t.category));
+    setVal('t_category', t.category);
+    setVal('t_tag', t.tag);
+    setVal('t_duration', t.duration);
+    setVal('t_start_time', t.start_time);
+    setVal('t_group', t.group_size);
+    setVal('t_price', t.price);
+    setVal('t_child_price', t.child_price);
+    setVal('t_private_price', t.private_price);
+    setVal('t_min', t.min_travelers);
+    setVal('t_max', t.max_travelers);
+    setVal('t_image', t.image);
+    setVal('t_description', t.description);
+    setVal('t_highlights', t.highlights);
+    setVal('t_included', t.included);
+    setVal('t_not_included', t.not_included);
+    setVal('t_meeting_point', t.meeting_point);
+    setVal('t_agency_notes', t.agency_notes);
+    setVal('t_plan_b', t.plan_b);
+    if (t.tour_format) { const r = document.querySelector(`input[name="t_format"][value="${t.tour_format}"]`); if (r) r.checked = true; }
+    (Array.isArray(t.seasons) ? t.seasons : []).forEach(s => { const c = document.querySelector(`#seasonChoices input[value="${s}"]`); if (c) c.checked = true; });
+    setProgram(Array.isArray(t.day_program) ? t.day_program : []);
+    checkPrices();
     editingTourImages = Array.isArray(t.images) && t.images.length ? [...t.images] : (t.image ? [t.image] : []);
     renderTourPhotoPreview();
     document.getElementById('tourFormCard').style.display = 'block';
     document.getElementById('tourFormCard').scrollIntoView({ behavior: 'smooth' });
   }
 
-  async function deleteMyTour(id, title) {
-    const t = window.AEX_t || (x => x);
-    if (!confirm(t('Delete this tour?') + '\n\n"' + title + '"\n\n' + t('This cannot be undone.'))) return;
-    const { error } = await supabaseClient.from('tours').delete().eq('id', id).eq('partner_id', currentUserId);
-    if (error) {
-      showTourStatus('Could not delete: ' + error.message, false);
-      return;
-    }
+  async function deleteMyTour(i) {
+    const t = myTours[i];
+    if (!t) return;
+    if (!confirm(tr('Delete this tour?') + '\n\n"' + t.title + '"\n\n' + tr('This cannot be undone.'))) return;
+    const { error } = await supabaseClient.from('tours').delete().eq('id', t.id).eq('partner_id', currentUserId);
+    if (error) { showTourStatus('Could not delete: ' + error.message, false); return; }
     showTourStatus('Tour deleted.', true);
-    loadMyTours();
+    await loadMyTours();
+    loadStats();
   }
+
+  const numOrNull = id => { const v = document.getElementById(id).value; return v === '' ? null : Number(v); };
 
   document.getElementById('myTourForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (!checkPrices()) { showTourStatus(tr('Please check the prices and group size.'), false); return; }
     const saveBtn = document.getElementById('saveTourBtn');
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     try {
-    addPhotoLinks(); // include links pasted but not yet added
-    const id = document.getElementById('t_id').value;
-    const payload = {
-      title: document.getElementById('t_title').value,
-      location: document.getElementById('t_location').value,
-      destination: document.getElementById('t_destination').value,
-      category: document.getElementById('t_category').value,
-      tag: document.getElementById('t_tag').value,
-      duration: document.getElementById('t_duration').value,
-      group_size: document.getElementById('t_group').value,
-      price: parseFloat(document.getElementById('t_price').value),
-      image: (editingTourImages[0]) || document.getElementById('t_image').value || '',
-      images: editingTourImages.length ? editingTourImages : (document.getElementById('t_image').value ? [document.getElementById('t_image').value] : []),
-      description: document.getElementById('t_description').value,
-      highlights: document.getElementById('t_highlights').value,
-      included: document.getElementById('t_included').value,
-      not_included: document.getElementById('t_not_included').value,
-      meeting_point: document.getElementById('t_meeting_point').value,
-      agency_notes: document.getElementById('t_agency_notes').value,
-      partner_id: currentUserId,
-      status: 'pending'
-    };
+      addPhotoLinks();
+      const id = document.getElementById('t_id').value;
+      const minT = numOrNull('t_min'), maxT = numOrNull('t_max');
+      const payload = {
+        title: document.getElementById('t_title').value,
+        location: document.getElementById('t_location').value,
+        destination: document.getElementById('t_destination').value.trim().toLowerCase(),
+        category: document.getElementById('t_category').value,
+        tag: document.getElementById('t_tag').value,
+        duration: document.getElementById('t_duration').value,
+        group_size: minT || maxT ? [minT, maxT].filter(Boolean).join('–') + ' ' + tr('guests') : document.getElementById('t_group').value,
+        price: parseFloat(document.getElementById('t_price').value),
+        child_price: numOrNull('t_child_price'),
+        private_price: numOrNull('t_private_price'),
+        min_travelers: minT,
+        max_travelers: maxT,
+        tour_format: getFormat() || null,
+        start_time: document.getElementById('t_start_time').value || null,
+        day_program: getProgram(),
+        seasons: Array.from(document.querySelectorAll('#seasonChoices input:checked')).map(c => c.value),
+        plan_b: document.getElementById('t_plan_b').value,
+        image: (editingTourImages[0]) || document.getElementById('t_image').value || '',
+        images: editingTourImages.length ? editingTourImages : (document.getElementById('t_image').value ? [document.getElementById('t_image').value] : []),
+        description: document.getElementById('t_description').value,
+        highlights: document.getElementById('t_highlights').value,
+        included: document.getElementById('t_included').value,
+        not_included: document.getElementById('t_not_included').value,
+        meeting_point: document.getElementById('t_meeting_point').value,
+        agency_notes: document.getElementById('t_agency_notes').value,
+        partner_id: currentUserId,
+        status: 'pending'
+      };
 
-    // New tours wait for admin review. Changes to a tour that is already live
-    // stay live; the admin just sees an "edited" note to check them.
-    const keepLive = id && editingTourStatus === 'approved';
-    if (keepLive) {
-      delete payload.status;
-      payload.edited_at = new Date().toISOString();
-    }
+      // New tours wait for admin review. Changes to a tour that is already live
+      // stay live; the admin just sees an "edited" note to check them.
+      const keepLive = id && editingTourStatus === 'approved';
+      if (keepLive) {
+        delete payload.status;
+        payload.edited_at = new Date().toISOString();
+      }
 
-    let error;
-    if (id) {
-      ({ error } = await supabaseClient.from('tours').update(payload).eq('id', id).eq('partner_id', currentUserId));
-    } else {
-      ({ error } = await supabaseClient.from('tours').insert(payload));
-    }
+      let error;
+      if (id) ({ error } = await supabaseClient.from('tours').update(payload).eq('id', id).eq('partner_id', currentUserId));
+      else ({ error } = await supabaseClient.from('tours').insert(payload));
 
-    if (error) {
-      showTourStatus('Could not save: ' + error.message, false);
-      return;
-    }
-    closeTourForm();
-    showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
-    loadMyTours();
+      if (error) { showTourStatus('Could not save: ' + error.message, false); return; }
+      closeTourForm();
+      showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
+      await loadMyTours();
+      loadStats();
     } catch (err) {
       showTourStatus('Could not save: ' + (err && err.message ? err.message : err), false);
     } finally {
