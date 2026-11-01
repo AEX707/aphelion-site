@@ -11,7 +11,8 @@
 <style>
 .terms-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
 .terms-check input { width: auto; margin-top: 3px; flex: 0 0 auto; }
-.terms-link { display: inline-block; margin: 6px 0 0 26px; font-size: 13px; color: var(--gold); text-decoration: underline; }
+.terms-links { margin: 6px 0 0 26px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.terms-link { display: inline-block; font-size: 13px; color: var(--gold); text-decoration: underline; }
 .terms-modal .modal-box { width: min(920px, 100%); padding: 0; display: flex; flex-direction: column; height: min(86vh, 900px); overflow: hidden; }
 .terms-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--border-soft); }
 .terms-modal-head h3 { margin: 0; font-size: 22px; }
@@ -102,8 +103,12 @@
           <textarea id="message" name="message" rows="4" placeholder="What kind of tours do you sell? How many customers do you serve annually?"></textarea>
         </div>
         <div class="form-group terms-agree">
-          <label class="terms-check"><input type="checkbox" id="agreeTerms" required> <span>I have read and agree to the Partner Terms</span></label>
-          <a href="partner-terms.html" target="_blank" rel="noopener" class="terms-link" id="openTerms">View Partner Terms</a>
+          <label class="terms-check"><input type="checkbox" id="agreeTerms" required> <span>I agree to the Partner Terms and Privacy Policy</span></label>
+          <div class="terms-links">
+            <a href="partner-terms.html" target="_blank" rel="noopener" class="terms-link" data-doc="partner-terms.html" data-box="agreeTerms" data-title="Partner Terms">Partner Terms</a>
+            <span aria-hidden="true">·</span>
+            <a href="privacy-policy.html" target="_blank" rel="noopener" class="terms-link" data-doc="privacy-policy.html" data-box="agreeTerms" data-title="Privacy Policy">Privacy Policy</a>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;">Create Partner Account</button>
       </form>
@@ -181,7 +186,7 @@
     const message = document.getElementById('message').value;
     const agreed = document.getElementById('agreeTerms').checked;
     if (!agreed) {
-      errorMessage.textContent = 'Please agree to the Partner Terms to continue.';
+      errorMessage.textContent = 'Please agree to the Partner Terms and the Privacy Policy to continue.';
       errorMessage.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = 'Create Partner Account';
@@ -203,6 +208,7 @@
             country: country,
             message: message,
             terms_version: '1.0',
+            privacy_version: '2026-11-01',
             terms_accepted_at: new Date().toISOString()
           }
         }
@@ -225,18 +231,23 @@
   (function () {
     var modal = document.getElementById('termsModal');
     var frame = document.getElementById('termsFrame');
-    var box = document.getElementById('agreeTerms');
+    var title = document.getElementById('termsModalTitle');
+    var currentBox = null;
     function open(e) {
       e.preventDefault();
-      if (!frame.src) frame.src = 'partner-terms.html?embed=1';
+      var link = e.currentTarget;
+      currentBox = document.getElementById(link.dataset.box);
+      var src = link.dataset.doc + '?embed=1';
+      if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+      title.textContent = link.dataset.title;
       modal.classList.add('show');
       document.body.style.overflow = 'hidden';
     }
     function close() { modal.classList.remove('show'); document.body.style.overflow = ''; }
-    document.getElementById('openTerms').addEventListener('click', open);
+    document.querySelectorAll('.terms-link[data-doc]').forEach(function (a) { a.addEventListener('click', open); });
     document.getElementById('termsClose').addEventListener('click', close);
     document.getElementById('termsCancel').addEventListener('click', close);
-    document.getElementById('termsAgree').addEventListener('click', function () { box.checked = true; close(); });
+    document.getElementById('termsAgree').addEventListener('click', function () { if (currentBox) currentBox.checked = true; close(); });
     modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal.classList.contains('show')) close(); });
   })();

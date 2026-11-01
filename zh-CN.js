@@ -212,5 +212,9 @@ window.AEX_I18N["zh-CN"] = {
  "Partner Terms": "合作伙伴条款",
  "Privacy Policy": "隐私政策",
  "Close": "关闭",
- "I agree": "我同意"
+ "I agree": "我同意",
+ "I have read and agree to the Privacy Policy": "我已阅读并同意隐私政策",
+ "View Privacy Policy": "查看隐私政策",
+ "Please agree to the Partner Terms and the Privacy Policy to continue.": "请同意合作伙伴条款和隐私政策后继续。",
+ "I agree to the Partner Terms and Privacy Policy": "我同意合作伙伴条款和隐私政策"
 };

@@ -212,5 +212,9 @@ window.AEX_I18N["fr"] = {
  "Partner Terms": "Conditions partenaires",
  "Privacy Policy": "Politique de confidentialité",
  "Close": "Fermer",
- "I agree": "J'accepte"
+ "I agree": "J'accepte",
+ "I have read and agree to the Privacy Policy": "J'ai lu et j'accepte la Politique de confidentialité",
+ "View Privacy Policy": "Voir la Politique de confidentialité",
+ "Please agree to the Partner Terms and the Privacy Policy to continue.": "Veuillez accepter les Conditions partenaires et la Politique de confidentialité pour continuer.",
+ "I agree to the Partner Terms and Privacy Policy": "J'accepte les Conditions partenaires et la Politique de confidentialité"
 };
