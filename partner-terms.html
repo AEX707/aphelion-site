@@ -21,6 +21,9 @@
 .legal-body th, .legal-body td { border: 1px solid var(--border-soft); padding: 9px 11px; text-align: left; vertical-align: top; }
 .legal-body th { font-weight: 700; }
 .legal-lang[hidden] { display: none; }
+body.embed .topbar, body.embed header, body.embed footer, body.embed .page-hero { display: none !important; }
+body.embed section { padding: 0 !important; margin: 0 !important; }
+body.embed .legal-wrap { padding: 18px 0 30px !important; }
 </style>
 </head>
 <body>
@@ -290,6 +293,7 @@
 
 <script>
   (function () {
+    if (/[?&]embed=1/.test(location.search)) document.body.classList.add('embed');
     var buttons = document.querySelectorAll('.legal-tabs button');
     function show(lang) {
       document.getElementById('terms-ja').hidden = lang !== 'ja';

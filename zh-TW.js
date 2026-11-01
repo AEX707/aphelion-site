@@ -210,5 +210,7 @@ window.AEX_I18N["zh-TW"] = {
  "View Partner Terms": "查看合作夥伴條款",
  "Please agree to the Partner Terms to continue.": "請同意合作夥伴條款後繼續。",
  "Partner Terms": "合作夥伴條款",
- "Privacy Policy": "隱私權政策"
+ "Privacy Policy": "隱私權政策",
+ "Close": "關閉",
+ "I agree": "我同意"
 };

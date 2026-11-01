@@ -425,3 +425,23 @@ body:not(.home) header .btn-outline:hover { background: rgba(21,33,61,.06); colo
 body:not(.home) .menu-toggle { border-color: rgba(21,33,61,.45); }
 body:not(.home) .menu-toggle span { background: #15213D; }
 @media (max-width: 900px) { body:not(.home) header nav.nav-open { background: #fff; border-radius: 14px; padding: 12px 16px; box-shadow: 0 10px 30px rgba(21,33,61,.12); } }
+
+/* Compact spacing on inner pages (Nov 2026) */
+.page-hero { padding: 34px 0 26px; }
+.page-hero .eyebrow { margin-bottom: 8px; }
+.page-hero h1 { font-size: clamp(30px, 4vw, 42px); }
+.page-hero p { margin-top: 8px; }
+.page-hero + section,
+.page-hero + .container + section { padding-top: 32px; }
+.page-hero + section .legal-wrap { padding-top: 0; }
+.admin-wrap { padding-top: 28px !important; }
+.dash-wrap { padding-top: 24px !important; }
+@media (max-width: 900px) {
+  .page-hero { padding: 24px 0 18px; }
+  .page-hero + section,
+  .page-hero + .container + section { padding-top: 22px; }
+  .admin-wrap, .dash-wrap { padding-top: 18px !important; }
+}
+/* Tours page: keep room for the search panel that overlaps the heading band */
+.page-hero:has(+ .container .search-panel) { padding-bottom: 64px; }
+@media (max-width: 900px) { .page-hero:has(+ .container .search-panel) { padding-bottom: 48px; } }

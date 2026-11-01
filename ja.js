@@ -337,5 +337,7 @@ window.AEX_I18N["ja"] = {
  "View Partner Terms": "パートナー規約を見る",
  "Please agree to the Partner Terms to continue.": "続行するにはパートナー規約に同意してください。",
  "Partner Terms": "パートナー規約",
- "Privacy Policy": "プライバシーポリシー"
+ "Privacy Policy": "プライバシーポリシー",
+ "Close": "閉じる",
+ "I agree": "同意する"
 };

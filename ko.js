@@ -210,5 +210,7 @@ window.AEX_I18N["ko"] = {
  "View Partner Terms": "파트너 약관 보기",
  "Please agree to the Partner Terms to continue.": "계속하려면 파트너 약관에 동의해 주세요.",
  "Partner Terms": "파트너 약관",
- "Privacy Policy": "개인정보 처리방침"
+ "Privacy Policy": "개인정보 처리방침",
+ "Close": "닫기",
+ "I agree": "동의합니다"
 };
