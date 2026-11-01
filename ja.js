@@ -332,5 +332,10 @@ window.AEX_I18N["ja"] = {
  "Day plan": "1日のスケジュール",
  "Child": "子ども",
  "Private group": "貸切",
- "Group size": "人数"
+ "Group size": "人数",
+ "I have read and agree to the Partner Terms": "パートナー規約を読み、同意します",
+ "View Partner Terms": "パートナー規約を見る",
+ "Please agree to the Partner Terms to continue.": "続行するにはパートナー規約に同意してください。",
+ "Partner Terms": "パートナー規約",
+ "Privacy Policy": "プライバシーポリシー"
 };

@@ -205,5 +205,10 @@ window.AEX_I18N["ko"] = {
  "A place in our ready-made itineraries": "완성 일정에 포함",
  "Guaranteed payment": "결제 보장",
  "12 months of free promotion": "12개월 무료 홍보",
- "Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.": "전 세계 여행사를 위한 일본 엄선 체험. 운영: ZEN Co., Ltd., 도쿄."
+ "Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.": "전 세계 여행사를 위한 일본 엄선 체험. 운영: ZEN Co., Ltd., 도쿄.",
+ "I have read and agree to the Partner Terms": "파트너 약관을 읽었으며 이에 동의합니다",
+ "View Partner Terms": "파트너 약관 보기",
+ "Please agree to the Partner Terms to continue.": "계속하려면 파트너 약관에 동의해 주세요.",
+ "Partner Terms": "파트너 약관",
+ "Privacy Policy": "개인정보 처리방침"
 };

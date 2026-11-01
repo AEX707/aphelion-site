@@ -8,6 +8,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
+<style>
+.terms-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.terms-check input { width: auto; margin-top: 3px; flex: 0 0 auto; }
+.terms-link { display: inline-block; margin: 6px 0 0 26px; font-size: 13px; color: var(--gold); text-decoration: underline; }
+</style>
 </head>
 <body>
 
@@ -88,6 +93,10 @@
           <label for="message">Tell us about your business</label>
           <textarea id="message" name="message" rows="4" placeholder="What kind of tours do you sell? How many customers do you serve annually?"></textarea>
         </div>
+        <div class="form-group terms-agree">
+          <label class="terms-check"><input type="checkbox" id="agreeTerms" required> <span>I have read and agree to the Partner Terms</span></label>
+          <a href="partner-terms.html" target="_blank" rel="noopener" class="terms-link">View Partner Terms</a>
+        </div>
         <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;">Create Partner Account</button>
       </form>
     </div>
@@ -110,11 +119,13 @@
         <h3>Partners</h3>
         <a href="partner.html">Become a Partner</a>
         <a href="login.html">Partner Login</a>
+        <a href="partner-terms.html">Partner Terms</a>
       </div>
       <div>
         <h3>Contact</h3>
         <a href="mailto:partners@aphelionexpeditions.com">partners@aphelionexpeditions.com</a>
         <a href="mailto:info@aphelionexpeditions.com">info@aphelionexpeditions.com</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -145,6 +156,14 @@
     const country = document.getElementById('country').value;
     const password = document.getElementById('password').value;
     const message = document.getElementById('message').value;
+    const agreed = document.getElementById('agreeTerms').checked;
+    if (!agreed) {
+      errorMessage.textContent = 'Please agree to the Partner Terms to continue.';
+      errorMessage.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Partner Account';
+      return;
+    }
 
     try {
       // Create the login account. The partner profile (company, contact, etc.)
@@ -159,7 +178,9 @@
             company_name: companyName,
             contact_person: contactPerson,
             country: country,
-            message: message
+            message: message,
+            terms_version: '1.0',
+            terms_accepted_at: new Date().toISOString()
           }
         }
       });

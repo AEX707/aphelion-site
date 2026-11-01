@@ -205,5 +205,10 @@ window.AEX_I18N["it"] = {
  "A place in our ready-made itineraries": "Un posto nei nostri itinerari pronti",
  "Guaranteed payment": "Pagamento garantito",
  "12 months of free promotion": "12 mesi di promozione gratuita",
- "Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.": "Esperienze selezionate in Giappone per agenzie di viaggio di tutto il mondo. Gestito da ZEN Co., Ltd., Tokyo."
+ "Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.": "Esperienze selezionate in Giappone per agenzie di viaggio di tutto il mondo. Gestito da ZEN Co., Ltd., Tokyo.",
+ "I have read and agree to the Partner Terms": "Ho letto e accetto i Termini per i partner",
+ "View Partner Terms": "Visualizza i Termini per i partner",
+ "Please agree to the Partner Terms to continue.": "Accetta i Termini per i partner per continuare.",
+ "Partner Terms": "Termini per i partner",
+ "Privacy Policy": "Informativa sulla privacy"
 };
