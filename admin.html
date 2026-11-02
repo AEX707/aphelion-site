@@ -1033,6 +1033,157 @@
     return data; // { url, orderId, id }
   }
 
+  // =================== BOOKING EMAILS ===================
+  const AEX_MAIL = {
+    navy: '#15213D', gold: '#C9A961', text: '#1F2937', muted: '#6B7280', line: '#E7E2D6', bg: '#F5F3EC'
+  };
+  function bookingRef(id) { return 'AEX-' + String(id).padStart(4, '0'); }
+  function fmtYen(n) { return '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP'); }
+  function fmtLongDate(d) {
+    if (!d) return '—';
+    const x = new Date(d + (String(d).length <= 10 ? 'T00:00:00' : ''));
+    return isNaN(x) ? esc(d) : x.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function mailLines(v) {
+    return String(v || '').split(/\r?\n/).map(x => x.replace(/^[-•*·]\s*/, '').trim()).filter(Boolean);
+  }
+  function mailList(v) {
+    const l = mailLines(v);
+    return l.length ? '<ul style="margin:6px 0 0; padding-left:18px;">' + l.map(x => `<li style="margin:2px 0;">${esc(x)}</li>`).join('') + '</ul>' : '';
+  }
+  function mailRow(label, value) {
+    if (value == null || value === '') return '';
+    return `<tr><td style="padding:9px 0; color:${AEX_MAIL.muted}; font-size:13px; width:38%; vertical-align:top; border-bottom:1px solid ${AEX_MAIL.line};">${label}</td>
+      <td style="padding:9px 0; color:${AEX_MAIL.text}; font-size:14px; font-weight:600; vertical-align:top; border-bottom:1px solid ${AEX_MAIL.line};">${value}</td></tr>`;
+  }
+  function mailSection(title, bodyHtml) {
+    if (!bodyHtml) return '';
+    return `<h3 style="margin:26px 0 8px; font:600 15px Georgia, serif; color:${AEX_MAIL.navy};">${title}</h3>
+      <div style="font-size:14px; line-height:1.6; color:${AEX_MAIL.text};">${bodyHtml}</div>`;
+  }
+  function mailLayout(badge, heading, introHtml, contentHtml) {
+    return `<div style="background:${AEX_MAIL.bg}; padding:24px 12px; font-family:Arial, Helvetica, sans-serif;">
+      <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:14px; overflow:hidden; border:1px solid ${AEX_MAIL.line};">
+        <div style="background:${AEX_MAIL.navy}; padding:22px 28px;">
+          <div style="font:600 20px Georgia, serif; letter-spacing:3px; color:#fff;">APHELION</div>
+          <div style="font-size:10px; letter-spacing:4px; color:${AEX_MAIL.gold};">EXPEDITIONS</div>
+        </div>
+        <div style="padding:28px;">
+          <div style="display:inline-block; font-size:12px; font-weight:700; letter-spacing:1px; color:${AEX_MAIL.navy}; background:${AEX_MAIL.gold}; padding:5px 12px; border-radius:20px;">${badge}</div>
+          <h2 style="margin:14px 0 10px; font:600 24px Georgia, serif; color:${AEX_MAIL.navy};">${heading}</h2>
+          <div style="font-size:14px; line-height:1.6; color:${AEX_MAIL.text};">${introHtml}</div>
+          ${contentHtml}
+        </div>
+        <div style="padding:18px 28px; background:${AEX_MAIL.bg}; font-size:12px; color:${AEX_MAIL.muted}; line-height:1.6;">
+          Aphelion Expeditions · Tokyo, Japan<br>
+          <a href="mailto:info@aphelionexpeditions.com" style="color:${AEX_MAIL.navy};">info@aphelionexpeditions.com</a> ·
+          <a href="https://aphelionexpeditions.com" style="color:${AEX_MAIL.navy};">aphelionexpeditions.com</a>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  async function fetchOne(path) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` }
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return rows && rows[0] ? rows[0] : null;
+  }
+
+  async function sendBookingEmails(id, status, ctx) {
+    const b = await fetchOne(`bookings?select=*&id=eq.${id}`) || {};
+    const tourId = b.tour_id || ctx.tourId;
+    const t = tourId ? (await fetchOne(`tours?select=*&id=eq.${tourId}`) || {}) : {};
+    const p = t.partner_id ? (await fetchOne(`partners?select=email,company_name,contact_person&id=eq.${t.partner_id}`) || {}) : {};
+    const ref = bookingRef(id);
+    const tourName = t.title || b.tour_name || ctx.tourName || 'your tour';
+    const guests = Number(b.travelers || ctx.travelers || 1);
+    const agencyEmail = b.email || ctx.email;
+    const agency = b.company || '';
+    const unit = Number(t.price) || 0;
+    const total = ctx.chargeTotal || (unit ? publicPrice(unit) * guests : 0);
+    const program = Array.isArray(t.day_program) ? t.day_program.filter(x => x && x.activity) : [];
+    const startTime = program.length && program[0].time ? program[0].time : '';
+    const programHtml = program.length
+      ? '<table style="width:100%; border-collapse:collapse;">' + program.map(x => `<tr><td style="padding:4px 10px 4px 0; color:${AEX_MAIL.gold}; font-weight:700; width:60px; vertical-align:top;">${esc(x.time || '')}</td><td style="padding:4px 0;">${esc(x.activity)}</td></tr>`).join('') + '</table>'
+      : '';
+
+    if (status === 'declined') {
+      const html = mailLayout('BOOKING UPDATE · ' + ref,
+        'We are sorry — this date is not available',
+        `<p>Dear ${esc(agency || 'partner')},</p>
+         <p>Thank you for your request for <strong>${esc(tourName)}</strong> on <strong>${fmtLongDate(b.requested_date)}</strong> for ${guests} ${guests === 1 ? 'guest' : 'guests'}. Unfortunately we cannot confirm it this time.</p>
+         <p>We would be glad to suggest another date or a similar experience. Simply reply to this email, or browse our catalogue:</p>
+         <p style="margin:18px 0;"><a href="https://aphelionexpeditions.com/tours.html" style="display:inline-block; background:${AEX_MAIL.navy}; color:#fff; text-decoration:none; padding:12px 22px; border-radius:24px; font-size:13px; font-weight:700; letter-spacing:1px;">VIEW ALL EXPERIENCES</a></p>
+         <p>Kind regards,<br>Aphelion Expeditions</p>`, '');
+      await sendNotificationEmail(agencyEmail, `Booking ${ref} — ${tourName}: date not available`, html);
+      return;
+    }
+
+    // ---- Confirmed: agency ----
+    const details = '<table style="width:100%; border-collapse:collapse; margin-top:18px;">' +
+      mailRow('Booking reference', ref) +
+      mailRow('Experience', esc(tourName)) +
+      mailRow('Date', fmtLongDate(b.requested_date) + (startTime ? ', start ' + esc(startTime) : '')) +
+      mailRow('Guests', guests + (guests === 1 ? ' guest' : ' guests')) +
+      mailRow('Booked by', esc(agency)) +
+      mailRow('Duration', esc(t.duration || '')) +
+      mailRow('Meeting point', esc(t.meeting_point || '')) +
+      mailRow('Price', unit ? `${fmtYen(publicPrice(unit))} × ${guests} = <span style="color:${AEX_MAIL.navy};">${fmtYen(total)}</span><div style="font-weight:400; font-size:12px; color:${AEX_MAIL.muted};">JPY, consumption tax included</div>` : '') +
+      mailRow('Your notes', esc(b.details || '')) +
+      '</table>';
+    const payment = ctx.paymentLinkUrl
+      ? `<p>Please complete the payment of <strong>${fmtYen(total)}</strong> to finalise the booking:</p>
+         <p style="margin:14px 0;"><a href="${ctx.paymentLinkUrl}" style="display:inline-block; background:${AEX_MAIL.gold}; color:${AEX_MAIL.navy}; text-decoration:none; padding:12px 22px; border-radius:24px; font-size:13px; font-weight:700; letter-spacing:1px;">PAY NOW</a></p>`
+      : `<p>We will send you the payment details separately.</p>`;
+    const agencyHtml = mailLayout('CONFIRMED · ' + ref,
+      'Your booking is confirmed',
+      `<p>Dear ${esc(agency || 'partner')},</p>
+       <p>We are pleased to confirm your booking for <strong>${esc(tourName)}</strong> for <strong>${guests} ${guests === 1 ? 'guest' : 'guests'}</strong> on <strong>${fmtLongDate(b.requested_date)}</strong>. Please find all details below.</p>`,
+      details +
+      mailSection('Programme', programHtml) +
+      mailSection('Included', mailList(t.included)) +
+      mailSection('Not included', mailList(t.not_included)) +
+      mailSection('Good to know', mailList(t.important_info)) +
+      mailSection('Plan B (bad weather)', t.plan_b ? esc(t.plan_b) : '') +
+      mailSection('Payment', payment) +
+      mailSection('Cancellation policy',
+        `<ul style="margin:6px 0 0; padding-left:18px;">
+           <li>More than 72 hours before the start: full refund</li>
+           <li>24–72 hours before the start: 50% refund</li>
+           <li>Less than 24 hours before, or no-show: no refund</li>
+         </ul>
+         <p style="font-size:12px; color:${AEX_MAIL.muted};">If weather makes the experience unsafe, the listed Plan B is offered at the same price, or the booking is fully refunded.</p>`) +
+      mailSection('Before the tour',
+        `<p>Please reply to this email with the participants' names and the contact of the group leader for the day. For any change, always quote <strong>${ref}</strong>.</p>`) +
+      `<p style="margin-top:24px;">Thank you for choosing Aphelion Expeditions.<br>Kind regards,<br><strong>Aphelion Expeditions</strong></p>`);
+    await sendNotificationEmail(agencyEmail, `Booking confirmed ${ref} — ${tourName}, ${fmtLongDate(b.requested_date)}, ${guests} ${guests === 1 ? 'guest' : 'guests'}`, agencyHtml);
+
+    // ---- Confirmed: partner (provider) ----
+    if (p.email) {
+      const payout = unit ? partnerPayout(publicPrice(unit)) * guests : 0;
+      const partnerHtml = mailLayout('NEW BOOKING · ' + ref,
+        'New confirmed booking',
+        `<p>Dear ${esc(p.contact_person || p.company_name || 'partner')},</p>
+         <p>A travel agency has booked <strong>${esc(tourName)}</strong> through Aphelion Expeditions. Please reserve this date.</p>`,
+        '<table style="width:100%; border-collapse:collapse; margin-top:18px;">' +
+          mailRow('Booking reference', ref) +
+          mailRow('Experience', esc(tourName)) +
+          mailRow('Date', fmtLongDate(b.requested_date) + (startTime ? ', start ' + esc(startTime) : '')) +
+          mailRow('Guests', guests + (guests === 1 ? ' guest' : ' guests')) +
+          mailRow('Agency', esc(agency)) +
+          mailRow('Special requests', esc(b.details || '')) +
+          mailRow('Your payout', payout ? `${fmtYen(payout)}<div style="font-weight:400; font-size:12px; color:${AEX_MAIL.muted};">90% of ${fmtYen(total)} · paid at the end of the following month</div>` : '') +
+        '</table>' +
+        mailSection('Next steps',
+          `<p>Participants' names and the group leader's contact for the day will follow before the tour. Please contact us — not the agency directly — about any change, quoting <strong>${ref}</strong>.</p>`) +
+        `<p style="margin-top:24px;">Thank you,<br><strong>Aphelion Expeditions</strong><br>partners@aphelionexpeditions.com</p>`);
+      await sendNotificationEmail(p.email, `New booking ${ref} — ${tourName}, ${fmtLongDate(b.requested_date)}, ${guests} ${guests === 1 ? 'guest' : 'guests'}`, partnerHtml);
+    }
+  }
+
   async function setBookingStatus(id, status, email, tourName, tourId, travelers) {
     try {
       let paymentPatch = {};
@@ -1079,13 +1230,14 @@
       showBookingStatus('Booking status updated to "' + status + '".', true);
 
       if (status === 'confirmed' || status === 'declined') {
-        const subject = status === 'confirmed'
-          ? `Your booking for "${tourName}" is confirmed`
-          : `Update on your booking for "${tourName}"`;
-        const html = status === 'confirmed'
-          ? `<p>Good news — your booking request for <strong>${tourName}</strong> has been confirmed by Aphelion Expeditions.</p>${paymentLinkUrl ? `<p>Total: <strong>¥${Number(chargeTotal).toLocaleString('ja-JP')}</strong></p><p>Please complete payment to finalize your booking: <a href="${paymentLinkUrl}">${paymentLinkUrl}</a></p><p>Payment is processed securely by Square, our payment provider.</p>` : '<p>Our team will be in touch with further details.</p>'}`
-          : `<p>We're sorry, but your booking request for <strong>${tourName}</strong> could not be confirmed at this time.</p><p>Please contact us if you'd like to discuss alternative dates or tours.</p>`;
-        sendNotificationEmail(email, subject, html);
+        // Detailed emails: agency gets a full confirmation (or a polite decline),
+        // the partner gets the booking details for the confirmed tour.
+        try {
+          await sendBookingEmails(id, status, { email, tourName, tourId, travelers, paymentLinkUrl, chargeTotal });
+        } catch (mailErr) {
+          console.error('Booking email failed:', mailErr);
+          showBookingStatus('Status updated, but the email could not be prepared: ' + mailErr.message, false);
+        }
       }
 
       loadBookings();
