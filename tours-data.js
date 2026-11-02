@@ -6,12 +6,20 @@ const SUPABASE_KEY = "sb_publishable_vsbAvQlf9in0HDYZeP8asQ_znoG1onN";
 
 let _toursCache = null;
 
-// Aphelion's commission, added on top of the partner's price.
+// Aphelion's commission (Partner Terms v2.0): INCLUDED in the price.
+// The partner enters the final price agencies pay; Aphelion keeps 10% of it
+// and the partner receives 90%. Nothing is added on top any more.
 // Also used by admin.html when it creates the payment link.
 const COMMISSION_RATE = 0.10;
 
-function publicPrice(basePrice) {
-  return Math.round(Number(basePrice) * (1 + COMMISSION_RATE));
+// Price the agency pays = the price the partner entered (commission inside).
+function publicPrice(price) {
+  return Math.round(Number(price));
+}
+
+// What the partner receives from a given agency price.
+function partnerPayout(price) {
+  return Math.round(Number(price) * (1 - COMMISSION_RATE));
 }
 
 // Public-facing: only tours that have been approved by an admin.
@@ -29,10 +37,8 @@ async function getTours() {
     const data = await res.json();
     // map group_size (database column name) back to "group" so existing
     // page code (t.group) keeps working unchanged.
-    // Visitors see the price WITH Aphelion's commission already included:
-    // price = partner's price + 10%, rounded to a whole yen. The partner's
-    // own price is kept as base_price (admin panel and partner dashboard
-    // load tours separately and keep showing the partner's price).
+    // Visitors see exactly the price the partner entered — Aphelion's 10%
+    // commission is already inside it (Partner Terms v2.0).
     _toursCache = data.map(t => ({
       ...t,
       group: t.group_size,

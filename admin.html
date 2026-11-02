@@ -148,7 +148,7 @@
         <input type="hidden" id="f_group">
       </div>
       <div class="form-group">
-        <label>Price per person (JPY ¥, number only)</label>
+        <label>Price per person for agencies (JPY ¥, number only — Aphelion's 10% is included)</label>
         <input type="number" step="1" min="0" id="f_price" required>
       </div>
       <div class="form-group">
@@ -245,6 +245,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tours-data.js"></script>
+<script src="terms-version.js"></script>
 <script>
   // --- Real admin sign-in (Supabase Auth) ---
   // The admin signs in with email + password. The database itself checks that
@@ -419,7 +420,7 @@
         <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
         <div class="info">
           <h4>${t.title} <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
-          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}${t.edited_at ? ` · <span style="color:#E0482D; font-weight:600;">✏ edited by partner ${new Date(t.edited_at).toLocaleDateString('en-GB')} — check &amp; Approve</span>` : ''}<span class="tr-state">${translationState(t)}</span></span>
+          <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} (AEX ¥${(Number(t.price) - partnerPayout(t.price)).toLocaleString('ja-JP')}) · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}${t.edited_at ? ` · <span style="color:#E0482D; font-weight:600;">✏ edited by partner ${new Date(t.edited_at).toLocaleDateString('en-GB')} — check &amp; Approve</span>` : ''}<span class="tr-state">${translationState(t)}</span></span>
         </div>
         <div class="actions">
           <button class="btn-go${(t.status || 'approved') === 'approved' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'approved', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Approve</button>
@@ -697,6 +698,47 @@
     setTimeout(() => { el.className = 'status-msg'; }, 4000);
   }
 
+  // ---------- Partner Terms acceptance ----------
+  function termsBadge(p) {
+    const cur = typeof PARTNER_TERMS_VERSION !== 'undefined' ? PARTNER_TERMS_VERSION : null;
+    if (!cur) return '';
+    if (p.terms_version === cur) {
+      const d = p.terms_accepted_at ? new Date(p.terms_accepted_at).toLocaleDateString('en-GB') : '';
+      return `<span style="color:#5BB98C;">✓ Terms v${cur} accepted${d ? ' ' + d : ''}</span>`;
+    }
+    const was = p.terms_version ? 'v' + p.terms_version : 'none';
+    const mailed = p.terms_notified_version === cur ? ' · email sent' : '';
+    return `<span style="color:#E0A82D;">⚠ Terms v${cur} not accepted yet (has ${was})${mailed}</span>`;
+  }
+
+  // Emails every partner who hasn't accepted the current Partner Terms yet.
+  // Each partner gets the email only once per version (remembered in
+  // partners.terms_notified_version), so opening admin again sends nothing new.
+  let termsNotifyRunning = false;
+  async function notifyPartnersAboutTerms(partners) {
+    if (termsNotifyRunning || typeof PARTNER_TERMS_VERSION === 'undefined') return;
+    termsNotifyRunning = true;
+    const cur = PARTNER_TERMS_VERSION;
+    const todo = partners.filter(p => p.email && p.terms_version !== cur && p.terms_notified_version !== cur);
+    const items = (PARTNER_TERMS_SUMMARY || []).map(x => `<li>${x}</li>`).join('');
+    for (const p of todo) {
+      const html = `<p>Dear ${p.contact_person || p.company_name || 'Partner'},</p>
+        <p>We have updated the Aphelion Expeditions Partner Terms (version ${cur}). What changed:</p>
+        <ul>${items}</ul>
+        <p>Please log in to your partner dashboard and click <b>"I accept"</b> to confirm. You can read the full terms here: <a href="https://aphelionexpeditions.com/partner-terms.html">aphelionexpeditions.com/partner-terms.html</a></p>
+        <p>Thank you for being with us,<br>Aphelion Expeditions<br>partners@aphelionexpeditions.com</p>`;
+      await sendNotificationEmail(p.email, `Updated Partner Terms (v${cur}) — please review and accept`, html);
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/partners?id=eq.${p.id}`, {
+          method: 'PATCH',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ terms_notified_version: cur })
+        });
+      } catch (e) { console.error('Could not mark terms email as sent:', e); }
+    }
+    termsNotifyRunning = false;
+  }
+
   async function loadPartners() {
     const list = document.getElementById('partnerList');
     try {
@@ -708,6 +750,7 @@
       });
       if (!res.ok) throw new Error('Status ' + res.status);
       const partners = await res.json();
+      notifyPartnersAboutTerms(partners); // runs in the background
       if (!partners.length) {
         list.innerHTML = '<p style="color:var(--muted);">No partners registered yet.</p>';
         return;
@@ -717,6 +760,7 @@
           <div class="info" style="cursor:pointer;" onclick="togglePartnerDetails('${p.id}')" title="Click to see partner details">
             <h4>${p.company_name} <span class="status-pill ${p.status}">${p.status}</span></h4>
             <span>${p.contact_person || ''} · ${p.email} · ${p.country || ''} · <span style="color:var(--gold-soft);">Details ▾</span></span>
+            <span style="display:block; margin-top:4px; font-size:12px;">${termsBadge(p)}</span>
           </div>
           <div class="actions">
             <button class="btn-go${p.status === 'approved' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'approved', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Approve</button>

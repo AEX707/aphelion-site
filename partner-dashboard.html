@@ -10,6 +10,17 @@
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
 <style>
+  .payout-line { font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .payout-line b { color:var(--gold); font-weight:600; }
+  .terms-gate { position:fixed; inset:0; z-index:1000; background:rgba(8,12,24,.72); display:none; align-items:center; justify-content:center; padding:16px; }
+  .terms-gate.open { display:flex; }
+  .terms-gate .tg-box { background:var(--void, #fff); color:var(--white, #15213D); width:min(560px,100%); max-height:90vh; overflow:auto; border-radius:18px; padding:26px 24px; box-shadow:0 30px 80px rgba(0,0,0,.35); }
+  .terms-gate h3 { margin:0 0 6px; font-size:22px; }
+  .terms-gate .tg-sub { font-size:13px; color:var(--muted); margin:0 0 14px; }
+  .terms-gate ul { margin:0 0 16px; padding-left:20px; font-size:14px; line-height:1.6; }
+  .terms-gate ul li { margin-bottom:6px; }
+  .terms-gate .tg-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+  .terms-gate .tg-err { color:#E0482D; font-size:13px; margin-top:10px; display:none; }
   .dash-wrap { max-width: 1040px; margin: 0 auto; padding: 50px 20px 100px; }
   .status-pill { display:inline-block; padding:5px 14px; border-radius:20px; font-size:11px; text-transform:uppercase; letter-spacing:.5px; font-weight:600; }
   .status-pill.pending { background:rgba(166,124,46,.12); color:var(--gold); border:1px solid rgba(166,124,46,.4); }
@@ -298,21 +309,24 @@
             <button type="button" class="link-btn" onclick="fillProgramTemplate()">Use a template for this format</button>
           </div>
 
-          <h4 class="form-step"><span class="n">4</span> Prices <span style="font:400 13px var(--sans); color:var(--muted);">— your price, in yen</span></h4>
-          <p class="form-hint">Enter the price you want to receive. Keep prices simple and clear: one adult price, and optionally a child price and a price for a private group.</p>
+          <h4 class="form-step"><span class="n">4</span> Prices <span style="font:400 13px var(--sans); color:var(--muted);">— final price for agencies, in yen</span></h4>
+          <p class="form-hint">Enter the final price agencies pay. Aphelion's 10% commission is already included — nothing is added on top. You receive 90%. Keep prices simple and clear: one adult price, and optionally a child price and a price for a private group.</p>
           <div class="price-grid">
             <div class="form-group">
               <label>Price per adult (JPY ¥, number only)</label>
               <input type="number" step="1" min="0" id="t_price" required>
+              <div class="payout-line" id="t_price_payout"></div>
             </div>
             <div class="form-group">
               <label>Price per child (optional)</label>
               <input type="number" step="1" min="0" id="t_child_price" placeholder="e.g. 5000">
+              <div class="payout-line" id="t_child_price_payout"></div>
               <div class="field-warn" id="childWarn">The child price should not be higher than the adult price.</div>
             </div>
             <div class="form-group">
               <label>Private group — price for the whole group (optional)</label>
               <input type="number" step="1" min="0" id="t_private_price" placeholder="e.g. 60000">
+              <div class="payout-line" id="t_private_price_payout"></div>
               <div class="field-warn" id="privateWarn">A private group usually costs at least as much as the minimum number of guests at the adult price.</div>
             </div>
             <div class="form-group">
@@ -411,14 +425,34 @@
   </div>
 </footer>
 
+<div class="terms-gate" id="termsGate" role="dialog" aria-modal="true" aria-labelledby="tgTitle">
+  <div class="tg-box">
+    <h3 id="tgTitle">Updated Partner Terms</h3>
+    <p class="tg-sub" id="tgVersion"></p>
+    <p style="font-size:14px; margin:0 0 8px;">What changed:</p>
+    <ul id="tgSummary"></ul>
+    <p style="font-size:14px; margin:0 0 14px;">Please read the updated terms and accept them to continue using your dashboard.</p>
+    <div class="tg-actions">
+      <a href="partner-terms.html" target="_blank" rel="noopener" class="btn btn-outline">Read the Partner Terms</a>
+      <button type="button" class="btn btn-primary" id="tgAccept">I accept</button>
+    </div>
+    <div class="tg-err" id="tgErr"></div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
+<script src="terms-version.js"></script>
 <script>
   let currentUserId = null;
   let myTours = [];
   const tr = s => (window.AEX_t ? window.AEX_t(s) : s);
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const yen = n => '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP');
+  // Aphelion's commission is INCLUDED in the price the partner enters
+  // (Partner Terms v2.0): agencies pay the price, the partner receives 90%.
+  const COMMISSION_RATE = 0.10;
+  const payoutOf = price => Math.round((Number(price) || 0) * (1 - COMMISSION_RATE));
   const FORMAT_LABELS = { half_day: 'Half-day', full_day: 'Full-day', evening: 'Evening', flexible: 'Flexible' };
 
   // --- Tabs (remembers the last tab in the address, e.g. #tours) ---
@@ -445,6 +479,29 @@
   });
   markActivity();
 
+  // ---------- Updated Partner Terms: must accept before continuing ----------
+  function checkTermsGate(profile) {
+    if (typeof PARTNER_TERMS_VERSION === 'undefined') return;
+    if (profile.terms_version === PARTNER_TERMS_VERSION) return;
+    document.getElementById('tgVersion').textContent = tr('Version') + ' ' + PARTNER_TERMS_VERSION;
+    document.getElementById('tgSummary').innerHTML = (PARTNER_TERMS_SUMMARY || []).map(x => '<li>' + esc(tr(x)) + '</li>').join('');
+    document.getElementById('termsGate').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  document.getElementById('tgAccept').addEventListener('click', async function () {
+    const btn = this, err = document.getElementById('tgErr');
+    btn.disabled = true; err.style.display = 'none';
+    const { error } = await supabaseClient.rpc('accept_partner_terms', { p_version: PARTNER_TERMS_VERSION });
+    if (error) {
+      err.textContent = tr('Could not save. Please try again.') + ' (' + error.message + ')';
+      err.style.display = 'block';
+      btn.disabled = false;
+      return;
+    }
+    document.getElementById('termsGate').classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
   (async () => {
     await checkIdleAndLogout();
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -466,6 +523,7 @@
       document.getElementById('statusOut').textContent = 'No profile found';
       return;
     }
+    checkTermsGate(profile);
     document.getElementById('companyNameOut').textContent = profile.company_name;
     document.getElementById('companyOut2').textContent = profile.company_name || '—';
     document.getElementById('contactOut').textContent = profile.contact_person || '—';
@@ -528,8 +586,10 @@
     setText('kConf', s.bookings_confirmed || 0);
     setText('kConfSub', (s.bookings_pending || 0) + ' ' + tr('waiting for confirmation'));
     setText('kGuests', (s.guests_confirmed || 0).toLocaleString());
-    setText('kEarn', yen(s.earnings_confirmed));
-    setText('kEarnSub', tr('already paid') + ': ' + yen(s.earnings_paid));
+    // Prices are agency prices with the 10% commission inside, so the
+    // partner's earnings are 90% of them.
+    setText('kEarn', yen(payoutOf(s.earnings_confirmed)));
+    setText('kEarnSub', tr('already paid') + ': ' + yen(payoutOf(s.earnings_paid)));
     if (s.reviews_count) {
       setText('kRating', '★ ' + Number(s.rating_avg).toFixed(1));
       setText('kRatingSub', s.reviews_count + ' ' + tr('reviews'));
@@ -791,6 +851,18 @@
   }
   ['t_price', 't_child_price', 't_private_price', 't_min', 't_max'].forEach(id => document.getElementById(id).addEventListener('input', checkPrices));
 
+  // ---------- Live "you receive" line under each price ----------
+  function updatePayouts() {
+    ['t_price', 't_child_price', 't_private_price'].forEach(id => {
+      const v = document.getElementById(id).value;
+      const out = document.getElementById(id + '_payout');
+      if (v === '' || Number(v) <= 0) { out.innerHTML = ''; return; }
+      const price = Math.round(Number(v));
+      out.innerHTML = tr('Agencies pay') + ' ' + yen(price) + ' · ' + tr('Aphelion 10%') + ': ' + yen(price - payoutOf(price)) + ' · ' + tr('You receive') + ': <b>' + yen(payoutOf(price)) + '</b>';
+    });
+  }
+  ['t_price', 't_child_price', 't_private_price'].forEach(id => document.getElementById(id).addEventListener('input', updatePayouts));
+
   // ---------- Open / edit / delete ----------
   let editingTourStatus = null;
   function resetExtras() {
@@ -835,6 +907,7 @@
     setVal('t_price', t.price);
     setVal('t_child_price', t.child_price);
     setVal('t_private_price', t.private_price);
+    updatePayouts();
     setVal('t_min', t.min_travelers);
     setVal('t_max', t.max_travelers);
     setVal('t_image', t.image);
