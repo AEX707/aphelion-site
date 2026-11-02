@@ -76,6 +76,8 @@
     </div>
     <button class="btn btn-primary" id="loginBtn" style="width:100%;" onclick="adminLogin()">Sign In</button>
     <p id="pwError" style="color:#f19a9a; font-size:13px; margin-top:12px; display:none;"></p>
+    <p style="margin-top:14px; font-size:13px; text-align:center;"><a href="#" id="adminForgot" style="color:var(--gold-soft);">Forgot password?</a></p>
+    <p id="adminForgotMsg" style="display:none; margin-top:10px; font-size:13px; text-align:center; color:var(--gold-soft);"></p>
   </div>
 </div>
 
@@ -246,6 +248,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tours-data.js"></script>
 <script src="terms-version.js"></script>
+<script src="password-toggle.js"></script>
 <script>
   // --- Real admin sign-in (Supabase Auth) ---
   // The admin signs in with email + password. The database itself checks that
@@ -330,6 +333,22 @@
   }
   document.getElementById('pw').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') adminLogin();
+  });
+
+  // "Forgot password?" — emails a reset link to the admin address typed above.
+  document.getElementById('adminForgot').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('adminEmail').value.trim();
+    const msg = document.getElementById('adminForgotMsg');
+    if (!email) { showGateError('Type your admin email above first, then click "Forgot password?".'); return; }
+    try { localStorage.setItem('aex_reset_target', 'admin'); } catch (err) {}
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password.html'
+    });
+    msg.style.display = 'block';
+    msg.textContent = error
+      ? 'Could not send the reset email: ' + error.message
+      : 'If this email belongs to an admin account, a reset link has been sent. Check your inbox (and spam).';
   });
 
   // Manual "Sign out" → back to the public home page.
