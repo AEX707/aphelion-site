@@ -356,5 +356,7 @@ window.AEX_I18N["ja"] = {
  "Could not save. Please try again.": "保存できませんでした。もう一度お試しください。",
  "Aphelion's 10% commission is now included in your price. The price you enter is the final price agencies pay; you receive 90% of it.": "Aphelionの手数料10%は料金に含まれるようになりました。入力した料金がエージェンシーの支払う最終料金となり、その90%をお受け取りいただきます。",
  "Founding Partner benefits updated: the standard 10% commission applies to everyone, with no listing, sign-up or monthly fees.": "ファウンディング・パートナー特典を更新しました：手数料は全パートナー共通の10%で、掲載料・登録料・月額料金はかかりません。",
- "Cancellation payouts are now calculated from your payout (90% of the price).": "キャンセル時の受取額は、お受取額（料金の90%）を基準に計算されます。"
+ "Cancellation payouts are now calculated from your payout (90% of the price).": "キャンセル時の受取額は、お受取額（料金の90%）を基準に計算されます。",
+ "View": "表示",
+ "Preview": "プレビュー"
 };

@@ -191,7 +191,31 @@
     const params = new URLSearchParams(window.location.search);
     const id = parseInt(params.get('id'), 10);
     const tours = await getTours();
-    const tour = tours.find(t => t.id === id);
+    let tour = tours.find(t => t.id === id);
+
+    // Not live yet (pending / edited / rejected)? The partner who owns it, or
+    // an admin, can still open it as a preview from their dashboard.
+    let isPreview = false;
+    if (!tour && id && supabaseClient) {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+          const { data } = await supabaseClient.from('tours').select('*').eq('id', id).maybeSingle();
+          if (data) {
+            tour = { ...data, group: data.group_size, base_price: data.price, price: publicPrice(data.price) };
+            if (typeof registerTourTranslations === 'function') registerTourTranslations([tour]);
+            isPreview = true;
+          }
+        }
+      } catch (e) { console.error('Preview load failed:', e); }
+    }
+    if (isPreview) {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'background:#E0A82D; color:#15213D; text-align:center; padding:10px 16px; font-size:14px; font-weight:600;';
+      bar.textContent = 'Preview — this tour is not live yet (status: ' + (tour.status || 'pending') + '). Only you can see it.';
+      const content = document.getElementById('tourContent');
+      content.parentNode.insertBefore(bar, content);
+    }
 
     if (!tour) {
       document.getElementById('notFound').style.display = 'block';

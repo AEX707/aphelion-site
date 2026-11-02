@@ -10,6 +10,10 @@
 <link rel="icon" type="image/png" href="favicon-32.png">
 <link rel="stylesheet" href="styles.css">
 <style>
+  .tour-link { color:inherit; text-decoration:none; border-bottom:1px dashed rgba(201,169,97,.6); }
+  .tour-link:hover { color:var(--gold); }
+  .view-btn { display:inline-flex; align-items:center; padding:8px 14px; border-radius:8px; border:1px solid var(--border-soft); font-size:13px; text-decoration:none; color:inherit; }
+  .view-btn:hover { border-color:var(--gold); color:var(--gold); }
   .payout-line { font-size:12.5px; color:var(--muted); margin-top:6px; line-height:1.5; }
   .payout-line b { color:var(--gold); font-weight:600; }
   .terms-gate { position:fixed; inset:0; z-index:1000; background:rgba(8,12,24,.72); display:none; align-items:center; justify-content:center; padding:16px; }
@@ -605,15 +609,15 @@
     document.getElementById('perfTable').innerHTML = per.length ? `
       <table class="perf-table">
         <thead><tr><th>Tour</th><th>Status</th><th class="num">Views</th><th class="num">Requests</th><th class="num">Confirmed</th><th class="num">Conversion</th><th class="num">Rating</th></tr></thead>
-        <tbody>${per.map(t => `<tr>
-          <td>${esc(t.title)}</td>
+        <tbody>${per.map(t => { const tid = t.id || t.tour_id || ((myTours || []).find(m => m.title === t.title) || {}).id; return `<tr>
+          <td>${tid ? `<a href="tour.html?id=${tid}" target="_blank" rel="noopener" class="tour-link">${esc(t.title)} ↗</a>` : esc(t.title)}</td>
           <td><span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></td>
           <td class="num">${t.views}</td>
           <td class="num">${t.bookings}</td>
           <td class="num">${t.confirmed}</td>
           <td class="num">${t.views ? Math.round(t.bookings / t.views * 100) + '%' : '—'}</td>
           <td class="num">${t.reviews ? '<span class="stars">★</span> ' + Number(t.rating).toFixed(1) + ' <span style="color:var(--muted)">(' + t.reviews + ')</span>' : '—'}</td>
-        </tr>`).join('')}</tbody>
+        </tr>`; }).join('')}</tbody>
       </table>` : `<p class="empty">${esc(tr('You have no tours yet. Add your first one above.'))}</p>`;
 
     const up = s.upcoming || [];
@@ -701,7 +705,7 @@
       <div class="tour-admin-row">
         <img src="${esc(t.image || '')}" alt="" onerror="this.style.opacity=0.2">
         <div class="info">
-          <h4>${esc(t.title)} <span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></h4>
+          <h4><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" class="tour-link">${esc(t.title)} ↗</a> <span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></h4>
           <span>${esc(t.location)} · ${yen(t.price)} · ${esc(t.category)}${t.tour_format ? ' · ' + esc(tr(FORMAT_LABELS[t.tour_format] || t.tour_format)) : ''}</span>
           <div class="quality" title="${esc(q.missing.length ? tr('Missing') + ': ' + q.missing.map(m => tr(m)).join(', ') : '')}">
             <div class="quality-track"><div class="quality-fill" style="width:${q.pct}%"></div></div>
@@ -709,6 +713,7 @@
           </div>
         </div>
         <div class="actions">
+          <a href="tour.html?id=${t.id}" target="_blank" rel="noopener" class="view-btn">${esc(tr(t.status === 'approved' ? 'View' : 'Preview'))}</a>
           <button onclick="editMyTour(${i})">Edit</button>
           <button class="danger" onclick="deleteMyTour(${i})">Delete</button>
         </div>

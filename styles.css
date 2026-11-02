@@ -445,3 +445,9 @@ body:not(.home) .menu-toggle span { background: #15213D; }
 /* Tours page: keep room for the search panel that overlaps the heading band */
 .page-hero:has(+ .container .search-panel) { padding-bottom: 64px; }
 @media (max-width: 900px) { .page-hero:has(+ .container .search-panel) { padding-bottom: 48px; } }
+
+/* "Partner Login" inside the mobile menu (the header button is hidden on phones) */
+nav .nav-login-mobile { display: none; }
+@media (max-width: 600px) {
+  nav.nav-open .nav-login-mobile { display: block; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(201,169,97,.35); color: var(--gold, #C9A961); }
+}

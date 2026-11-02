@@ -3,14 +3,38 @@ document.addEventListener('DOMContentLoaded', function () {
   const btn = document.getElementById('menuToggle');
   const nav = document.querySelector('header nav');
   if (!btn || !nav) return;
-  btn.addEventListener('click', function () {
-    nav.classList.toggle('nav-open');
+  // On phones the "Partner Login" button is hidden from the header to save
+  // space, so add it as the last item of the menu instead.
+  const login = document.querySelector('.nav-actions a[href="login.html"]');
+  if (login && !nav.querySelector('.nav-login-mobile')) {
+    const a = document.createElement('a');
+    a.href = login.getAttribute('href');
+    a.className = 'nav-login-mobile';
+    a.textContent = login.textContent.trim() || 'Partner Login';
+    nav.appendChild(a);
+  }
+  btn.setAttribute('aria-expanded', 'false');
+  function setOpen(open) {
+    nav.classList.toggle('nav-open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setOpen(!nav.classList.contains('nav-open'));
   });
   // close the menu after tapping a link
   nav.querySelectorAll('a').forEach(function (link) {
-    link.addEventListener('click', function () {
-      nav.classList.remove('nav-open');
-    });
+    link.addEventListener('click', function () { setOpen(false); });
+  });
+  // close the menu when tapping anywhere outside it, or pressing Esc
+  document.addEventListener('click', function (e) {
+    if (nav.classList.contains('nav-open') && !nav.contains(e.target) && !btn.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener('touchstart', function (e) {
+    if (nav.classList.contains('nav-open') && !nav.contains(e.target) && !btn.contains(e.target)) setOpen(false);
+  }, { passive: true });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setOpen(false);
   });
 });
 

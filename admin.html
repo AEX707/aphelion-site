@@ -419,7 +419,7 @@
       <div class="admin-row">
         <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
         <div class="info">
-          <h4>${t.title} <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
+          <h4><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:inherit; text-decoration:none; border-bottom:1px dashed rgba(201,169,97,.6);">${t.title} ↗</a> <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
           <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} (AEX ¥${(Number(t.price) - partnerPayout(t.price)).toLocaleString('ja-JP')}) · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}${t.edited_at ? ` · <span style="color:#E0482D; font-weight:600;">✏ edited by partner ${new Date(t.edited_at).toLocaleDateString('en-GB')} — check &amp; Approve</span>` : ''}<span class="tr-state">${translationState(t)}</span></span>
         </div>
         <div class="actions">
@@ -824,7 +824,7 @@
       const tours = tRes.ok ? await tRes.json() : [];
       html += `<h5 style="margin:18px 0 6px; color:var(--gold-soft); font-size:13px; letter-spacing:.5px;">TOURS (${tours.length})</h5>`;
       html += tours.length
-        ? tours.map(t => `<div>• ${esc(t.title)} — ¥${Number(t.price || 0).toLocaleString('ja-JP')} · ${esc(t.status || 'approved')} · added ${fmtDate(t.created_at)}</div>`).join('')
+        ? tours.map(t => `<div>• <a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:var(--gold-soft);">${esc(t.title)} ↗</a> — ¥${Number(t.price || 0).toLocaleString('ja-JP')} · ${esc(t.status || 'approved')} · added ${fmtDate(t.created_at)}</div>`).join('')
         : '<div style="color:var(--muted);">No tours yet.</div>';
       let bookings = [];
       if (tours.length) {
