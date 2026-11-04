@@ -216,5 +216,28 @@ window.AEX_I18N["zh-TW"] = {
  "I have read and agree to the Privacy Policy": "我已閱讀並同意隱私權政策",
  "View Privacy Policy": "查看隱私權政策",
  "Please agree to the Partner Terms and the Privacy Policy to continue.": "請同意合作夥伴條款和隱私權政策後繼續。",
- "I agree to the Partner Terms and Privacy Policy": "我同意合作夥伴條款和隱私權政策"
+ "I agree to the Partner Terms and Privacy Policy": "我同意合作夥伴條款和隱私權政策",
+ // Explore by region (map of Japan)
+ "Explore by region": "依地區探索",
+ "Where in Japan?": "去日本哪裡？",
+ "Choose a region on the map to see its experiences.": "在地圖上選擇地區，查看該地區的體驗。",
+ "Hokkaido": "北海道",
+ "Tohoku": "東北",
+ "Kanto": "關東",
+ "Chubu": "中部",
+ "Kansai": "關西",
+ "Chugoku": "中國地區",
+ "Shikoku": "四國",
+ "Kyushu": "九州",
+ "Okinawa": "沖繩",
+ "Kanto (Tokyo)": "關東（東京）",
+ "experience": "個體驗",
+ "experiences": "個體驗",
+ "Coming soon": "即將推出",
+ "Map of Japan": "日本地圖",
+ // Homepage doors
+ "For Travel Agencies": "旅行社入口",
+ "Build itineraries at net prices": "以淨價組合行程",
+ "For Tour Operators": "地接/活動供應商入口",
+ "Reach agencies worldwide · 10% commission": "觸及全球旅行社 · 佣金10%"
 };

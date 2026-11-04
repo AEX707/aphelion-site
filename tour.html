@@ -182,6 +182,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tours-data.js"></script>
+<script src="regions-map.js"></script>
 <script>
   // Login session (for reviews). tours-data.js already holds the project address and key.
   const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -279,7 +280,7 @@
             <div class="td-head">
               ${tour.tag ? `<span class="td-tag">${esc(tour.tag)}</span>` : ''}
               <h1>${esc(tour.title)}</h1>
-              ${tour.duration || tour.location || tour.tour_format ? `<div class="td-meta">${tour.tour_format ? `<span>☀ ${esc(FORMAT_LABELS[tour.tour_format] || tour.tour_format)}</span>` : ''}${tour.start_time ? `<span>🕒 ${esc(tour.start_time)}</span>` : ''}${tour.duration ? `<span>⏱ ${esc(tour.duration)}</span>` : ''}${tour.location ? `<span>📍 ${esc(tour.location)}</span>` : ''}</div>` : ''}
+              ${`<div class="td-meta"><span class="tour-code">${tourCode(tour)}</span>${tour.tour_format ? `<span>☀ ${esc(FORMAT_LABELS[tour.tour_format] || tour.tour_format)}</span>` : ''}${tour.start_time ? `<span>🕒 ${esc(tour.start_time)}</span>` : ''}${tour.duration ? `<span>⏱ ${esc(tour.duration)}</span>` : ''}${tour.location ? `<span>📍 ${esc(tour.location)}</span>` : ''}</div>`}
             </div>
             <div class="td-gallery${photos.length > 1 ? '' : ' single'}">
               <div class="td-stage" id="tdStage">

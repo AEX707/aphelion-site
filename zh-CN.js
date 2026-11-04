@@ -216,5 +216,28 @@ window.AEX_I18N["zh-CN"] = {
  "I have read and agree to the Privacy Policy": "我已阅读并同意隐私政策",
  "View Privacy Policy": "查看隐私政策",
  "Please agree to the Partner Terms and the Privacy Policy to continue.": "请同意合作伙伴条款和隐私政策后继续。",
- "I agree to the Partner Terms and Privacy Policy": "我同意合作伙伴条款和隐私政策"
+ "I agree to the Partner Terms and Privacy Policy": "我同意合作伙伴条款和隐私政策",
+ // Explore by region (map of Japan)
+ "Explore by region": "按地区探索",
+ "Where in Japan?": "去日本哪里？",
+ "Choose a region on the map to see its experiences.": "在地图上选择地区，查看该地区的体验。",
+ "Hokkaido": "北海道",
+ "Tohoku": "东北",
+ "Kanto": "关东",
+ "Chubu": "中部",
+ "Kansai": "关西",
+ "Chugoku": "中国地区",
+ "Shikoku": "四国",
+ "Kyushu": "九州",
+ "Okinawa": "冲绳",
+ "Kanto (Tokyo)": "关东（东京）",
+ "experience": "个体验",
+ "experiences": "个体验",
+ "Coming soon": "即将推出",
+ "Map of Japan": "日本地图",
+ // Homepage doors
+ "For Travel Agencies": "旅行社入口",
+ "Build itineraries at net prices": "以净价组合行程",
+ "For Tour Operators": "地接/活动供应商入口",
+ "Reach agencies worldwide · 10% commission": "触达全球旅行社 · 佣金10%"
 };

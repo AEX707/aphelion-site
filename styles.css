@@ -451,3 +451,69 @@ nav .nav-login-mobile { display: none; }
 @media (max-width: 600px) {
   nav.nav-open .nav-login-mobile { display: block; margin-top: 6px; padding-top: 14px; border-top: 1px solid rgba(201,169,97,.35); color: var(--gold, #C9A961); }
 }
+
+/* Explore by region — map of Japan (tours.html, regions-map.js) */
+.region-section { padding: 80px 0 70px; }
+.region-map { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.rm-map { background: #fff; border-radius: 22px; box-shadow: 0 18px 50px rgba(21,33,61,.10); padding: 22px; }
+.rm-map svg { width: 100%; height: auto; display: block; max-height: 560px; }
+.rm-region { fill: #E4E7EE; stroke: #fff; stroke-width: 1; transition: fill .2s ease; }
+.rm-region.is-live { fill: rgba(166,124,46,.45); cursor: pointer; outline: none; }
+.rm-region.is-live:hover, .rm-region.is-live:focus { fill: rgba(166,124,46,.75); }
+.rm-region.is-active { fill: var(--gold); }
+.rm-inset { fill: none; stroke: rgba(21,33,61,.18); stroke-dasharray: 4 4; }
+.rm-inset-label { font: 600 11px var(--sans); letter-spacing: 1.5px; text-transform: uppercase; fill: var(--muted); }
+.rm-list { display: grid; gap: 8px; }
+.rm-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; padding: 13px 18px; border-radius: 14px; background: #fff; border: 1px solid rgba(21,33,61,.08); color: var(--muted); text-align: left; transition: border-color .2s, background .2s, color .2s; }
+.rm-item .rm-name { font-family: var(--serif); font-size: 20px; font-weight: 600; color: inherit; }
+.rm-item.is-live { color: var(--wood); }
+.rm-item.is-live:hover { border-color: var(--gold); }
+.rm-item.is-active { background: var(--wood); border-color: var(--wood); color: #fff; }
+.rm-item:disabled { cursor: default; opacity: .7; }
+.rm-count { font-size: 13px; color: inherit; white-space: nowrap; }
+.rm-count b { color: var(--gold); font-size: 15px; }
+.rm-item.is-active .rm-count b { color: #E8C77A; }
+.rm-soon { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); white-space: nowrap; }
+@media (max-width: 900px) {
+  .region-map { grid-template-columns: 1fr; gap: 22px; }
+  .rm-list { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .region-section { padding: 56px 0 44px; }
+  .rm-map { padding: 12px; border-radius: 16px; }
+  .rm-list { grid-template-columns: 1fr; gap: 6px; }
+  .rm-item { padding: 11px 14px; }
+  .rm-item .rm-name { font-size: 18px; }
+}
+@media (max-width: 600px) {
+  .rm-list { grid-template-columns: 1fr 1fr; }
+  .rm-item { flex-direction: column; align-items: flex-start; gap: 0; }
+  .rm-item.rm-all { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+}
+
+/* Region numbers (1–9) on the map and in the list; tour codes like "3-012" */
+.rm-no circle { fill: #fff; stroke: rgba(21,33,61,.25); stroke-width: 1; }
+.rm-no text { font: 700 11px var(--sans); fill: var(--muted); text-anchor: middle; pointer-events: none; }
+.rm-no.is-live circle { fill: var(--wood); stroke: var(--wood); }
+.rm-no.is-live text { fill: #fff; }
+.rm-no.is-active circle { fill: #fff; stroke: var(--wood); stroke-width: 2; }
+.rm-no.is-active text { fill: var(--wood); }
+.rm-badge { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 10px; border-radius: 50%; background: rgba(21,33,61,.08); color: var(--muted); font: 700 11px var(--sans); font-style: normal; vertical-align: 3px; }
+.rm-item.is-live .rm-badge { background: var(--wood); color: #fff; }
+.rm-item.is-active .rm-badge { background: #fff; color: var(--wood); }
+.tour-code { display: inline-block; font: 600 11px var(--sans); letter-spacing: .8px; color: var(--muted); background: rgba(21,33,61,.06); border-radius: 6px; padding: 2px 7px; margin-right: 8px; vertical-align: 1px; }
+
+/* Homepage: two doors — agencies (buy) and tour operators (sell) */
+.hero-doors { display: grid; grid-template-columns: repeat(2, minmax(0, 290px)); gap: 14px; }
+.hero-door { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 18px 52px 18px 22px; border-radius: 18px; border: 1px solid rgba(255,255,255,.55); background: rgba(255,255,255,.12); backdrop-filter: blur(6px); color: #fff; transition: background .2s, transform .2s, box-shadow .2s; }
+.hero-door:hover { background: rgba(255,255,255,.24); transform: translateY(-2px); }
+.hero-door.is-agency { background: #E8C987; border-color: #E8C987; color: #15213D; }
+.hero-door.is-agency:hover { background: #fff; border-color: #fff; box-shadow: 0 14px 30px rgba(0,0,0,.25); }
+.hd-title { font-family: var(--serif); font-size: 22px; font-weight: 600; line-height: 1.2; }
+.hd-sub { font-size: 13px; opacity: .85; line-height: 1.4; }
+.hd-arrow { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 20px; transition: right .2s; }
+.hero-door:hover .hd-arrow { right: 14px; }
+@media (max-width: 600px) {
+  .hero-doors { grid-template-columns: 1fr; }
+  .hd-title { font-size: 20px; }
+}

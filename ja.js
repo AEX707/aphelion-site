@@ -358,5 +358,28 @@ window.AEX_I18N["ja"] = {
  "Founding Partner benefits updated: the standard 10% commission applies to everyone, with no listing, sign-up or monthly fees.": "ファウンディング・パートナー特典を更新しました：手数料は全パートナー共通の10%で、掲載料・登録料・月額料金はかかりません。",
  "Cancellation payouts are now calculated from your payout (90% of the price).": "キャンセル時の受取額は、お受取額（料金の90%）を基準に計算されます。",
  "View": "表示",
- "Preview": "プレビュー"
+ "Preview": "プレビュー",
+ // Explore by region (map of Japan)
+ "Explore by region": "地域から探す",
+ "Where in Japan?": "日本のどこへ？",
+ "Choose a region on the map to see its experiences.": "地図で地域を選ぶと、その地域の体験が表示されます。",
+ "Hokkaido": "北海道",
+ "Tohoku": "東北",
+ "Kanto": "関東",
+ "Chubu": "中部",
+ "Kansai": "関西",
+ "Chugoku": "中国",
+ "Shikoku": "四国",
+ "Kyushu": "九州",
+ "Okinawa": "沖縄",
+ "Kanto (Tokyo)": "関東（東京）",
+ "experience": "件の体験",
+ "experiences": "件の体験",
+ "Coming soon": "近日公開",
+ "Map of Japan": "日本地図",
+ // Homepage doors
+ "For Travel Agencies": "旅行会社の方",
+ "Build itineraries at net prices": "ネット価格で旅程を作成",
+ "For Tour Operators": "ツアーオペレーターの方",
+ "Reach agencies worldwide · 10% commission": "世界中の旅行会社へ · 手数料10%"
 };

@@ -101,9 +101,17 @@
     <div class="eyebrow">Japan · Starting in Tokyo</div>
     <h1 class="hero-title">Japan, <em>beyond</em> the guidebook.</h1>
     <p>Hand-picked local experiences and ready-made itineraries for travel agencies — under your brand, at net prices.</p>
-    <div class="hero-buttons">
-      <a href="tours.html#results" class="btn btn-primary">Explore Experiences</a>
-      <a href="partner.html" class="btn btn-light">Become a Partner</a>
+    <div class="hero-doors">
+      <a href="tours.html#regions" class="hero-door is-agency">
+        <span class="hd-title">For Travel Agencies</span>
+        <span class="hd-sub">Build itineraries at net prices</span>
+        <span class="hd-arrow" aria-hidden="true">→</span>
+      </a>
+      <a href="partner.html" class="hero-door is-operator">
+        <span class="hd-title">For Tour Operators</span>
+        <span class="hd-sub">Reach agencies worldwide · 10% commission</span>
+        <span class="hd-arrow" aria-hidden="true">→</span>
+      </a>
     </div>
   </div>
 </section>
@@ -119,7 +127,15 @@
         <label for="destination">Destination</label>
         <select id="destination" name="destination">
           <option value="">All of Japan</option>
-          <option value="tokyo">Tokyo</option>
+          <option value="hokkaido">Hokkaido</option>
+          <option value="tohoku">Tohoku</option>
+          <option value="kanto">Kanto (Tokyo)</option>
+          <option value="chubu">Chubu</option>
+          <option value="kansai">Kansai</option>
+          <option value="chugoku">Chugoku</option>
+          <option value="shikoku">Shikoku</option>
+          <option value="kyushu">Kyushu</option>
+          <option value="okinawa">Okinawa</option>
         </select>
       </div>
       <div>
@@ -255,6 +271,7 @@
 </footer>
 
 <script src="tours-data.js"></script>
+<script src="regions-map.js"></script>
 <script>
   function renderFeatured(tours) {
     const grid = document.getElementById('featuredGrid');
@@ -264,7 +281,7 @@
           <span class="tour-tag">${t.tag}</span>
         </div>
         <div class="tour-body">
-          <div class="tour-location">${t.location}</div>
+          <div class="tour-location"><span class="tour-code">${tourCode(t)}</span>${t.location}</div>
           <h3>${t.title}</h3>
           <div class="tour-meta"><span>⏱ ${t.duration}</span><span>👥 ${t.group}</span></div>
           <div class="tour-footer">

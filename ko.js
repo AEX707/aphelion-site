@@ -216,5 +216,28 @@ window.AEX_I18N["ko"] = {
  "I have read and agree to the Privacy Policy": "개인정보 처리방침을 읽었으며 이에 동의합니다",
  "View Privacy Policy": "개인정보 처리방침 보기",
  "Please agree to the Partner Terms and the Privacy Policy to continue.": "계속하려면 파트너 약관과 개인정보 처리방침에 동의해 주세요.",
- "I agree to the Partner Terms and Privacy Policy": "파트너 약관 및 개인정보 처리방침에 동의합니다"
+ "I agree to the Partner Terms and Privacy Policy": "파트너 약관 및 개인정보 처리방침에 동의합니다",
+ // Explore by region (map of Japan)
+ "Explore by region": "지역별로 찾기",
+ "Where in Japan?": "일본 어디로?",
+ "Choose a region on the map to see its experiences.": "지도에서 지역을 선택하면 해당 지역의 체험을 볼 수 있습니다.",
+ "Hokkaido": "홋카이도",
+ "Tohoku": "도호쿠",
+ "Kanto": "간토",
+ "Chubu": "주부",
+ "Kansai": "간사이",
+ "Chugoku": "주고쿠",
+ "Shikoku": "시코쿠",
+ "Kyushu": "규슈",
+ "Okinawa": "오키나와",
+ "Kanto (Tokyo)": "간토(도쿄)",
+ "experience": "개 체험",
+ "experiences": "개 체험",
+ "Coming soon": "곧 공개",
+ "Map of Japan": "일본 지도",
+ // Homepage doors
+ "For Travel Agencies": "여행사용",
+ "Build itineraries at net prices": "순가격으로 일정 만들기",
+ "For Tour Operators": "투어 운영사용",
+ "Reach agencies worldwide · 10% commission": "전 세계 여행사와 연결 · 수수료 10%"
 };

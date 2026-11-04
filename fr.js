@@ -216,5 +216,28 @@ window.AEX_I18N["fr"] = {
  "I have read and agree to the Privacy Policy": "J'ai lu et j'accepte la Politique de confidentialité",
  "View Privacy Policy": "Voir la Politique de confidentialité",
  "Please agree to the Partner Terms and the Privacy Policy to continue.": "Veuillez accepter les Conditions partenaires et la Politique de confidentialité pour continuer.",
- "I agree to the Partner Terms and Privacy Policy": "J'accepte les Conditions partenaires et la Politique de confidentialité"
+ "I agree to the Partner Terms and Privacy Policy": "J'accepte les Conditions partenaires et la Politique de confidentialité",
+ // Explore by region (map of Japan)
+ "Explore by region": "Explorer par région",
+ "Where in Japan?": "Où au Japon ?",
+ "Choose a region on the map to see its experiences.": "Choisissez une région sur la carte pour voir ses expériences.",
+ "Hokkaido": "Hokkaido",
+ "Tohoku": "Tohoku",
+ "Kanto": "Kanto",
+ "Chubu": "Chubu",
+ "Kansai": "Kansai",
+ "Chugoku": "Chugoku",
+ "Shikoku": "Shikoku",
+ "Kyushu": "Kyushu",
+ "Okinawa": "Okinawa",
+ "Kanto (Tokyo)": "Kanto (Tokyo)",
+ "experience": "expérience",
+ "experiences": "expériences",
+ "Coming soon": "Bientôt disponible",
+ "Map of Japan": "Carte du Japon",
+ // Homepage doors
+ "For Travel Agencies": "Pour les agences de voyage",
+ "Build itineraries at net prices": "Créez des itinéraires à prix nets",
+ "For Tour Operators": "Pour les tour-opérateurs",
+ "Reach agencies worldwide · 10% commission": "Touchez des agences du monde entier · 10 % de commission"
 };

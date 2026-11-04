@@ -53,6 +53,42 @@
   .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .photo-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.75); color: #fff; font-size: 14px; line-height: 1; border: none; cursor: pointer; }
 
+
+  /* Analytics block (admin-analytics.js) */
+  .an-periods { display:flex; gap:6px; flex-wrap:wrap; }
+  .an-period { padding:8px 14px; border-radius:20px; border:1px solid var(--border-soft); background:#fff; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; }
+  .an-period.active { background:var(--wood); border-color:var(--wood); color:#fff; }
+  .an-kpis { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .an-kpi { background:var(--panel); border:1px solid var(--border-soft); border-radius:16px; padding:18px 20px; }
+  .an-kpi .l { font-size:12px; color:var(--muted); }
+  .an-kpi .v { font:600 28px var(--sans); color:var(--wood); margin-top:4px; font-variant-numeric:tabular-nums; }
+  .an-kpi .s { font-size:12px; color:var(--muted); margin-top:2px; }
+  .an-card { background:var(--panel); border:1px solid var(--border-soft); border-radius:16px; padding:20px 22px; margin-top:16px; }
+  .an-card h3 { font-size:22px; margin:0 0 2px; }
+  .an-note { font-size:13px; color:var(--muted); margin:0 0 12px; }
+  .an-two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .an-two .an-card { margin-top:16px; }
+  .an-scroll { overflow-x:auto; }
+  .an-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .an-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:600; padding:8px 8px; border-bottom:1px solid var(--border-soft); white-space:nowrap; }
+  .an-table td { padding:9px 8px; border-bottom:1px solid var(--border-soft); vertical-align:middle; }
+  .an-table tr:last-child td { border-bottom:0; }
+  .an-table .r { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .an-table .w { width:40%; }
+  .an-table .muted, .an-table .muted { color:var(--muted); font-size:12px; }
+  .an-table .warn { color:#c2410c; font-weight:600; }
+  .an-table a { color:var(--wood); text-decoration:underline; text-decoration-color:rgba(21,33,61,.25); }
+  .an-bar { display:block; height:8px; background:rgba(21,33,61,.06); border-radius:4px; overflow:hidden; }
+  .an-bar i { display:block; height:100%; background:var(--gold); border-radius:4px; }
+  .an-tag { display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:.6px; background:#fde68a; color:#7c4a03; border-radius:10px; padding:1px 7px; margin-left:6px; }
+  .an-months { display:flex; align-items:flex-end; gap:8px; height:170px; padding-top:20px; }
+  .an-mcol { flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative; }
+  .an-mstack { width:60%; max-width:34px; background:rgba(166,124,46,.35); border-radius:4px 4px 0 0; display:flex; align-items:flex-end; min-height:2px; }
+  .an-mconf { width:100%; background:var(--wood); border-radius:4px 4px 0 0; }
+  .an-mval { font-size:11px; font-weight:600; color:var(--wood); margin-bottom:3px; }
+  .an-mlab { font-size:11px; color:var(--muted); margin-top:6px; }
+  @media (max-width: 760px) { .an-kpis { grid-template-columns:1fr 1fr; } .an-two { grid-template-columns:1fr; } .an-kpi .v { font-size:22px; } }
+
   @media (max-width: 640px) {
     .admin-row { flex-wrap: wrap; }
     .admin-row .actions { width: 100%; flex-wrap: wrap; }
@@ -103,6 +139,20 @@
 </header>
 
 <div class="admin-wrap">
+  <div class="admin-header">
+    <h1 style="font-size:32px;">Analytics</h1>
+    <div class="an-periods">
+      <button class="an-period" data-days="7" onclick="setAnalyticsPeriod(7)">7 days</button>
+      <button class="an-period active" data-days="30" onclick="setAnalyticsPeriod(30)">30 days</button>
+      <button class="an-period" data-days="365" onclick="setAnalyticsPeriod(365)">12 months</button>
+      <button class="an-period" data-days="0" onclick="setAnalyticsPeriod(0)">All time</button>
+      <button class="an-period" onclick="loadAnalytics()" title="Reload the numbers">↻ Refresh</button>
+    </div>
+  </div>
+  <div id="analytics"><p style="color:var(--muted);">Loading analytics…</p></div>
+
+  <hr class="section-divider">
+
   <div class="admin-header">
     <h1 style="font-size:32px;">Manage Tours</h1>
     <button class="btn btn-primary" onclick="openForm()">+ Add New Tour</button>
@@ -247,6 +297,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tours-data.js"></script>
+<script src="regions-map.js"></script>
+<script src="admin-analytics.js"></script>
 <script src="terms-version.js"></script>
 <script src="password-toggle.js"></script>
 <script>
@@ -278,6 +330,7 @@
     loadPartners();
     loadBookings();
     loadReviewsAdmin();
+    loadAnalytics();
   }
 
   function lockAdmin(msg) {
@@ -438,7 +491,7 @@
       <div class="admin-row">
         <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
         <div class="info">
-          <h4><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:inherit; text-decoration:none; border-bottom:1px dashed rgba(201,169,97,.6);">${t.title} ↗</a> <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
+          <h4><span class="tour-code">${tourCode(t)}</span><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:inherit; text-decoration:none; border-bottom:1px dashed rgba(201,169,97,.6);">${t.title} ↗</a> <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
           <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} (AEX ¥${(Number(t.price) - partnerPayout(t.price)).toLocaleString('ja-JP')}) · ${t.category}${t.partner_id ? ' · submitted by partner' : ''}${t.edited_at ? ` · <span style="color:#E0482D; font-weight:600;">✏ edited by partner ${new Date(t.edited_at).toLocaleDateString('en-GB')} — check &amp; Approve</span>` : ''}<span class="tr-state">${translationState(t)}</span></span>
         </div>
         <div class="actions">

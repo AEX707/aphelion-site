@@ -55,7 +55,15 @@
         <label for="destination">Destination</label>
         <select id="destination" name="destination">
           <option value="">All of Japan</option>
-          <option value="tokyo">Tokyo</option>
+          <option value="hokkaido">Hokkaido</option>
+          <option value="tohoku">Tohoku</option>
+          <option value="kanto">Kanto (Tokyo)</option>
+          <option value="chubu">Chubu</option>
+          <option value="kansai">Kansai</option>
+          <option value="chugoku">Chugoku</option>
+          <option value="shikoku">Shikoku</option>
+          <option value="kyushu">Kyushu</option>
+          <option value="okinawa">Okinawa</option>
         </select>
       </div>
       <div>
@@ -76,7 +84,20 @@
   </form>
 </div>
 
-<section class="tours-section">
+<section class="region-section" id="regions">
+  <div class="container">
+    <div class="section-heading">
+      <div>
+      <div class="eyebrow">Explore by region</div>
+      <h2>Where in Japan?</h2>
+      </div>
+      <p>Choose a region on the map to see its experiences.</p>
+    </div>
+    <div class="region-map" id="regionMap"></div>
+  </div>
+</section>
+
+<section class="tours-section" id="results">
   <div class="container">
     <div class="filter-row" id="filterRow">
       <button class="filter-btn active" data-filter="">All</button>
@@ -123,11 +144,15 @@
 </footer>
 
 <script src="tours-data.js"></script>
+<script src="regions-map.js"></script>
 <script>
   let tours = [];
+  let regionMap = null;
   const params = new URLSearchParams(window.location.search);
   const qVal = params.get('q') || '';
-  const destVal = params.get('destination') || '';
+  let destVal = params.get('destination') || '';
+  // Older links send a place ("tokyo"); turn it into its region ("kanto").
+  if (destVal && !AEX_REGIONS.some(r => r.key === destVal)) destVal = regionOfTour({ location: destVal });
   const typeVal = params.get('type') || '';
 
   document.getElementById('q').value = qVal;
@@ -168,15 +193,32 @@
 
     const filtered = tours.filter(t => {
       const text = [t.title, t.location, t.destination, t.description, t.category, t.tag].map(norm).join(' ');
-      const place = [t.destination, t.location, t.title].map(norm).join(' ');
       const cat = [t.category, t.tag, t.title].map(norm).join(' ');
       const matchesQ = !words.length || words.every(w => text.includes(w));
-      const matchesDest = !destination || destination === 'japan' || place.includes(destination);
+      const matchesDest = !destination || destination === 'japan' || regionOfTour(t) === destination;
       const matchesCat = !category || (CATEGORY_WORDS[category] || [category]).some(w => cat.includes(w));
       return matchesQ && matchesDest && matchesCat;
     });
 
     renderTours(filtered);
+    if (q && !filtered.length) logEmptySearch(q, destination, category);
+  }
+
+  // Searches that find nothing are counted (anonymously) for the admin
+  // analytics: they show which experiences agencies want but we don't have.
+  // Waits until the visitor stops typing; each search is counted once per visit.
+  let _searchTimer = null;
+  function logEmptySearch(q, region, category) {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => {
+      const key = 'aex_s_' + q;
+      try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) {}
+      fetch(`${SUPABASE_URL}/rest/v1/search_log`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ query: q.slice(0, 100), region: region || null, category: category || null, results: 0 })
+      }).catch(() => {});
+    }, 1500);
   }
 
   function renderTours(list) {
@@ -194,7 +236,7 @@
           <span class="tour-tag">${t.tag}</span>
         </div>
         <div class="tour-body">
-          <div class="tour-location">${t.location}</div>
+          <div class="tour-location"><span class="tour-code">${tourCode(t)}</span>${t.location}</div>
           <h3>${t.title}</h3>
           <div class="tour-meta"><span>⏱ ${t.duration}</span><span>👥 ${t.group}</span></div>
           <div class="tour-footer">
@@ -210,6 +252,10 @@
     activeCategory = document.getElementById('type').value;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === activeCategory));
     filterTours();
+  });
+  // Picking a region in the list keeps the map in step.
+  document.getElementById('destination').addEventListener('change', () => {
+    if (regionMap) regionMap.select(document.getElementById('destination').value);
   });
   ['q','destination'].forEach(id => {
     document.getElementById(id).addEventListener('input', filterTours);
@@ -234,9 +280,15 @@
 
   (async () => {
     tours = await getTours();
-    filterTours();
+    regionMap = renderRegionMap(document.getElementById('regionMap'), tours, key => {
+      document.getElementById('destination').value = key;
+      filterTours();
+      scrollToResults();
+    });
+    if (destVal) regionMap.select(destVal); else filterTours();
     // Came here from the homepage search? Show the results straight away.
     if (qVal || destVal || typeVal || location.hash === '#results') setTimeout(scrollToResults, 150);
+    else if (location.hash === '#regions') setTimeout(() => document.getElementById('regions').scrollIntoView({ behavior: 'smooth' }), 150);
   })();
 </script>
 <script>
