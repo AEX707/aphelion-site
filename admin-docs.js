@@ -21,8 +21,10 @@
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, Object.assign({}, opts, {
       headers: Object.assign({ apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}`, 'Content-Type': 'application/json' }, (opts && opts.headers) || {})
     }));
-    if (!res.ok) throw new Error((await res.text()) || ('Status ' + res.status));
-    return res.status === 204 ? null : res.json();
+    const text = await res.text();
+    if (!res.ok) throw new Error(text || ('Status ' + res.status));
+    // "return=minimal" answers have an empty body.
+    return text ? JSON.parse(text) : null;
   }
 
   async function loadRequests() {
