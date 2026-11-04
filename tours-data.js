@@ -79,6 +79,8 @@ async function getTours() {
     let data;
     if (res.ok) {
       data = await res.json();
+      // Each row is the tour itself; some server versions wrap it as {catalog_tours: {...}}.
+      data = (Array.isArray(data) ? data : []).map(r => (r && r.catalog_tours && typeof r.catalog_tours === 'object') ? r.catalog_tours : r);
     } else {
       // Before the agencies SQL step has been run: the old direct read.
       const old = await fetch(`${SUPABASE_URL}/rest/v1/tours?select=*&status=eq.approved&order=id.asc`, {
