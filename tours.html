@@ -145,6 +145,7 @@
 
 <script src="tours-data.js"></script>
 <script src="regions-map.js"></script>
+<script src="trip.js"></script>
 <script>
   let tours = [];
   let regionMap = null;
@@ -241,7 +242,7 @@
           <div class="tour-meta"><span>⏱ ${t.duration}</span><span>👥 ${t.group}</span></div>
           <div class="tour-footer">
             <div class="price"><small>From</small><strong>¥${Number(t.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${t.price}"></span></div>
-            <a href="tour.html?id=${t.id}" class="btn btn-outline" target="_blank" rel="noopener" onclick="event.stopPropagation()">View Details</a>
+            <div class="tour-actions">${tripButtonHtml(t)}<a href="tour.html?id=${t.id}" class="btn btn-outline" target="_blank" rel="noopener" onclick="event.stopPropagation()">View Details</a></div>
           </div>
         </div>
       </div>
@@ -280,6 +281,7 @@
 
   (async () => {
     tours = await getTours();
+    rememberTours(tours);
     regionMap = renderRegionMap(document.getElementById('regionMap'), tours, key => {
       document.getElementById('destination').value = key;
       filterTours();

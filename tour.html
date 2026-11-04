@@ -183,6 +183,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tours-data.js"></script>
 <script src="regions-map.js"></script>
+<script src="trip.js"></script>
 <script>
   // Login session (for reviews). tours-data.js already holds the project address and key.
   const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
@@ -193,6 +194,7 @@
     const id = parseInt(params.get('id'), 10);
     const tours = await getTours();
     let tour = tours.find(t => t.id === id);
+    if (tour) rememberTours([tour]);
 
     // Not live yet (pending / edited / rejected)? The partner who owns it, or
     // an admin, can still open it as a preview from their dashboard.
@@ -349,6 +351,7 @@
                 <div class="td-per">per person</div>
                 ${priceOptions.length ? `<ul class="td-prices">${priceOptions.map(o => `<li><span>${esc(o.label)}</span><strong>${esc(o.value)}</strong></li>`).join('')}</ul>` : ''}
                 <a href="booking.html?id=${tour.id}" class="btn btn-primary td-book-btn" onclick="openBooking(event)">Request This Tour</a>
+                ${tripButtonHtml(tour)}
                 <ul class="td-assure">
                   <li>Confirmation within 1 business day</li>
                   <li>Free cancellation up to 72 hours before</li>
