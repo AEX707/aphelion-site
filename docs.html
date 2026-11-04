@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documents — Aphelion Expeditions</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="favicon-32.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container topbar-content">
+    <span>For travel partners &amp; tour operators worldwide</span>
+    <span>partners@aphelionexpeditions.com</span>
+  </div>
+</div>
+
+<header>
+  <div class="container navbar">
+    <a href="index.html" class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="logo-full-img"></a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="tours.html">Tours</a>
+      <a href="index.html#benefits">Why Us</a>
+    </nav>
+    <div class="navbar-right">
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="nav-actions">
+      <a href="login.html" class="btn btn-outline">Log In</a>
+      <a href="partner.html" class="btn btn-primary">Become a Partner</a>
+    </div>
+    </div>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Verification</div>
+    <h1>Documents</h1>
+    <p>Our team asked for a few documents to complete the review of your account. Please upload them here — only Aphelion's team can see them.</p>
+  </div>
+</section>
+
+<section class="form-page-section">
+  <div class="container" style="max-width:720px;">
+    <div class="form-card" id="docsBox">
+      <p style="color:var(--muted);">Loading…</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="footer-logo-full-img"></div>
+        <p>Curated journeys for travel partners worldwide — beyond the horizon, beyond the ordinary.</p>
+      </div>
+      <div>
+        <h3>Explore</h3>
+        <a href="tours.html">All Tours</a>
+        <a href="index.html#benefits">Why Us</a>
+      </div>
+      <div>
+        <h3>Partners</h3>
+        <a href="partner.html">Become a Partner</a>
+        <a href="login.html">Partner Login</a>
+      </div>
+      <div>
+        <h3>Contact</h3>
+        <a href="mailto:partners@aphelionexpeditions.com">partners@aphelionexpeditions.com</a>
+        <a href="mailto:info@aphelionexpeditions.com">info@aphelionexpeditions.com</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="copyright">© 2026 Aphelion Expeditions. All rights reserved.</div>
+      <a href="admin.html" class="footer-admin-link" rel="nofollow">Admin</a>
+    </div>
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  const t = s => (window.AEX_t ? window.AEX_t(s) : s);
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const box = document.getElementById('docsBox');
+  let userId = null;
+
+  async function listFiles() {
+    const { data } = await supabaseClient.storage.from('verification').list(userId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+    return (data || []).filter(f => f.name && !f.name.startsWith('.'));
+  }
+
+  async function render() {
+    const { data: reqs, error } = await supabaseClient.from('doc_requests').select('*').order('created_at', { ascending: false });
+    if (error) { box.innerHTML = '<p class="error-message" style="display:block;">' + esc(t('Could not load your document requests.')) + ' (' + esc(error.message) + ')</p>'; return; }
+    const open = (reqs || []).filter(r => r.status === 'requested');
+    const files = await listFiles();
+    const fileList = files.length
+      ? '<ul class="docs-files">' + files.map(f => '<li>📄 ' + esc(f.name.replace(/^\d+-\d+-/, '')) + '</li>').join('') + '</ul>'
+      : '<p style="color:var(--muted); font-size:13px;">' + esc(t('No files uploaded yet.')) + '</p>';
+    if (!open.length) {
+      box.innerHTML = '<h3>' + esc(t('Thank you')) + '</h3><p>' + esc(t('There are no open document requests for your account.')) + '</p><h4 class="docs-h">' + esc(t('Your uploaded files')) + '</h4>' + fileList;
+      return;
+    }
+    box.innerHTML = open.map(r => `
+      <div class="docs-req">
+        <h3>${esc(t('Requested documents'))}</h3>
+        <ul class="docs-items">${(r.items || []).map(i => '<li>' + esc(t(i)) + '</li>').join('')}</ul>
+        ${r.note ? '<p class="docs-note">' + esc(r.note) + '</p>' : ''}
+        <div class="form-group">
+          <label for="f${r.id}">${esc(t('Upload files (PDF, JPG or PNG, up to 10 MB each)'))}</label>
+          <input type="file" id="f${r.id}" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*">
+        </div>
+        <div class="error-message" id="e${r.id}"></div>
+        <button type="button" class="btn btn-primary" style="width:100%;" id="b${r.id}" onclick="upload(${r.id})">${esc(t('Send documents'))}</button>
+      </div>`).join('') + '<h4 class="docs-h">' + esc(t('Your uploaded files')) + '</h4>' + fileList;
+  }
+
+  async function upload(reqId) {
+    const input = document.getElementById('f' + reqId), err = document.getElementById('e' + reqId), btn = document.getElementById('b' + reqId);
+    err.style.display = 'none';
+    const files = [...(input.files || [])];
+    if (!files.length) { err.textContent = t('Please choose at least one file.'); err.style.display = 'block'; return; }
+    const tooBig = files.find(f => f.size > 10 * 1024 * 1024);
+    if (tooBig) { err.textContent = t('This file is larger than 10 MB: ') + tooBig.name; err.style.display = 'block'; return; }
+    btn.disabled = true; btn.textContent = t('Uploading…');
+    try {
+      for (const f of files) {
+        const safe = f.name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-80);
+        const path = `${userId}/${reqId}-${Date.now()}-${safe}`;
+        const { error } = await supabaseClient.storage.from('verification').upload(path, f, { contentType: f.type || 'application/octet-stream' });
+        if (error) throw error;
+      }
+      const { error: uerr } = await supabaseClient.from('doc_requests').update({ status: 'submitted', submitted_at: new Date().toISOString() }).eq('id', reqId);
+      if (uerr) throw uerr;
+      await render();
+    } catch (e) {
+      err.textContent = t('Could not upload: ') + e.message; err.style.display = 'block';
+      btn.disabled = false; btn.textContent = t('Send documents');
+    }
+  }
+
+  (async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) { location.href = 'login.html?next=docs.html'; return; }
+    userId = session.user.id;
+    render();
+  })();
+</script>
+<script src="mobile-nav.js"></script>
+<script src="i18n.js"></script>
+</body>
+</html>

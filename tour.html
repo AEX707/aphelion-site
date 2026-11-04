@@ -134,7 +134,7 @@
     <div class="navbar-right">
       <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
     <div class="nav-actions">
-      <a href="login.html" class="btn btn-outline">Partner Login</a>
+      <a href="login.html" class="btn btn-outline">Log In</a>
       <a href="partner.html" class="btn btn-primary">Become a Partner</a>
     </div>
     </div>
@@ -347,8 +347,8 @@
 
             <aside class="td-side">
               <div class="td-book">
-                <div class="price"><small>From</small><strong>¥${Number(tour.price).toLocaleString('ja-JP')}</strong><span class="price-approx" data-jpy="${tour.price}"></span></div>
-                <div class="td-per">per person</div>
+                ${priceHtml(tour)}
+                ${tour.price != null ? '<div class="td-per">per person</div>' : '<div class="td-per">Net prices are shown to registered travel agencies.</div>'}
                 ${priceOptions.length ? `<ul class="td-prices">${priceOptions.map(o => `<li><span>${esc(o.label)}</span><strong>${esc(o.value)}</strong></li>`).join('')}</ul>` : ''}
                 <a href="booking.html?id=${tour.id}" class="btn btn-primary td-book-btn" onclick="openBooking(event)">Request This Tour</a>
                 ${tripButtonHtml(tour)}
@@ -364,7 +364,7 @@
         </section>
 
         <div class="td-mobilebar">
-          <div class="price"><small>From</small><strong>¥${Number(tour.price).toLocaleString('ja-JP')}</strong></div>
+          ${priceHtml(tour)}
           <a href="booking.html?id=${tour.id}" class="btn btn-primary" onclick="openBooking(event)">Request This Tour</a>
         </div>
 

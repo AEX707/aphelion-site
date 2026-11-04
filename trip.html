@@ -29,7 +29,7 @@
     <div class="navbar-right">
       <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
     <div class="nav-actions">
-      <a href="login.html" class="btn btn-outline">Partner Login</a>
+      <a href="login.html" class="btn btn-outline">Log In</a>
       <a href="partner.html" class="btn btn-primary">Become a Partner</a>
     </div>
     </div>
@@ -86,7 +86,7 @@
             <label for="tBrand">Your agency name on the PDF</label>
             <input type="text" id="tBrand" placeholder="e.g. Voyages Lumière">
           </div>
-          <label class="trip-check"><input type="checkbox" id="tShowPrices"> <span>Show our net prices on the PDF</span></label>
+          <label class="trip-check" id="tShowPricesRow"><input type="checkbox" id="tShowPrices"> <span>Show our net prices on the PDF</span></label>
           <button type="button" class="btn btn-outline trip-wide" onclick="printTrip()">Download PDF</button>
           <p class="trip-hint">In the print window choose “Save as PDF”.</p>
         </div>
@@ -148,6 +148,7 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="tours-data.js"></script>
 <script src="regions-map.js"></script>
 <script src="trip.js"></script>
@@ -243,7 +244,7 @@
             <div class="trip-info">
               <div class="trip-meta"><span class="tour-code">${tourCode(t)}</span>${esc(t.location || '')}</div>
               <a href="tour.html?id=${t.id}" target="_blank" rel="noopener" class="trip-title">${esc(t.title)}</a>
-              <div class="trip-sub">${t.duration ? '⏱ ' + esc(t.duration) + ' · ' : ''}${yen(t.price)} × ${guests} = <b>${yen(t.price * guests)}</b></div>
+              <div class="trip-sub">${t.duration ? '⏱ ' + esc(t.duration) + (t.price != null ? ' · ' : '') : ''}${t.price != null ? `${yen(t.price)} × ${guests} = <b>${yen(t.price * guests)}</b>` : ''}</div>
             </div>
             <div class="trip-ctrl">
               <select aria-label="Day" onchange="moveItem(${t.id}, 'day', this.value)">${dayOpts}</select>
@@ -263,7 +264,10 @@
       <div><span>${tr('Experiences')}</span><b>${items.length}</b></div>
       <div><span>${tr('Days')}</span><b>${nDays}</b></div>
       <div><span>${tr('Regions')}</span><b>${regions.join(', ') || '—'}</b></div>
-      <div class="trip-total"><span>${tr('Net total')} · ${guests} ${tr(guests === 1 ? 'guest' : 'guests')}</span><b>${yen(total)}</b></div>`;
+      ${pricesVisible(Object.values(TOURS))
+        ? `<div class="trip-total"><span>${tr('Net total')} · ${guests} ${tr(guests === 1 ? 'guest' : 'guests')}</span><b>${yen(total)}</b></div>`
+        : `<div class="trip-total"><span>${tr('Net total')}</span><a href="login.html?next=trip.html" class="price-lock-link">🔒 ${tr('Sign in as agency')}</a></div>`}`;
+    document.getElementById('tShowPricesRow').style.display = pricesVisible(Object.values(TOURS)) ? '' : 'none';
   }
 
   // ---- PDF (print) ----
@@ -271,7 +275,7 @@
     const items = orderedItems();
     const guests = Math.max(1, Number(document.getElementById('tGuests').value) || 1);
     const brand = document.getElementById('tBrand').value.trim() || document.getElementById('tCompany').value.trim();
-    const showPrices = document.getElementById('tShowPrices').checked;
+    const showPrices = document.getElementById('tShowPrices').checked && pricesVisible(Object.values(TOURS));
     const nDays = items.reduce((m, x) => Math.max(m, x.day), 0);
     const stops = items.map(x => tourPoint(TOURS[x.id]));
     let n = 0;
@@ -361,6 +365,19 @@
     const list = await getTours();
     list.forEach(t => { TOURS[t.id] = t; });
     render();
+    // Signed-in agency: fill in the company and email from its account.
+    try {
+      const token = await currentAccessToken();
+      if (token) {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/agencies?select=company_name,email`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } });
+        const a = r.ok ? (await r.json())[0] : null;
+        if (a) {
+          if (!document.getElementById('tCompany').value) document.getElementById('tCompany').value = a.company_name || '';
+          if (!document.getElementById('tEmail').value) document.getElementById('tEmail').value = a.email || '';
+          if (!document.getElementById('tBrand').value) document.getElementById('tBrand').value = a.company_name || '';
+        }
+      }
+    } catch (err) {}
   })();
 </script>
 <script src="mobile-nav.js"></script>

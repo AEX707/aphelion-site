@@ -528,6 +528,18 @@
       return;
     }
     checkTermsGate(profile);
+    // Documents requested by Aphelion's team? Show a notice with a link to upload them.
+    try {
+      const { data: reqs } = await supabaseClient.from('doc_requests').select('id').eq('status', 'requested');
+      if (reqs && reqs.length) {
+        const n = document.createElement('div');
+        n.className = 'status-msg err';
+        n.style.display = 'block';
+        n.innerHTML = '<b>' + tr('Documents requested') + '</b> — ' + tr('Our team asked for a few documents to complete the review of your account.') + ' <a href="docs.html" style="color:inherit; text-decoration:underline; font-weight:700;">' + tr('Upload documents') + ' →</a>';
+        const head = document.querySelector('.dash-head');
+        head.parentNode.insertBefore(n, head);
+      }
+    } catch (e) {}
     document.getElementById('companyNameOut').textContent = profile.company_name;
     document.getElementById('companyOut2').textContent = profile.company_name || '—';
     document.getElementById('contactOut').textContent = profile.contact_person || '—';

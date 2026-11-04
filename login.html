@@ -29,7 +29,7 @@
     <div class="navbar-right">
       <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
     <div class="nav-actions">
-      <a href="login.html" class="btn btn-outline">Partner Login</a>
+      <a href="login.html" class="btn btn-outline">Log In</a>
       <a href="partner.html" class="btn btn-primary">Become a Partner</a>
     </div>
     </div>
@@ -38,16 +38,16 @@
 
 <section class="page-hero">
   <div class="container">
-    <div class="eyebrow">Partner Access</div>
+    <div class="eyebrow">Partners &amp; Agencies</div>
     <h1>Welcome Back</h1>
-    <p>Log in to manage your tours and track your partnership status.</p>
+    <p>Tour operators: manage your tours. Travel agencies: see net prices and build itineraries.</p>
   </div>
 </section>
 
 <section class="form-page-section">
   <div class="container" style="max-width:480px;">
     <div class="form-card">
-      <h3>Partner Login</h3>
+      <h3>Log In</h3>
       <div class="error-message" id="errorMessage"></div>
       <form id="loginForm">
         <div class="form-group">
@@ -62,7 +62,7 @@
         <p style="margin-top:14px; font-size:13px; text-align:center;"><a href="#" id="forgotLink" style="color:var(--gold-soft);">Forgot password?</a></p>
       </form>
       <form id="forgotForm" style="display:none;">
-        <p style="font-size:14px; color:var(--muted); margin-bottom:16px;">Enter your partner email and we'll send you a link to set a new password.</p>
+        <p style="font-size:14px; color:var(--muted); margin-bottom:16px;">Enter your account email and we'll send you a link to set a new password.</p>
         <div class="form-group">
           <label for="forgotEmail">Email</label>
           <input type="email" id="forgotEmail" name="forgotEmail" required>
@@ -71,7 +71,7 @@
         <p id="forgotMsg" style="display:none; margin-top:14px; font-size:14px; text-align:center; color:var(--gold-soft);"></p>
         <p style="margin-top:14px; font-size:13px; text-align:center;"><a href="#" id="backToLogin" style="color:var(--gold-soft);">&larr; Back to login</a></p>
       </form>
-      <p style="margin-top:20px; font-size:13px; color:var(--muted); text-align:center;">Not a partner yet? <a href="partner.html" style="color:var(--gold-soft);">Apply here</a></p>
+      <p style="margin-top:20px; font-size:13px; color:var(--muted); text-align:center;">New here? <a href="agency.html" style="color:var(--gold-soft);">Register your agency</a> · <a href="partner.html" style="color:var(--gold-soft);">Become a partner</a></p>
     </div>
   </div>
 </section>
@@ -124,9 +124,24 @@
     const password = document.getElementById('password').value;
 
     try {
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      window.location.href = 'partner-dashboard.html';
+      // Travel agency -> back to the page it came from (or the tours);
+      // tour operator (partner) -> partner dashboard.
+      let isAgency = false;
+      try {
+        const r = await supabaseClient.from('agencies').select('id,status').eq('id', data.user.id).maybeSingle();
+        isAgency = !!(r && r.data);
+        if (isAgency && r.data.status !== 'approved') {
+          try { sessionStorage.setItem('aex_agency_pending', '1'); } catch (e) {}
+        }
+      } catch (e) {}
+      if (isAgency) {
+        const next = new URLSearchParams(location.search).get('next') || '';
+        window.location.href = /^[a-z0-9-]+\.html([?#].*)?$/i.test(next) ? next : 'tours.html#regions';
+      } else {
+        window.location.href = 'partner-dashboard.html';
+      }
     } catch (err) {
       errorMessage.textContent = 'Login failed: ' + err.message;
       errorMessage.style.display = 'block';

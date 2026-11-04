@@ -266,6 +266,19 @@
   <hr class="section-divider">
 
   <div class="admin-header">
+    <h1 style="font-size:32px;">Travel Agencies</h1>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin:-18px 0 18px;">Approved agencies see net prices on the website. Pending ones see the tours without prices.</p>
+
+  <div id="agencyStatusMsg" class="status-msg"></div>
+
+  <div id="agencyList" class="admin-list">
+    <p style="color:var(--muted);">Loading agencies…</p>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="admin-header">
     <h1 style="font-size:32px;">Booking Requests</h1>
   </div>
 
@@ -331,6 +344,7 @@
     loadBookings();
     loadReviewsAdmin();
     loadAnalytics();
+    loadAgencies();
   }
 
   function lockAdmin(msg) {
@@ -847,11 +861,13 @@
             <h4>${p.company_name} <span class="status-pill ${p.status}">${p.status}</span></h4>
             <span>${p.contact_person || ''} · ${p.email} · ${p.country || ''} · <span style="color:var(--gold-soft);">Details ▾</span></span>
             <span style="display:block; margin-top:4px; font-size:12px;">${termsBadge(p)}</span>
+            <span class="doc-badge" data-acc="${p.id}"></span>
           </div>
           <div class="actions">
             <button class="btn-go${p.status === 'approved' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'approved', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Approve</button>
             <button class="btn-wait${p.status === 'pending' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'pending', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Pending</button>
             <button class="btn-stop${p.status === 'rejected' ? ' is-current' : ''}" onclick="setPartnerStatus('${p.id}', 'rejected', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Reject</button>
+            <button class="btn-edit" onclick="openDocRequest('${p.id}', 'partner', '${(p.email || '').replace(/'/g, "\\'")}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Docs</button>
             <button class="btn-delete" onclick="deletePartner('${p.id}', '${(p.company_name || '').replace(/'/g, "\\'")}')">Delete</button>
           </div>
           <div class="partner-details" id="pd-${p.id}" style="display:none; flex-basis:100%; width:100%; margin-top:14px; padding:16px 18px; border:1px solid var(--border-soft); border-radius:var(--radius); background:rgba(245,243,236,.03); font-size:13px; line-height:1.7;"></div>
@@ -859,12 +875,64 @@
       `).join('');
       list.querySelectorAll('.admin-row').forEach(r => r.style.flexWrap = 'wrap');
       _partnersCache = partners;
+      markInactivePartners(partners);
+      if (typeof decorateDocBadges === 'function') decorateDocBadges();
     } catch (err) {
       list.innerHTML = '<p style="color:#f19a9a;">Could not load partners: ' + err.message + '</p>';
     }
   }
 
   let _partnersCache = [];
+  // Approved partners with no tours: a label on the row and one button
+  // that sends all of them a friendly reminder.
+  let _inactivePartners = [];
+  async function markInactivePartners(partners) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/tours?select=partner_id`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` }
+      });
+      if (!r.ok) return;
+      const withTours = new Set((await r.json()).map(t => String(t.partner_id)));
+      const days = d => Math.floor((Date.now() - new Date(d)) / 864e5);
+      _inactivePartners = partners.filter(p => p.status === 'approved' && !withTours.has(String(p.id)));
+      _inactivePartners.forEach(p => {
+        const el = document.querySelector(`.doc-badge[data-acc="${p.id}"]`);
+        if (el && el.parentNode) {
+          const tag = document.createElement('span');
+          tag.style.cssText = 'display:inline-block; margin:4px 0 0 0; font-size:12px; font-weight:700; color:#b45309;';
+          tag.textContent = '○ No tours yet' + (p.created_at ? ' · ' + days(p.created_at) + ' days since sign-up' : '');
+          el.parentNode.insertBefore(tag, el);
+        }
+      });
+      let bar = document.getElementById('inactiveBar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'inactiveBar';
+        bar.style.cssText = 'margin:-10px 0 16px; font-size:13px; color:var(--muted);';
+        const list = document.getElementById('partnerList');
+        list.parentNode.insertBefore(bar, list);
+      }
+      bar.innerHTML = _inactivePartners.length
+        ? `${_inactivePartners.length} approved partner(s) without tours. <button class="btn btn-outline" style="padding:6px 14px; font-size:11px; margin-left:8px;" onclick="remindInactivePartners()">Send reminder to all</button>`
+        : '';
+    } catch (e) {}
+  }
+  async function remindInactivePartners() {
+    if (!_inactivePartners.length) return;
+    if (!confirm('Send a reminder email to ' + _inactivePartners.length + ' partner(s) without tours?')) return;
+    for (const p of _inactivePartners) {
+      if (!p.email) continue;
+      const html = mailLayout('PARTNER ACCOUNT', 'Your first experience on Aphelion',
+        `<p>Dear ${esc(p.contact_person || p.company_name || 'partner')},</p>
+         <p>Your Aphelion Expeditions partner account is ready, but there are no experiences in it yet. Travel agencies are already building itineraries on the platform — add your first experience so they can find and book it.</p>
+         <p style="margin:18px 0;"><a href="https://aphelionexpeditions.com/partner-dashboard.html#tours" style="display:inline-block; background:${AEX_MAIL.navy}; color:#fff; text-decoration:none; padding:12px 22px; border-radius:24px; font-size:13px; font-weight:700; letter-spacing:1px;">ADD AN EXPERIENCE</a></p>
+         <p>It takes about 10 minutes. If you need help, simply reply to this email.</p>
+         <p>Kind regards,<br>Aphelion Expeditions</p>`, '');
+      await sendNotificationEmail(p.email, 'Aphelion Expeditions — add your first experience', html);
+    }
+    showPartnerStatus('Reminder sent to ' + _inactivePartners.length + ' partner(s).', true);
+  }
+
 
   function esc(v) {
     return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1041,6 +1109,86 @@
       loadReviewsAdmin();
     } catch (err) {
       showReviewStatus('Could not delete: ' + err.message, false);
+    }
+  }
+
+
+  // ---- Travel agencies (buyers) ----
+  function showAgencyStatus(msg, ok) {
+    const el = document.getElementById('agencyStatusMsg');
+    el.textContent = msg;
+    el.className = 'status-msg ' + (ok ? 'ok' : 'err');
+    setTimeout(() => { el.className = 'status-msg'; }, 4000);
+  }
+  async function loadAgencies() {
+    const list = document.getElementById('agencyList');
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/agencies?select=*&order=created_at.desc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` }
+      });
+      if (res.status === 404) { list.innerHTML = '<p style="color:var(--muted);">Not switched on yet: run <b>agencies.sql</b> once in Supabase → SQL Editor.</p>'; return; }
+      if (!res.ok) throw new Error('Status ' + res.status);
+      const rows = await res.json();
+      if (!rows.length) { list.innerHTML = '<p style="color:var(--muted);">No agencies registered yet.</p>'; return; }
+      const q = v => String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      list.innerHTML = rows.map(a => `
+        <div class="admin-row">
+          <div class="info">
+            <h4>${esc(a.company_name)} <span class="status-pill ${esc(a.status)}">${esc(a.status)}</span></h4>
+            <span>${esc(a.contact_person || '')} · ${esc(a.email || '')} · ${esc(a.country || '')}${a.website ? ` · <a href="${/^https?:\/\//.test(a.website) ? esc(a.website) : 'https://' + esc(a.website)}" target="_blank" rel="noopener" style="color:var(--gold-soft);">${esc(a.website)} ↗</a>` : ''} · registered ${fmtDate(a.created_at)}</span>
+            <span class="doc-badge" data-acc="${a.id}"></span>
+          </div>
+          <div class="actions">
+            <button class="btn-go${a.status === 'approved' ? ' is-current' : ''}" onclick="setAgencyStatus('${a.id}', 'approved', '${q(a.email)}', '${q(a.company_name)}')">Approve</button>
+            <button class="btn-wait${a.status === 'pending' ? ' is-current' : ''}" onclick="setAgencyStatus('${a.id}', 'pending', '${q(a.email)}', '${q(a.company_name)}')">Pending</button>
+            <button class="btn-stop${a.status === 'rejected' ? ' is-current' : ''}" onclick="setAgencyStatus('${a.id}', 'rejected', '${q(a.email)}', '${q(a.company_name)}')">Reject</button>
+            <button class="btn-edit" onclick="openDocRequest('${a.id}', 'agency', '${q(a.email)}', '${q(a.company_name)}')">Docs</button>
+            <button class="btn-delete" onclick="deleteAgency('${a.id}', '${q(a.company_name)}')">Delete</button>
+          </div>
+        </div>`).join('');
+      if (typeof decorateDocBadges === 'function') decorateDocBadges();
+    } catch (err) {
+      list.innerHTML = '<p style="color:#f19a9a;">Could not load agencies: ' + esc(err.message) + '</p>';
+    }
+  }
+  async function setAgencyStatus(id, status, email, companyName) {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/agencies?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ status })
+      });
+      if (!res.ok) throw new Error('Status ' + res.status);
+      const changed = await res.json();
+      if (!changed.length) throw new Error('not allowed');
+      showAgencyStatus('Agency status updated to "' + status + '".', true);
+      if (email && (status === 'approved' || status === 'rejected')) {
+        const html = status === 'approved'
+          ? mailLayout('AGENCY ACCOUNT', 'Your agency account is approved',
+              `<p>Dear ${esc(companyName)},</p><p>Your Aphelion Expeditions agency account has been approved. Log in to see net prices for all experiences, build itineraries with the Trip Builder and download them as a PDF under your own brand.</p>
+               <p style="margin:18px 0;"><a href="https://aphelionexpeditions.com/login.html" style="display:inline-block; background:${AEX_MAIL.navy}; color:#fff; text-decoration:none; padding:12px 22px; border-radius:24px; font-size:13px; font-weight:700; letter-spacing:1px;">LOG IN</a></p>
+               <p>Kind regards,<br>Aphelion Expeditions</p>`, '')
+          : mailLayout('AGENCY ACCOUNT', 'Update on your agency registration',
+              `<p>Dear ${esc(companyName)},</p><p>Thank you for registering with Aphelion Expeditions. We are not able to approve this agency account at the moment. If you think this is a mistake, simply reply to this email.</p><p>Kind regards,<br>Aphelion Expeditions</p>`, '');
+        sendNotificationEmail(email, status === 'approved' ? 'Your Aphelion Expeditions agency account is approved' : 'Your Aphelion Expeditions agency registration', html);
+      }
+      loadAgencies();
+    } catch (err) {
+      showAgencyStatus('Could not update: ' + err.message, false);
+    }
+  }
+  async function deleteAgency(id, companyName) {
+    if (!confirm('Delete the agency "' + companyName + '"? Its login stays, but it will no longer see net prices.')) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/agencies?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}`, Prefer: 'return=representation' }
+      });
+      if (!res.ok) throw new Error('Status ' + res.status);
+      showAgencyStatus('Agency deleted.', true);
+      loadAgencies();
+    } catch (err) {
+      showAgencyStatus('Could not delete: ' + err.message, false);
     }
   }
 
@@ -1365,5 +1513,6 @@
     }
   }
 </script>
+<script src="admin-docs.js"></script>
 </body>
 </html>

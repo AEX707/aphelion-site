@@ -635,3 +635,18 @@ nav .nav-login-mobile { display: none; }
   .home .hero p { font-size: 17px; margin-bottom: 26px; }
   .home .hero .eyebrow { margin-bottom: 14px; }
 }
+
+/* Net prices only for registered agencies */
+.price-locked a, .price-locked span { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 600; color: var(--wood); border-bottom: 1px dashed rgba(21,33,61,.4); }
+.price-locked span { border-bottom: 0; color: var(--muted); }
+.price-locked a:hover { color: var(--gold); border-color: var(--gold); }
+.price-lock-link { font-size: 13px; font-weight: 600; color: var(--wood); }
+
+/* Document requests (docs.html) */
+.docs-req { margin-bottom: 28px; }
+.docs-items { margin: 0 0 12px 20px; }
+.docs-items li { margin: 4px 0; }
+.docs-note { background: var(--sage-light); border-radius: 12px; padding: 12px 14px; font-size: 14px; margin-bottom: 14px; }
+.docs-h { font: 600 18px var(--serif); margin: 22px 0 8px; }
+.docs-files { list-style: none; font-size: 14px; }
+.docs-files li { padding: 6px 0; border-bottom: 1px solid rgba(21,33,61,.08); }
