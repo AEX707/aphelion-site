@@ -205,7 +205,7 @@ window.AEX_I18N["ja"] = {
  "A place in our ready-made itineraries": "完成旅程への掲載",
  "Guaranteed payment": "支払い保証",
  "12 months of free promotion": "12か月間の無料プロモーション",
- "Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.": "世界中の旅行会社向けに、日本の厳選体験をご提供。運営：ZEN株式会社（東京）",
+ "Hand-picked experiences in Japan for travel agencies worldwide.": "世界中の旅行会社向けに、日本の厳選体験をご提供。",
  "Overview": "概要",
  "Account": "アカウント",
  "Partner dashboard · ": "パートナー管理画面 · ",

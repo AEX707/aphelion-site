@@ -205,7 +205,7 @@ window.AEX_I18N["es"] = {
  "A place in our ready-made itineraries": "Un lugar en nuestros itinerarios listos",
  "Guaranteed payment": "Pago garantizado",
  "12 months of free promotion": "12 meses de promoción gratuita",
- "Hand-picked experiences in Japan for travel agencies worldwide. Operated by ZEN Co., Ltd., Tokyo.": "Experiencias seleccionadas en Japón para agencias de viaje de todo el mundo. Operado por ZEN Co., Ltd., Tokio.",
+ "Hand-picked experiences in Japan for travel agencies worldwide.": "Experiencias seleccionadas en Japón para agencias de viaje de todo el mundo.",
  "I have read and agree to the Partner Terms": "He leído y acepto las Condiciones para socios",
  "View Partner Terms": "Ver las Condiciones para socios",
  "Please agree to the Partner Terms to continue.": "Acepte las Condiciones para socios para continuar.",
