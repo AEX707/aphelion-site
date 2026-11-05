@@ -196,7 +196,9 @@ footer a { display: block; margin-bottom: 10px; transition: color .2s; }
 footer a:hover { color: var(--gold-soft); }
 .footer-bottom { border-top: 1px solid var(--border-soft); padding-top: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .footer-bottom .copyright { margin: 0; border-top: 0; padding-top: 0; }
-.footer-legal { display: flex; gap: 8px 22px; flex-wrap: wrap; align-items: center; }
+.footer-legal { display: flex; gap: 8px 22px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+.footer-legal + .footer-admin-link { margin-left: 10px; }
+@media (max-width: 600px) { .footer-legal { margin-left: 0; } .footer-legal + .footer-admin-link { margin-left: 0; } }
 footer .footer-legal a { display: inline; margin: 0; font-size: 13px; }
 footer a.footer-admin-link { display: inline; margin: 0; font-size: 12px; opacity: .45; letter-spacing: .5px; }
 footer a.footer-admin-link:hover { opacity: 1; }
