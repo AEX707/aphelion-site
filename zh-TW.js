@@ -336,5 +336,10 @@ window.AEX_I18N["zh-TW"] = {
  "Uploading…": "上傳中…",
  "Documents requested": "需要提交文件",
  "Our team asked for a few documents to complete the review of your account.": "為完成您帳戶的審核，我們需要幾份文件。",
- "Upload documents": "上傳文件"
+ "Upload documents": "上傳文件",
+ // Booking Terms
+ "We are a travel business and agree to the Booking Terms and Privacy Policy": "我們是旅遊業者，並同意預訂條款與隱私權政策",
+ "Booking Terms": "預訂條款",
+ "Please agree to the Booking Terms and the Privacy Policy to continue.": "請同意預訂條款與隱私權政策以繼續。",
+ "By sending a request you accept the": "送出請求即表示您接受"
 };

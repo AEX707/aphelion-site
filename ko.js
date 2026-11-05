@@ -336,5 +336,10 @@ window.AEX_I18N["ko"] = {
  "Uploading…": "업로드 중…",
  "Documents requested": "서류 제출 요청",
  "Our team asked for a few documents to complete the review of your account.": "계정 심사를 완료하기 위해 몇 가지 서류가 필요합니다.",
- "Upload documents": "서류 업로드"
+ "Upload documents": "서류 업로드",
+ // Booking Terms
+ "We are a travel business and agree to the Booking Terms and Privacy Policy": "당사는 여행업체이며 예약 약관 및 개인정보 처리방침에 동의합니다",
+ "Booking Terms": "예약 약관",
+ "Please agree to the Booking Terms and the Privacy Policy to continue.": "계속하려면 예약 약관과 개인정보 처리방침에 동의해 주세요.",
+ "By sending a request you accept the": "요청을 보내면 다음에 동의하는 것으로 간주됩니다:"
 };

@@ -336,5 +336,10 @@ window.AEX_I18N["es"] = {
  "Uploading…": "Subiendo…",
  "Documents requested": "Documentos solicitados",
  "Our team asked for a few documents to complete the review of your account.": "Nuestro equipo necesita algunos documentos para completar la revisión de su cuenta.",
- "Upload documents": "Subir documentos"
+ "Upload documents": "Subir documentos",
+ // Booking Terms
+ "We are a travel business and agree to the Booking Terms and Privacy Policy": "Somos una empresa de viajes y aceptamos las Condiciones de reserva y la Política de privacidad",
+ "Booking Terms": "Condiciones de reserva",
+ "Please agree to the Booking Terms and the Privacy Policy to continue.": "Acepte las Condiciones de reserva y la Política de privacidad para continuar.",
+ "By sending a request you accept the": "Al enviar una solicitud acepta las"
 };

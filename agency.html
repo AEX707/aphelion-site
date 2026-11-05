@@ -105,8 +105,10 @@
           <input type="password" id="password" name="password" required minlength="6">
         </div>
         <div class="form-group terms-agree">
-          <label class="terms-check"><input type="checkbox" id="agreeTerms" required> <span>I confirm we are a travel business and agree to the Privacy Policy</span></label>
+          <label class="terms-check"><input type="checkbox" id="agreeTerms" required> <span>We are a travel business and agree to the Booking Terms and Privacy Policy</span></label>
           <div class="terms-links">
+            <a href="booking-terms.html" target="_blank" rel="noopener" class="terms-link" data-doc="booking-terms.html" data-box="agreeTerms" data-title="Booking Terms">Booking Terms</a>
+            <span aria-hidden="true">·</span>
             <a href="privacy-policy.html" target="_blank" rel="noopener" class="terms-link" data-doc="privacy-policy.html" data-box="agreeTerms" data-title="Privacy Policy">Privacy Policy</a>
           </div>
         </div>
@@ -178,7 +180,7 @@
     errorMessage.style.display = 'none';
     successMessage.style.display = 'none';
     if (!document.getElementById('agreeTerms').checked) {
-      errorMessage.textContent = t('Please confirm and agree to the Privacy Policy to continue.');
+      errorMessage.textContent = t('Please agree to the Booking Terms and the Privacy Policy to continue.');
       errorMessage.style.display = 'block';
       return;
     }
@@ -198,6 +200,7 @@
             contact_person: document.getElementById('contactPerson').value.trim(),
             country: document.getElementById('country').value.trim(),
             website: document.getElementById('website').value.trim(),
+            booking_terms_version: '1.0',
             privacy_version: '2026-11-01',
             terms_accepted_at: new Date().toISOString()
           }

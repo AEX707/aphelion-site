@@ -478,5 +478,10 @@ window.AEX_I18N["ja"] = {
  "Uploading…": "アップロード中…",
  "Documents requested": "書類のご提出のお願い",
  "Our team asked for a few documents to complete the review of your account.": "アカウント審査のため、いくつかの書類のご提出をお願いしています。",
- "Upload documents": "書類をアップロード"
+ "Upload documents": "書類をアップロード",
+ // Booking Terms
+ "We are a travel business and agree to the Booking Terms and Privacy Policy": "旅行事業者であることを確認し、予約規約とプライバシーポリシーに同意します",
+ "Booking Terms": "予約規約",
+ "Please agree to the Booking Terms and the Privacy Policy to continue.": "続行するには、予約規約とプライバシーポリシーに同意してください。",
+ "By sending a request you accept the": "リクエストを送信すると、次に同意したものとみなされます："
 };
