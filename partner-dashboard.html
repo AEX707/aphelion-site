@@ -102,20 +102,26 @@
   .status-msg.ok { background:rgba(46,125,91,.10); border:1px solid rgba(46,125,91,.4); color:#2E7D5B; display:block; }
   .status-msg.err { background:rgba(180,35,24,.08); border:1px solid rgba(180,35,24,.35); color:#B42318; display:block; }
   .photo-preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-  .photo-thumb { position: relative; width: 80px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .photo-thumb { position: relative; }
-  .photo-thumb .cover-badge, .photo-thumb .cover-set { position:absolute; left:6px; bottom:6px; font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; line-height:1.2; }
-  .photo-thumb .cover-badge { background: var(--gold); color:#15213D; }
-  .photo-thumb .cover-set { background: rgba(21,33,61,.78); color:#fff; cursor:pointer; }
-  .photo-thumb .cover-set:hover { background:#15213D; }
+  .photo-preview-grid { gap: 14px; }
+  .photo-thumb { position: relative; width: 150px; display:flex; flex-direction:column; gap:6px; }
+  .photo-thumb .ph-box { position:relative; width:150px; height:100px; border-radius:8px; overflow:hidden; border:1px solid var(--border); background:#eee; }
+  .photo-thumb.is-cover .ph-box { border:3px solid var(--gold); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor:pointer; }
+  .photo-thumb .star-btn { position:absolute; top:5px; left:5px; width:26px; height:26px; border-radius:50%; border:none; background:rgba(0,0,0,.55); color:#fff; font-size:15px; line-height:26px; text-align:center; cursor:pointer; padding:0; }
+  .photo-thumb .star-btn:hover { background:#15213D; color:var(--gold); }
+  .photo-thumb.is-cover .star-btn { background:var(--gold); color:#15213D; cursor:default; }
+  .photo-thumb .ph-cap { font-size:11px; font-weight:700; text-align:center; letter-spacing:.3px; min-height:15px; }
+  .photo-thumb.is-cover .ph-cap { color:#8a6a1f; }
+  .photo-thumb .ph-cap.muted { color:var(--muted); font-weight:500; cursor:pointer; }
+  .photo-thumb .ph-cap.muted:hover { color:#15213D; }
+  @media (max-width:600px){ .photo-thumb, .photo-thumb .ph-box { width:calc(50vw - 40px); } .photo-thumb .ph-box { height:calc((50vw - 40px)/1.5); } }
   .draft-bar { display:none; background:#FFF7E6; border:1px solid #F2D49B; color:#6B4E16; border-radius:10px; padding:10px 14px; margin:0 0 14px; font-size:13px; align-items:center; gap:10px; flex-wrap:wrap; }
   .draft-bar.show { display:flex; }
   .draft-bar button { border:0; border-radius:16px; padding:6px 14px; font-weight:700; cursor:pointer; font-size:12px; }
   .draft-bar .d-restore { background:#15213D; color:#fff; }
   .draft-bar .d-discard { background:transparent; color:#6B4E16; text-decoration:underline; }
   .draft-saved { font-size:12px; color:var(--muted); margin-left:10px; }
-  .photo-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.75); color: #fff; font-size: 14px; line-height: 1; border: none; cursor: pointer; }
+  .photo-thumb .del-btn { position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; padding:0; border-radius: 50%; background: rgba(0,0,0,.75); color: #fff; font-size: 14px; line-height: 1; border: none; cursor: pointer; }
 
   /* Tour form additions */
   .form-step { margin:30px 0 8px; font-size:19px; display:flex; align-items:baseline; gap:10px; }
@@ -129,7 +135,7 @@
   .choice input:checked + span { border-color:var(--gold); background:var(--plum-light); box-shadow:0 0 0 1px var(--gold) inset; }
   .choice input:focus-visible + span { outline:2px solid var(--gold); outline-offset:2px; }
   .program-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
-  .program-row { display:grid; grid-template-columns:110px 1fr 36px; gap:8px; align-items:center; }
+  .program-row { display:grid; grid-template-columns:170px 1fr 36px; gap:8px; align-items:center; }
   .program-row input { margin:0; }
   .program-row button { border:1px solid var(--border-soft); background:#fff; border-radius:8px; height:40px; cursor:pointer; color:var(--muted); font-size:18px; }
   .program-row button:hover { color:#B42318; border-color:#B42318; }
@@ -149,7 +155,7 @@
     .tour-admin-row .actions { width: 100%; flex-wrap: wrap; }
     .tour-admin-row .actions button { flex: 1 1 auto; }
     .section-header { align-items: stretch; }
-    .program-row { grid-template-columns:86px 1fr 36px; }
+    .program-row { grid-template-columns:150px 1fr 36px; }
     .kpi .k-value { font-size:24px; }
   }
 </style>
@@ -772,12 +778,15 @@
     scheduleDraft && setTimeout(scheduleDraft, 0);
     const el = document.getElementById('t_photos_preview');
     el.innerHTML = editingTourImages.map((url, i) => `
-      <div class="photo-thumb">
-        <img src="${esc(url)}" onerror="this.style.opacity=0.2" onclick="makeCover(${i})" title="${i === 0 ? 'Cover photo' : 'Click to make this the cover'}" style="cursor:pointer;${i === 0 ? ' outline:3px solid var(--gold); outline-offset:-3px;' : ''}">
+      <div class="photo-thumb${i === 0 ? ' is-cover' : ''}">
+        <div class="ph-box">
+          <img src="${esc(url)}" onerror="this.style.opacity=0.2" onclick="makeCover(${i})" title="${i === 0 ? esc(tr('Cover photo')) : esc(tr('Make cover'))}">
+          <button type="button" class="star-btn" onclick="makeCover(${i})" title="${i === 0 ? esc(tr('Cover photo')) : esc(tr('Make cover'))}">${i === 0 ? '★' : '☆'}</button>
+          <button type="button" class="del-btn" onclick="removeEditingTourImage(${i})" title="Remove">&times;</button>
+        </div>
         ${i === 0
-          ? `<span class="cover-badge">★ ${esc(tr('Cover'))}</span>`
-          : `<span class="cover-set" onclick="makeCover(${i})">☆ ${esc(tr('Make cover'))}</span>`}
-        <button type="button" onclick="removeEditingTourImage(${i})">&times;</button>
+          ? `<div class="ph-cap">★ ${esc(tr('Cover photo'))}</div>`
+          : `<div class="ph-cap muted" onclick="makeCover(${i})">☆ ${esc(tr('Make cover'))}</div>`}
       </div>`).join('');
   }
   function removeEditingTourImage(i) { editingTourImages.splice(i, 1); renderTourPhotoPreview(); }
@@ -1152,5 +1161,71 @@
   })();
 </script>
 <script src="i18n.js"></script>
+
+<style>
+  .tpick { display:flex; align-items:center; gap:4px; }
+  .tpick select { margin:0; padding:9px 6px; border:1px solid var(--border, #ccc); border-radius:8px; background:#fff; font-size:15px; font-variant-numeric:tabular-nums; cursor:pointer; flex:1; min-width:0; }
+  .tpick select:focus { outline:none; border-color:var(--gold, #C9A24A); }
+  .tpick .sep { font-weight:700; color:var(--muted, #777); }
+  .tpick.empty select { color:#999; }
+</style>
+<script>
+/* Alarm-clock style time picker: hour (00–23) + minute (5-min steps) dropdowns.
+   The original .time24 text field stays (hidden) and keeps the value, so saving/drafts work as before. */
+(function () {
+  var nativeDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function opts(list) { return '<option value="">--</option>' + list.map(function (v) { return '<option value="' + v + '">' + v + '</option>'; }).join(''); }
+  var HOURS = [], MINS = [];
+  for (var h = 0; h < 24; h++) HOURS.push(pad(h));
+  for (var m = 0; m < 60; m += 5) MINS.push(pad(m));
+  function enhance(input) {
+    if (input.dataset.tpick) return;
+    input.dataset.tpick = '1';
+    var box = document.createElement('div');
+    box.className = 'tpick';
+    box.innerHTML = '<select class="tp-h" aria-label="Hour">' + opts(HOURS) + '</select><span class="sep">:</span><select class="tp-m" aria-label="Minutes">' + opts(MINS) + '</select>';
+    input.parentNode.insertBefore(box, input);
+    input.style.display = 'none';
+    var hs = box.querySelector('.tp-h'), ms = box.querySelector('.tp-m');
+    function fromValue(v) {
+      var t = (typeof normTime === 'function' ? normTime(v) : v) || '';
+      var mm = /^(\d{2}):(\d{2})$/.exec(t);
+      if (!mm) { hs.value = ''; ms.value = ''; box.classList.add('empty'); return; }
+      var min = mm[2];
+      if (MINS.indexOf(min) === -1) {  // keep odd minutes like 07
+        var o = document.createElement('option'); o.value = min; o.textContent = min; ms.appendChild(o);
+      }
+      hs.value = mm[1]; ms.value = min; box.classList.remove('empty');
+    }
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get: function () { return nativeDesc.get.call(input); },
+      set: function (v) { nativeDesc.set.call(input, v); fromValue(v); }
+    });
+    function toValue(e) {
+      if (e && e.target === hs && hs.value && !ms.value) ms.value = '00';
+      if (e && e.target === ms && ms.value && !hs.value) hs.value = '09';
+      var v = (hs.value && ms.value) ? hs.value + ':' + ms.value : '';
+      nativeDesc.set.call(input, v);
+      box.classList.toggle('empty', !v);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+      if (typeof scheduleDraft === 'function') scheduleDraft();
+    }
+    hs.addEventListener('change', toValue);
+    ms.addEventListener('change', toValue);
+    fromValue(nativeDesc.get.call(input));
+  }
+  function scan(root) { (root.querySelectorAll ? root.querySelectorAll('input.time24') : []).forEach(enhance); }
+  function start() {
+    scan(document);
+    new MutationObserver(function (list) {
+      list.forEach(function (r) { r.addedNodes.forEach(function (n) { if (n.nodeType === 1) { if (n.matches && n.matches('input.time24')) enhance(n); else scan(n); } }); });
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>
