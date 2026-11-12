@@ -553,19 +553,21 @@
 
       if (partnerId && (status === 'approved' || status === 'rejected')) {
         try {
-          const pRes = await fetch(`${SUPABASE_URL}/rest/v1/partners?select=email&id=eq.${partnerId}`, {
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` }
-          });
+          const hdr = { apikey: SUPABASE_KEY, Authorization: `Bearer ${await getAccessToken()}` };
+          const [pRes, tRes] = await Promise.all([
+            fetch(`${SUPABASE_URL}/rest/v1/partners?select=email,company_name,contact_person&id=eq.${partnerId}`, { headers: hdr }),
+            fetch(`${SUPABASE_URL}/rest/v1/tours?select=*&id=eq.${id}`, { headers: hdr })
+          ]);
           const pData = await pRes.json();
-          const partnerEmail = pData[0] && pData[0].email;
-          if (partnerEmail) {
+          const tData = await tRes.json();
+          const partner = pData[0] || {};
+          const t = tData[0] || { title: tourTitle };
+          if (partner.email) {
             const subject = status === 'approved'
-              ? `Your tour "${tourTitle}" is now live`
-              : `Update on your tour "${tourTitle}"`;
-            const html = status === 'approved'
-              ? `<p>Good news — your tour <strong>${tourTitle}</strong> has been approved and is now visible to customers on Aphelion Expeditions.</p>`
-              : `<p>Your tour <strong>${tourTitle}</strong> was not approved at this time. Please review the details in your dashboard, or contact us for feedback.</p>`;
-            sendNotificationEmail(partnerEmail, subject, html);
+              ? `Your tour "${tourTitle}" is now live — ツアーが公開されました`
+              : `Action needed: "${tourTitle}" — ツアー内容の修正のお願い`;
+            const html = status === 'approved' ? tourApprovedMail(t, partner) : tourChangesMail(t, partner);
+            sendNotificationEmail(partner.email, subject, html);
           }
         } catch (e) { /* don't block the main action on a lookup failure */ }
       }
@@ -1284,6 +1286,66 @@
   const AEX_MAIL = {
     navy: '#15213D', gold: '#C9A961', text: '#1F2937', muted: '#6B7280', line: '#E7E2D6', bg: '#F5F3EC'
   };
+  // ---------- Partner emails: tour approved / tour needs changes ----------
+  const AEX_FORMATS = { half_day: 'Half-day', full_day: 'Full-day', evening: 'Evening', flexible: 'Flexible' };
+  function mailButton(href, label, solid) {
+    return `<a href="${href}" style="display:inline-block; ${solid ? `background:${AEX_MAIL.navy}; color:#fff;` : `background:#fff; color:${AEX_MAIL.navy}; border:1px solid ${AEX_MAIL.navy};`} text-decoration:none; padding:12px 22px; border-radius:24px; font-size:13px; font-weight:700; letter-spacing:1px; margin:0 8px 8px 0;">${label}</a>`;
+  }
+  function tourCard(t) {
+    const img = (Array.isArray(t.images) && t.images[0]) || t.image || '';
+    const rows = [
+      mailRow('Tour code', esc(typeof tourCode === 'function' ? tourCode(t) : ('#' + (t.id || '')))),
+      mailRow('Location', esc(t.location || '')),
+      mailRow('Format', esc(AEX_FORMATS[t.tour_format] || t.tour_format || '')),
+      mailRow('Duration', esc(t.duration || '')),
+      mailRow('Start time', esc(t.start_time ? String(t.start_time).slice(0, 5) : '')),
+      mailRow('Price (agency)', t.price != null ? fmtYen(t.price) + ' / person' : ''),
+      mailRow('Your payout (90%)', t.price != null ? fmtYen(partnerPayout(t.price)) + ' / person' : ''),
+      mailRow('Date', new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
+    ].join('');
+    return `<div style="margin:22px 0 6px; border:1px solid ${AEX_MAIL.line}; border-radius:12px; overflow:hidden;">
+      ${img ? `<img src="${esc(img)}" alt="" width="544" style="display:block; width:100%; max-width:544px; height:auto;">` : ''}
+      <div style="padding:16px 18px;">
+        <div style="font:600 19px Georgia, serif; color:${AEX_MAIL.navy}; margin-bottom:6px;">${esc(t.title || '')}</div>
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">${rows}</table>
+      </div></div>`;
+  }
+  function tourApprovedMail(t, p) {
+    const name = esc(p.contact_person || p.company_name || 'partner');
+    const tourUrl = `https://aphelionexpeditions.com/tour.html?id=${t.id}`;
+    return mailLayout('TOUR APPROVED ・ 公開されました', 'Your tour is now live',
+      `<p>Dear ${name},</p>
+       <p>Good news — your tour has been reviewed and approved. It is now visible to registered travel agencies on Aphelion Expeditions, translated automatically into all site languages.</p>
+       <p style="color:${AEX_MAIL.muted}; font-size:13px;">${name} 様<br>ツアーの審査が完了し、Aphelion Expeditions に公開されました。登録旅行会社が閲覧・予約できるようになりました。</p>`,
+      tourCard(t) +
+      `<p style="margin:20px 0 4px;">${mailButton(tourUrl, 'VIEW TOUR', true)}${mailButton('https://aphelionexpeditions.com/partner-dashboard.html#tours', 'OPEN DASHBOARD', false)}</p>` +
+      mailSection('When a booking arrives', `<ul style="margin:6px 0 0; padding-left:18px;">
+          <li style="margin:3px 0;">We will email you the full booking details (date, guests, agency) as soon as an agency books this tour.</li>
+          <li style="margin:3px 0;">You can follow all bookings and reviews in your partner dashboard.</li>
+          <li style="margin:3px 0;">Payouts are made monthly for delivered bookings (end-of-month closing, paid the following month).</li>
+          <li style="margin:3px 0;">Keep your price, schedule and photos up to date — changes to a live tour stay live and are reviewed by us.</li>
+        </ul>`) +
+      `<p style="margin-top:22px; font-size:13px; color:${AEX_MAIL.muted};">Questions? Simply reply to this email or write to <a href="mailto:partners@aphelionexpeditions.com" style="color:${AEX_MAIL.navy};">partners@aphelionexpeditions.com</a>. This listing is subject to the <a href="https://aphelionexpeditions.com/partner-terms.html" style="color:${AEX_MAIL.navy};">Partner Terms</a>.</p>
+       <p>Kind regards,<br>Aphelion Expeditions — Partner Team</p>`);
+  }
+  function tourChangesMail(t, p) {
+    const name = esc(p.contact_person || p.company_name || 'partner');
+    return mailLayout('CHANGES NEEDED ・ 修正のお願い', 'Your tour needs a few changes',
+      `<p>Dear ${name},</p>
+       <p>Thank you for submitting your tour. Before we can publish it, a few details need to be completed or corrected. Please review it in your dashboard and submit it again — it will be checked again quickly.</p>
+       <p style="color:${AEX_MAIL.muted}; font-size:13px;">${name} 様<br>ツアーをご登録いただきありがとうございます。公開前に、いくつかの項目の修正・追記をお願いいたします。管理画面よりご確認のうえ、再度ご申請ください。</p>`,
+      tourCard(t) +
+      mailSection('Common things to check', `<ul style="margin:6px 0 0; padding-left:18px;">
+          <li style="margin:3px 0;">Clear title and description in English (or Japanese)</li>
+          <li style="margin:3px 0;">At least 3 good photos, with a cover photo chosen</li>
+          <li style="margin:3px 0;">Day program with times, meeting point, what is included</li>
+          <li style="margin:3px 0;">Price, group size and licence (if required for your activity)</li>
+        </ul>`) +
+      `<p style="margin:20px 0 4px;">${mailButton('https://aphelionexpeditions.com/partner-dashboard.html#tours', 'EDIT MY TOUR', true)}</p>
+       <p style="margin-top:22px; font-size:13px; color:${AEX_MAIL.muted};">If you are not sure what to change, reply to this email and we will help — <a href="mailto:partners@aphelionexpeditions.com" style="color:${AEX_MAIL.navy};">partners@aphelionexpeditions.com</a></p>
+       <p>Kind regards,<br>Aphelion Expeditions — Partner Team</p>`);
+  }
+
   function bookingRef(id) { return 'AEX-' + String(id).padStart(4, '0'); }
   function fmtYen(n) { return '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP'); }
   function fmtLongDate(d) {

@@ -104,6 +104,17 @@
   .photo-preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
   .photo-thumb { position: relative; width: 80px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
   .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb { position: relative; }
+  .photo-thumb .cover-badge, .photo-thumb .cover-set { position:absolute; left:6px; bottom:6px; font-size:11px; font-weight:700; padding:3px 8px; border-radius:12px; line-height:1.2; }
+  .photo-thumb .cover-badge { background: var(--gold); color:#15213D; }
+  .photo-thumb .cover-set { background: rgba(21,33,61,.78); color:#fff; cursor:pointer; }
+  .photo-thumb .cover-set:hover { background:#15213D; }
+  .draft-bar { display:none; background:#FFF7E6; border:1px solid #F2D49B; color:#6B4E16; border-radius:10px; padding:10px 14px; margin:0 0 14px; font-size:13px; align-items:center; gap:10px; flex-wrap:wrap; }
+  .draft-bar.show { display:flex; }
+  .draft-bar button { border:0; border-radius:16px; padding:6px 14px; font-weight:700; cursor:pointer; font-size:12px; }
+  .draft-bar .d-restore { background:#15213D; color:#fff; }
+  .draft-bar .d-discard { background:transparent; color:#6B4E16; text-decoration:underline; }
+  .draft-saved { font-size:12px; color:var(--muted); margin-left:10px; }
   .photo-thumb button { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.75); color: #fff; font-size: 14px; line-height: 1; border: none; cursor: pointer; }
 
   /* Tour form additions */
@@ -249,6 +260,7 @@
 
       <div class="form-card" id="tourFormCard" style="display:none;">
         <h3 id="tourFormTitle">Add Tour</h3>
+        <div class="draft-bar" id="draftBar"><span id="draftBarText">You have an unsaved draft.</span><button type="button" class="d-restore" id="draftRestore">Restore draft</button><button type="button" class="d-discard" id="draftDiscard">Discard</button></div>
         <form id="myTourForm">
           <input type="hidden" id="t_id">
 
@@ -300,7 +312,7 @@
             </div>
             <div class="form-group">
               <label>Usual start time</label>
-              <input type="time" id="t_start_time">
+              <input type="text" id="t_start_time" class="time24" inputmode="numeric" maxlength="5" placeholder="09:30" autocomplete="off">
             </div>
           </div>
           <input type="hidden" id="t_group">
@@ -360,7 +372,7 @@
 
           <h4 class="form-step"><span class="n">6</span> Photos &amp; story</h4>
           <div class="form-group">
-            <label>Photos — upload one or more (first one is the cover)</label>
+            <label>Photos — upload one or more. Choose the cover photo with ☆ Make cover</label>
             <input type="file" id="t_photos" accept="image/*" multiple>
             <div id="t_photos_preview" class="photo-preview-grid"></div>
           </div>
@@ -371,7 +383,7 @@
               <button type="button" class="btn btn-outline" onclick="addPhotoLinks()" style="white-space:nowrap;">+ Add</button>
             </div>
             <input type="hidden" id="t_image">
-            <p style="font-size:12px; color:var(--muted); margin-top:6px;">All photos are shown in the same 3:2 format. Click a photo below to make it the cover (first photo).</p>
+            <p style="font-size:12px; color:var(--muted); margin-top:6px;">All photos are shown in the same 3:2 format. Tap ☆ Make cover on any photo to show it first in the catalogue.</p>
           </div>
           <div class="form-group">
             <label>Description (tell the story of the experience)</label>
@@ -405,6 +417,7 @@
           <div style="display:flex; gap:12px;">
             <button type="submit" class="btn btn-primary" id="saveTourBtn">Save Tour</button>
             <button type="button" class="btn btn-outline" onclick="closeTourForm()">Cancel</button>
+            <span class="draft-saved" id="draftSaved"></span>
           </div>
         </form>
       </div>
@@ -476,7 +489,11 @@
   async function checkIdleAndLogout() {
     let last = 0;
     try { last = parseInt(localStorage.getItem(LAST_ACTIVITY_KEY) || '0', 10); } catch (e) { return; }
-    if (Date.now() - last > IDLE_LIMIT_MS) {
+    // While a tour form is open (partners often copy text from other tabs), allow 60 minutes.
+    const formOpen = document.getElementById('tourFormCard') && document.getElementById('tourFormCard').style.display !== 'none';
+    const limit = formOpen ? 60 * 60 * 1000 : IDLE_LIMIT_MS;
+    if (Date.now() - last > limit) {
+      try { saveDraftNow(); } catch (e) {}
       await supabaseClient.auth.signOut();
       window.location.href = 'login.html';
     }
@@ -752,10 +769,14 @@
     renderTourPhotoPreview();
   }
   function renderTourPhotoPreview() {
+    scheduleDraft && setTimeout(scheduleDraft, 0);
     const el = document.getElementById('t_photos_preview');
     el.innerHTML = editingTourImages.map((url, i) => `
       <div class="photo-thumb">
         <img src="${esc(url)}" onerror="this.style.opacity=0.2" onclick="makeCover(${i})" title="${i === 0 ? 'Cover photo' : 'Click to make this the cover'}" style="cursor:pointer;${i === 0 ? ' outline:3px solid var(--gold); outline-offset:-3px;' : ''}">
+        ${i === 0
+          ? `<span class="cover-badge">★ ${esc(tr('Cover'))}</span>`
+          : `<span class="cover-set" onclick="makeCover(${i})">☆ ${esc(tr('Make cover'))}</span>`}
         <button type="button" onclick="removeEditingTourImage(${i})">&times;</button>
       </div>`).join('');
   }
@@ -808,6 +829,27 @@
     e.target.value = '';
   });
 
+  // ---------- 24-hour time fields (no AM/PM) ----------
+  function normTime(v) {
+    v = String(v || '').trim().replace(/[．。.．\s]/g, ':').replace(/：/g, ':');
+    if (!v) return '';
+    let h, m;
+    const mm = v.match(/^(\d{1,2}):(\d{1,2})$/);
+    if (mm) { h = +mm[1]; m = +mm[2]; }
+    else if (/^\d{1,4}$/.test(v)) {
+      if (v.length <= 2) { h = +v; m = 0; } else { h = +v.slice(0, v.length - 2); m = +v.slice(-2); }
+    } else return null;
+    if (h > 23 || m > 59) return null;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+  }
+  document.addEventListener('focusout', (e) => {
+    const el = e.target;
+    if (!el.classList || !el.classList.contains('time24')) return;
+    const n = normTime(el.value);
+    if (n === null) { el.style.borderColor = '#B42318'; el.title = 'Use 24-hour time, e.g. 09:30 or 13:00'; }
+    else { el.value = n; el.style.borderColor = ''; el.title = ''; }
+  });
+
   // ---------- Day program ----------
   const PROGRAM_TEMPLATES = {
     half_day: [['09:00', 'Meet your guide at the meeting point'], ['09:15', 'Main activity'], ['11:30', 'Tasting / free time'], ['12:30', 'End of the tour']],
@@ -818,7 +860,7 @@
   function addProgramRow(time = '', activity = '') {
     const row = document.createElement('div');
     row.className = 'program-row';
-    row.innerHTML = `<input type="time" class="p-time"><input type="text" class="p-act" placeholder="${esc(tr('What happens (e.g. Sushi workshop with a chef)'))}"><button type="button" aria-label="Remove step" title="Remove">×</button>`;
+    row.innerHTML = `<input type="text" class="p-time time24" inputmode="numeric" maxlength="5" placeholder="09:30" autocomplete="off"><input type="text" class="p-act" placeholder="${esc(tr('What happens (e.g. Sushi workshop with a chef)'))}"><button type="button" aria-label="Remove step" title="Remove">×</button>`;
     row.querySelector('.p-time').value = time;
     row.querySelector('.p-act').value = activity;
     row.querySelector('button').onclick = () => row.remove();
@@ -830,7 +872,7 @@
   }
   function getProgram() {
     return Array.from(document.querySelectorAll('#programList .program-row'))
-      .map(r => ({ time: r.querySelector('.p-time').value, activity: r.querySelector('.p-act').value.trim() }))
+      .map(r => ({ time: normTime(r.querySelector('.p-time').value) || '', activity: r.querySelector('.p-act').value.trim() }))
       .filter(p => p.activity);
   }
   function getFormat() {
@@ -883,6 +925,73 @@
   }
   ['t_price', 't_child_price', 't_private_price'].forEach(id => document.getElementById(id).addEventListener('input', updatePayouts));
 
+  // ---------- Autosave: the form is saved as a draft in this browser while typing ----------
+  // A draft survives closing the tab, a crash or the automatic logout, and is offered
+  // back the next time the partner opens the same tour (or "Add Tour").
+  function draftKey(id) { return 'aex_tour_draft_' + (currentUserId || 'anon') + '_' + (id || 'new'); }
+  function collectDraft() {
+    const f = document.getElementById('myTourForm');
+    const vals = {};
+    f.querySelectorAll('input[id], textarea[id], select[id]').forEach(el => {
+      if (el.type === 'file' || el.id === 't_id') return;
+      vals[el.id] = el.value;
+    });
+    return {
+      v: vals,
+      format: getFormat(),
+      seasons: Array.from(document.querySelectorAll('#seasonChoices input:checked')).map(c => c.value),
+      program: Array.from(document.querySelectorAll('#programList .program-row')).map(r => ({ time: r.querySelector('.p-time').value, activity: r.querySelector('.p-act').value })),
+      images: editingTourImages.slice(),
+      title: (vals.t_title || '').trim(),
+      at: Date.now()
+    };
+  }
+  let _draftTimer = null, _draftPaused = false;
+  function saveDraftNow() {
+    if (_draftPaused) return;
+    if (document.getElementById('tourFormCard').style.display === 'none') return;
+    const id = document.getElementById('t_id').value;
+    const d = collectDraft();
+    const hasContent = d.title || Object.values(d.v).some(x => String(x || '').trim()) || d.images.length || d.program.some(p => p.activity.trim());
+    if (!hasContent) return;
+    try {
+      localStorage.setItem(draftKey(id), JSON.stringify(d));
+      const t = new Date(d.at);
+      document.getElementById('draftSaved').textContent = tr('Draft saved') + ' ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    } catch (e) {}
+  }
+  function scheduleDraft() { clearTimeout(_draftTimer); _draftTimer = setTimeout(saveDraftNow, 800); }
+  function clearDraft(id) { try { localStorage.removeItem(draftKey(id)); } catch (e) {} document.getElementById('draftSaved').textContent = ''; }
+  function applyDraft(d) {
+    _draftPaused = true;
+    Object.entries(d.v || {}).forEach(([k, val]) => { const el = document.getElementById(k); if (el && el.type !== 'file') el.value = val; });
+    document.querySelectorAll('input[name="t_format"]').forEach(r => r.checked = r.value === d.format);
+    document.querySelectorAll('#seasonChoices input').forEach(c => c.checked = (d.seasons || []).includes(c.value));
+    setProgram((d.program || []).length ? d.program : []);
+    editingTourImages = Array.isArray(d.images) ? d.images.slice() : [];
+    renderTourPhotoPreview();
+    checkPrices(); updatePayouts();
+    _draftPaused = false;
+  }
+  function offerDraft(id) {
+    const bar = document.getElementById('draftBar');
+    bar.classList.remove('show');
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(draftKey(id)) || 'null'); } catch (e) {}
+    if (!d) return;
+    const when = new Date(d.at);
+    document.getElementById('draftBarText').textContent = tr('You have an unsaved draft') + (d.title ? ' — "' + d.title + '"' : '') + ' (' + when.toLocaleString() + ').';
+    bar.classList.add('show');
+    document.getElementById('draftRestore').onclick = () => { applyDraft(d); bar.classList.remove('show'); showTourStatus(tr('Draft restored.'), true); };
+    document.getElementById('draftDiscard').onclick = () => { clearDraft(id); bar.classList.remove('show'); };
+  }
+  document.getElementById('myTourForm').addEventListener('input', scheduleDraft);
+  document.getElementById('myTourForm').addEventListener('change', scheduleDraft);
+  document.getElementById('programList').addEventListener('click', () => setTimeout(scheduleDraft, 50));
+  setInterval(saveDraftNow, 10000);
+  window.addEventListener('beforeunload', saveDraftNow);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraftNow(); });
+
   // ---------- Open / edit / delete ----------
   let editingTourStatus = null;
   function resetExtras() {
@@ -899,10 +1008,12 @@
     editingTourImages = [];
     renderTourPhotoPreview();
     resetExtras();
+    document.getElementById('draftSaved').textContent = '';
     document.getElementById('tourFormCard').style.display = 'block';
+    offerDraft('');
     document.getElementById('tourFormCard').scrollIntoView({ behavior: 'smooth' });
   }
-  function closeTourForm() { document.getElementById('tourFormCard').style.display = 'none'; }
+  function closeTourForm() { saveDraftNow(); document.getElementById('tourFormCard').style.display = 'none'; }
 
   function setVal(id, v) { document.getElementById(id).value = v == null ? '' : v; }
   function editMyTour(i) {
@@ -944,7 +1055,9 @@
     checkPrices();
     editingTourImages = Array.isArray(t.images) && t.images.length ? [...t.images] : (t.image ? [t.image] : []);
     renderTourPhotoPreview();
+    document.getElementById('draftSaved').textContent = '';
     document.getElementById('tourFormCard').style.display = 'block';
+    offerDraft(t.id);
     document.getElementById('tourFormCard').scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -985,7 +1098,7 @@
         min_travelers: minT,
         max_travelers: maxT,
         tour_format: getFormat() || null,
-        start_time: document.getElementById('t_start_time').value || null,
+        start_time: normTime(document.getElementById('t_start_time').value) || null,
         day_program: getProgram(),
         seasons: Array.from(document.querySelectorAll('#seasonChoices input:checked')).map(c => c.value),
         plan_b: document.getElementById('t_plan_b').value,
@@ -1014,7 +1127,10 @@
       else ({ error } = await supabaseClient.from('tours').insert(payload));
 
       if (error) { showTourStatus('Could not save: ' + error.message, false); return; }
+      clearDraft(id);
+      _draftPaused = true;
       closeTourForm();
+      _draftPaused = false;
       showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
       await loadMyTours();
       loadStats();
