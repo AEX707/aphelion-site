@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>請求書 | 白崎堂 SHIROSAKI-DO</title>
+<link rel="stylesheet" href="sk-portal.css">
+<style>
+  @page { size: A4; margin: 14mm; }
+  .sheet { background: #fff; max-width: 800px; margin: 20px auto; padding: 44px 48px; border: 1px solid var(--line); font-family: var(--serif); }
+  .sheet h1 { text-align: center; letter-spacing: .6em; font-size: 26px; margin: 0 0 4px; }
+  .sheet .sub { text-align: center; font-size: 11px; color: var(--ink-3); letter-spacing: .2em; margin-bottom: 28px; }
+  .top { display: flex; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+  .to b { font-size: 18px; border-bottom: 1px solid var(--ink); padding-bottom: 2px; }
+  .from { text-align: right; font-size: 13px; line-height: 1.7; }
+  .meta { font-size: 13px; line-height: 1.8; }
+  .big { display: flex; justify-content: space-between; align-items: baseline; border: 1.5px solid var(--ink); padding: 12px 18px; margin: 18px 0; }
+  .big b { font-size: 26px; }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 13px; font-family: var(--sans); }
+  table.inv th { background: #f3f0ea; border: 1px solid #cfc8bb; padding: 7px 9px; font-weight: 500; text-align: left; }
+  table.inv td { border: 1px solid #cfc8bb; padding: 7px 9px; }
+  table.inv .num { text-align: right; white-space: nowrap; }
+  .sums { width: 300px; margin: 10px 0 0 auto; font-size: 14px; }
+  .sums div { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--line); }
+  .sums .grand { font-weight: 700; font-size: 16px; border-bottom: 2px solid var(--ink); }
+  .bank { margin-top: 26px; font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; line-height: 1.8; }
+  .stamp { display: inline-grid; place-items: center; width: 54px; height: 54px; border: 2px solid var(--accent); color: var(--accent); border-radius: 4px; font-size: 13px; transform: rotate(-6deg); margin-left: 10px; }
+  .bar { max-width: 800px; margin: 16px auto 0; display: flex; gap: 10px; justify-content: flex-end; padding: 0 16px; }
+  @media print { body { background: #fff; } .bar { display: none; } .sheet { border: 0; margin: 0; padding: 0; max-width: none; } }
+  @media (max-width: 640px) { .sheet { padding: 24px 18px; } .top { flex-direction: column; } .from { text-align: left; } }
+</style>
+</head>
+<body>
+<div class="bar"><button class="btn ghost" onclick="history.length > 1 ? history.back() : window.close()">戻る</button><button class="btn" onclick="print()">印刷・PDF保存 / Print</button></div>
+<div class="sheet" id="sheet"><div class="empty">読み込み中… / Loading…</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sk-config.js"></script>
+<script src="sk-common.js"></script>
+<script>
+(async function () {
+  const id = new URLSearchParams(location.search).get('id');
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.replace('partner-login.html'); return; }
+  const { data: r, error } = await sb.from('sk_reports').select('*, sk_report_lines(*), sk_partners(*)').eq('id', id).maybeSingle();
+  if (error || !r) { $('#sheet').innerHTML = '<div class="empty">請求書が見つかりません / Invoice not found</div>'; return; }
+  const p = r.sk_partners, I = SK.ISSUER;
+  const no = `SK-${String(r.month).slice(0, 7).replace('-', '')}-${String(r.id).padStart(4, '0')}`;
+  const d = new Date(r.month), due = new Date(d.getFullYear(), d.getMonth() + 2, 0);
+  const lines = r.sk_report_lines.filter(l => l.sold + l.missing > 0);
+  document.title = `請求書 ${no} | 白崎堂`;
+  $('#sheet').innerHTML = `
+    <h1>請求書</h1><div class="sub">INVOICE</div>
+    <div class="top">
+      <div>
+        <div class="to"><b>${esc(p.shop_name)}　御中</b></div>
+        <div class="meta" style="margin-top:10px">${esc(p.address || '')}</div>
+        <div class="meta" style="margin-top:12px">
+          請求書番号：${no}<br>発行日：${fmtDate(r.created_at)}<br>対象期間：${fmtMonth(r.month)}分（委託販売）<br>お支払期限：${due.toLocaleDateString('ja-JP')}
+        </div>
+      </div>
+      <div class="from">
+        <b style="font-size:16px">${esc(I.name)}</b>${r.status === 'paid' ? '<span class="stamp">入金済</span>' : ''}<br>
+        ${I.operator ? esc(I.operator) + '<br>' : ''}${I.address ? esc(I.address) + '<br>' : ''}${esc(I.email || '')}<br>
+        ${I.invoice_reg_no ? '登録番号：' + esc(I.invoice_reg_no) : ''}
+      </div>
+    </div>
+    <p style="font-size:13px;margin:0">下記のとおりご請求申し上げます。</p>
+    <div class="big"><span>ご請求金額（税込）</span><b>${yen(r.amount + r.tax)}</b></div>
+    <table class="inv">
+      <tr><th>品名</th><th class="num">単価（納入価格）</th><th class="num">販売</th><th class="num">紛失・破損</th><th class="num">金額</th></tr>
+      ${lines.length ? lines.map(l => `<tr><td>${esc(l.name)}</td><td class="num">${yen(l.unit_price)}</td><td class="num">${l.sold}</td><td class="num">${l.missing}</td><td class="num">${yen(l.unit_price * (l.sold + l.missing))}</td></tr>`).join('')
+        : '<tr><td colspan="5" style="text-align:center;color:#888">当月の販売はありません</td></tr>'}
+    </table>
+    <div class="sums">
+      <div><span>小計（税抜）</span><span>${yen(r.amount)}</span></div>
+      <div><span>消費税（${Math.round(SK.TAX_RATE * 100)}%）</span><span>${yen(r.tax)}</span></div>
+      <div class="grand"><span>合計</span><span>${yen(r.amount + r.tax)}</span></div>
+    </div>
+    <div class="bank">
+      <b>お振込先</b><br>${esc(I.bank || '（振込先は別途ご案内します）')}<br>
+      <span style="color:#777">※振込手数料はご負担ください。委託販売パートナー規約第8条に基づくご請求です。</span>
+    </div>`;
+})();
+</script>
+</body>
+</html>

@@ -1,259 +1,408 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Become a Partner — Aphelion Expeditions</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="favicon-32.png">
-<link rel="stylesheet" href="styles.css">
-<style>
-.terms-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; }
-.terms-check input { width: auto; margin-top: 3px; flex: 0 0 auto; }
-.terms-links { margin: 6px 0 0 26px; font-size: 13px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.terms-link { display: inline-block; font-size: 13px; color: var(--gold); text-decoration: underline; }
-.terms-modal .modal-box { width: min(920px, 100%); padding: 0; display: flex; flex-direction: column; height: min(86vh, 900px); overflow: hidden; }
-.terms-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid var(--border-soft); }
-.terms-modal-head h3 { margin: 0; font-size: 22px; }
-.terms-modal-x { background: none; border: 0; font-size: 26px; line-height: 1; cursor: pointer; color: inherit; padding: 4px 8px; }
-.terms-modal iframe { flex: 1; width: 100%; border: 0; }
-.terms-modal-foot { display: flex; gap: 12px; justify-content: flex-end; padding: 14px 22px; border-top: 1px solid var(--border-soft); flex-wrap: wrap; }
-.terms-modal-foot .btn { min-width: 140px; }
-@media (max-width: 600px) { .terms-modal { padding: 0; } .terms-modal .modal-box { height: 100vh; height: 100dvh; border-radius: 0; } .terms-modal-foot .btn { flex: 1; } }
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>パートナーページ | 白崎堂 SHIROSAKI-DO</title>
+<link rel="stylesheet" href="sk-portal.css">
 </head>
 <body>
+<header class="sk-top"><div class="in">
+  <a class="sk-logo" href="index.html"><span class="sk-mark">白</span><span><b>白崎堂</b><small>SHIROSAKI-DO</small></span></a>
+  <span class="sp"></span>
+  <span class="sk-who" id="who"></span>
+  <button class="btn ghost sm" id="logout">ログアウト</button>
+</div></header>
 
-<div class="topbar">
-  <div class="container topbar-content">
-    <span>For travel partners &amp; tour operators worldwide</span>
-    <span>partners@aphelionexpeditions.com</span>
-  </div>
-</div>
+<main class="wrap">
+  <div id="loading" class="empty">読み込み中… / Loading…</div>
 
-<header>
-  <div class="container navbar">
-    <a href="index.html" class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="logo-full-img"></a>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="tours.html">Tours</a>
-      <a href="index.html#benefits">Why Us</a>
-    </nav>
-    <div class="navbar-right">
-      <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
-    <div class="nav-actions">
-      <a href="login.html" class="btn btn-outline">Log In</a>
-      <a href="partner.html" class="btn btn-primary">Become a Partner</a>
+  <!-- password reset -->
+  <section id="reset-box" class="card narrow hidden" style="margin:0 auto">
+    <h2>新しいパスワード<span class="en">New password</span></h2>
+    <form id="f-reset">
+      <div class="field"><input type="password" name="pw" minlength="8" required placeholder="8文字以上 / 8+ characters"></div>
+      <button class="btn block">保存 / Save</button>
+    </form>
+  </section>
+
+  <!-- waiting for approval -->
+  <section id="pending-box" class="card narrow hidden" style="margin:0 auto;text-align:center">
+    <div class="sk-mark" style="margin:0 auto 14px">白</div>
+    <h2 id="pending-title">ただいま審査中です</h2>
+    <p class="lead" id="pending-text">ご登録ありがとうございます。白崎堂が内容を確認し、承認後にカタログとご注文がご利用いただけます。通常1〜2営業日です。<br><span class="en">Thank you for registering. We will review and approve your account within 1–2 business days.</span></p>
+    <p class="muted">お問い合わせ: info@shirosakido.jp</p>
+  </section>
+
+  <!-- main dashboard -->
+  <section id="app" class="hidden">
+    <h1 id="shop-title"></h1>
+    <p class="lead">委託販売パートナーページ<span class="en">Consignment partner dashboard</span></p>
+    <div class="note warn hidden" id="terms-banner">
+      委託販売パートナー規約が更新されました（第<span id="tb-ver"></span>版）。<a href="partner-terms.html" target="_blank">内容を確認</a>のうえ、同意をお願いします。
+      <span class="en">The Partner Terms have been updated. Please review and accept.</span>
+      <div style="margin-top:8px"><button class="btn sm" id="tb-accept">同意する / I agree</button></div>
     </div>
-    </div>
-  </div>
-</header>
 
-<section class="page-hero">
-  <div class="container">
-    <div class="eyebrow">Partnership</div>
-    <h1>Become an Aphelion Partner</h1>
-    <p>Join our global network of travel agencies and tour operators, and offer your customers journeys beyond the horizon.</p>
-  </div>
-</section>
-
-<section class="form-page-section">
-  <div class="container form-layout">
-    <div>
-      <div class="eyebrow">Why Partner With Us</div>
-      <h2>Grow your catalogue, effortlessly</h2>
-      <p>Aphelion Expeditions gives travel agencies and tour operators direct access to a curated network of experiences — plus your own dashboard to list and manage the tours you operate.</p>
-      <ul class="check-list">
-        <li>Access to our full tour catalogue</li>
-        <li>Dedicated partner support within 24 hours</li>
-        <li>Partner dashboard to list and manage your own tours</li>
-        <li>Transparent, partner-friendly pricing</li>
-      </ul>
+    <div class="tabs">
+      <button data-tab="catalog">カタログ<span class="en">Catalogue</span></button>
+      <button data-tab="stock">店頭在庫<span class="en">Your stock</span></button>
+      <button data-tab="orders">注文履歴<span class="en">Orders</span></button>
+      <button data-tab="report">月次報告<span class="en">Monthly report</span><span class="badge hidden" id="report-badge">!</span></button>
+      <button data-tab="invoices">請求書<span class="en">Invoices</span></button>
+      <button data-tab="profile">登録情報<span class="en">Profile</span></button>
     </div>
-    <div class="form-card">
-      <h3>Partner Application</h3>
-      <div class="success-message" id="successMessage">Account created! Please check your inbox and click the confirmation link we sent you, then log in with your email and password. Your partnership will show as "pending" until our team reviews it.</div>
-      <div class="error-message" id="errorMessage"></div>
-      <form id="partnerForm">
-        <div class="form-group">
-          <label for="companyName">Company Name</label>
-          <input type="text" id="companyName" name="companyName" required>
+
+    <!-- CATALOG -->
+    <section class="pane" id="pane-catalog">
+      <div class="row" style="margin-bottom:16px">
+        <input id="q" placeholder="検索 / Search" style="max-width:260px">
+        <select id="cat" style="max-width:200px"><option value="">すべての種類 / All</option></select>
+      </div>
+      <p class="muted" style="margin:-6px 0 14px">納入価格＝御社のお支払い額（販売分のみ・税別）。推奨販売価格は市場相場に基づく目安です。<br>Supply price = what you pay for sold items (tax excl.). Recommended price is a market-based guide.</p>
+      <div class="pgrid" id="pgrid"></div>
+    </section>
+
+    <!-- STOCK -->
+    <section class="pane" id="pane-stock">
+      <p class="muted" style="margin:0 0 14px">店頭在庫＝納品数 − 報告済み販売・紛失 − 引上げ。数字が合わない場合はご連絡ください。</p>
+      <div class="tbl-wrap"><table class="t" id="stock-t"></table></div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="pane" id="pane-orders">
+      <div id="orders"></div>
+    </section>
+
+    <!-- REPORT -->
+    <section class="pane" id="pane-report">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">月次販売報告<span class="en">Monthly sales report</span></h2>
+          <select id="rep-month" style="max-width:180px"></select>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="contactPerson">Contact Person</label>
-            <input type="text" id="contactPerson" name="contactPerson" required>
-          </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
-          </div>
+        <p class="muted">毎月末締め・翌月5日までにご報告ください。送信すると請求書が自動で作成されます。<br>Report by the 5th of the next month. An invoice is created automatically.</p>
+        <div id="rep-sent" class="note ok hidden"></div>
+        <div class="tbl-wrap" style="margin-top:10px"><table class="t" id="rep-t"></table></div>
+        <div class="field" style="margin-top:14px"><label>備考 / Note</label><textarea id="rep-note" rows="2"></textarea></div>
+        <div class="row" style="justify-content:space-between">
+          <div><span class="muted">今回のご請求額（税込）/ Total incl. tax</span><div style="font-size:22px;font-weight:700" id="rep-total">¥0</div></div>
+          <button class="btn red" id="rep-send">報告を送信 / Send report</button>
         </div>
-        <div class="form-group">
-          <label for="country">Country</label>
-          <input type="text" id="country" name="country" required>
+      </div>
+    </section>
+
+    <!-- INVOICES -->
+    <section class="pane" id="pane-invoices">
+      <div class="tbl-wrap"><table class="t" id="inv-t"></table></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="pane" id="pane-profile">
+      <form class="card narrow" id="f-profile">
+        <div class="field"><label>店舗・工房名 / Shop name</label><input name="shop_name" required></div>
+        <div class="grid2">
+          <div class="field"><label>ご担当者名 / Contact</label><input name="contact_name"></div>
+          <div class="field"><label>電話番号 / Phone</label><input name="phone"></div>
         </div>
-        <div class="form-group">
-          <label for="password">Choose a Password</label>
-          <input type="password" id="password" name="password" required minlength="6">
-        </div>
-        <div class="form-group">
-          <label for="message">Tell us about your business</label>
-          <textarea id="message" name="message" rows="4" placeholder="What kind of tours do you sell? How many customers do you serve annually?"></textarea>
-        </div>
-        <div class="form-group terms-agree">
-          <label class="terms-check"><input type="checkbox" id="agreeTerms" required> <span>I agree to the Partner Terms and Privacy Policy</span></label>
-          <div class="terms-links">
-            <a href="partner-terms.html" target="_blank" rel="noopener" class="terms-link" data-doc="partner-terms.html" data-box="agreeTerms" data-title="Partner Terms">Partner Terms</a>
-            <span aria-hidden="true">·</span>
-            <a href="privacy-policy.html" target="_blank" rel="noopener" class="terms-link" data-doc="privacy-policy.html" data-box="agreeTerms" data-title="Privacy Policy">Privacy Policy</a>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%;">Create Partner Account</button>
+        <div class="field"><label>店舗住所（納品先）/ Address</label><input name="address"></div>
+        <div class="field"><label>ウェブサイト / Website</label><input name="website"></div>
+        <button class="btn">保存 / Save</button>
+        <p class="muted" style="margin:16px 0 0">規約: <a href="partner-terms.html" target="_blank">委託販売パートナー規約</a>（同意日 <span id="terms-date"></span>・第<span id="terms-ver"></span>版）</p>
       </form>
-    </div>
-  </div>
-</section>
+    </section>
+  </section>
+  <div class="foot">© 2026 SHIROSAKI-DO ・ info@shirosakido.jp</div>
+</main>
 
+<!-- cart bar -->
+<div class="cartbar hidden" id="cartbar"><div class="in">
+  <span id="cart-sum"></span><span class="sp" style="flex:1"></span>
+  <button class="btn" id="open-cart">カートを見る / View cart</button>
+</div></div>
 
-<div class="modal terms-modal" id="termsModal" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
-  <div class="modal-box">
-    <div class="terms-modal-head">
-      <h3 id="termsModalTitle">Partner Terms</h3>
-      <button type="button" class="terms-modal-x" id="termsClose" aria-label="Close">&times;</button>
-    </div>
-    <iframe id="termsFrame" title="Partner Terms"></iframe>
-    <div class="terms-modal-foot">
-      <button type="button" class="btn btn-outline" id="termsCancel">Close</button>
-      <button type="button" class="btn btn-primary" id="termsAgree">I agree</button>
-    </div>
-  </div>
-</div>
-
-<footer>
-  <div class="container">
-    <div class="footer-grid">
-      <div>
-        <div class="logo"><img src="logo-full-transparent.png" alt="Aphelion Expeditions" class="footer-logo-full-img"></div>
-        <p>Curated journeys for travel partners worldwide — beyond the horizon, beyond the ordinary.</p>
-      </div>
-      <div>
-        <h3>Explore</h3>
-        <a href="tours.html">All Tours</a>
-        <a href="index.html#benefits">Why Us</a>
-      </div>
-      <div>
-        <h3>Partners</h3>
-        <a href="partner.html">Become a Partner</a>
-        <a href="login.html">Partner Login</a>
-      </div>
-      <div>
-        <h3>Contact</h3>
-        <a href="mailto:partners@aphelionexpeditions.com">partners@aphelionexpeditions.com</a>
-        <a href="mailto:info@aphelionexpeditions.com">info@aphelionexpeditions.com</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <div class="copyright">© 2026 Aphelion Expeditions. All rights reserved.</div>
-      <div class="footer-legal"><a href="partner-terms.html">Partner Terms</a><a href="booking-terms.html">Booking Terms</a><a href="privacy-policy.html">Privacy Policy</a></div>
-      <a href="admin.html" class="footer-admin-link" rel="nofollow">Admin</a>
-    </div>
-  </div>
-</footer>
+<!-- cart drawer -->
+<div class="drawer-bg hidden" id="cart-bg"></div>
+<aside class="drawer hidden" id="cart">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">ご注文内容<span class="en">Your order</span></h2><button class="link" id="close-cart">閉じる</button></div>
+  <div id="cart-lines"></div>
+  <div class="total"><span>納入価格合計（税別）</span><span id="cart-total"></span></div>
+  <p class="muted" style="margin-top:-6px">委託販売のため、ご注文時のお支払いはありません。販売された分のみ月次でご請求します。<br>No payment now — you pay only for items sold, monthly.</p>
+  <form id="f-order">
+    <div class="field"><label>お届け先名 / Ship to</label><input name="ship_name" required></div>
+    <div class="field"><label>お届け先住所 / Address</label><input name="ship_address" required></div>
+    <div class="field"><label>電話番号 / Phone</label><input name="ship_phone" required></div>
+    <div class="field"><label>ご要望 / Note</label><textarea name="note" rows="2" placeholder="希望納期など"></textarea></div>
+    <button class="btn red block" id="btn-order">注文を確定する / Place order</button>
+  </form>
+</aside>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-client.js"></script>
-<script src="terms-version.js"></script>
+<script src="sk-config.js"></script>
+<script src="sk-common.js"></script>
 <script>
-  const form = document.getElementById('partnerForm');
-  const submitBtn = document.getElementById('submitBtn');
-  const successMessage = document.getElementById('successMessage');
-  const errorMessage = document.getElementById('errorMessage');
+(async function () {
+  const STATUS = {
+    new: '受付 / Received', confirmed: '確認済み / Confirmed', shipped: '発送済み / Shipped', cancelled: 'キャンセル / Cancelled',
+    invoiced: '未払い / Unpaid', paid: '入金済み / Paid', void: '取消 / Void'
+  };
+  let me = null, products = [], stock = [];
+  let cart = {};
+  try { cart = JSON.parse(localStorage.getItem('sk-cart') || '{}'); } catch (e) {}
 
-  form.addEventListener('submit', async (e) => {
+  const params = new URLSearchParams(location.search);
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.replace('partner-login.html'); return; }
+  $('#logout').onclick = async () => { await sb.auth.signOut(); location.href = 'partner-login.html'; };
+  $('#loading').classList.add('hidden');
+
+  // password reset link
+  if (params.get('reset')) {
+    $('#reset-box').classList.remove('hidden');
+    $('#f-reset').onsubmit = async e => {
+      e.preventDefault();
+      const { error } = await sb.auth.updateUser({ password: e.target.pw.value });
+      if (error) return toast(errText(error));
+      toast('保存しました / Saved'); location.replace('partner.html');
+    };
+    return;
+  }
+
+  const { data: p } = await sb.from('sk_partners').select('*').eq('id', session.user.id).maybeSingle();
+  if (!p || p.status !== 'approved') {
+    $('#pending-box').classList.remove('hidden');
+    if (p && p.status === 'rejected') {
+      $('#pending-title').textContent = 'ご登録を承認できませんでした';
+      $('#pending-text').innerHTML = '詳しくは info@shirosakido.jp までお問い合わせください。<br><span class="en">Please contact us for details.</span>';
+    } else if (p && p.status === 'paused') {
+      $('#pending-title').textContent = 'お取引は一時停止中です';
+      $('#pending-text').innerHTML = 'info@shirosakido.jp までお問い合わせください。<br><span class="en">Your account is paused. Please contact us.</span>';
+    }
+    return;
+  }
+  me = p;
+  $('#who').textContent = me.shop_name;
+  $('#shop-title').textContent = me.shop_name;
+  $('#app').classList.remove('hidden');
+
+  // terms changed since the partner agreed → ask to accept again
+  if (me.terms_version !== SK.TERMS_VERSION) {
+    $('#tb-ver').textContent = SK.TERMS_VERSION;
+    $('#terms-banner').classList.remove('hidden');
+    $('#tb-accept').onclick = async () => {
+      const { error } = await sb.rpc('sk_accept_terms', { v: SK.TERMS_VERSION });
+      if (error) return toast(errText(error));
+      me.terms_version = SK.TERMS_VERSION; me.terms_agreed_at = new Date().toISOString();
+      $('#terms-banner').classList.add('hidden'); toast('ありがとうございます / Thank you');
+      $('#terms-ver').textContent = me.terms_version; $('#terms-date').textContent = fmtDate(me.terms_agreed_at);
+    };
+  }
+
+  initTabs(name => ({ stock: loadStock, orders: loadOrders, report: loadReport, invoices: loadInvoices }[name] || (() => {}))());
+
+  // ---------------- CATALOG ----------------
+  const { data: prods, error: pe } = await sb.from('sk_products').select('*').eq('active', true).order('sort').order('id');
+  if (pe) toast(errText(pe));
+  products = prods || [];
+  [...new Set(products.map(x => x.category).filter(Boolean))].forEach(c => $('#cat').insertAdjacentHTML('beforeend', `<option>${esc(c)}</option>`));
+
+  function renderCatalog() {
+    const q = $('#q').value.trim().toLowerCase(), c = $('#cat').value;
+    const list = products.filter(x => (!c || x.category === c) &&
+      (!q || [x.name_ja, x.name_en, x.maker, x.code, x.steel].join(' ').toLowerCase().includes(q)));
+    $('#pgrid').innerHTML = list.length ? list.map(x => `
+      <div class="prod">
+        <div class="ph" style="${x.image_url ? `background-image:url('${esc(x.image_url)}')` : ''}">${x.image_url ? '' : '刃'}</div>
+        <div class="bd">
+          <div class="nm">${esc(x.name_ja)}</div>
+          ${x.name_en ? `<div class="spec">${esc(x.name_en)}</div>` : ''}
+          <div class="spec">${[x.maker, x.blade_mm ? x.blade_mm + 'mm' : '', x.steel, x.code].filter(Boolean).map(esc).join(' ・ ')}</div>
+          ${x.description ? `<div class="spec" style="color:var(--ink-2)">${esc(x.description)}</div>` : ''}
+          <div class="prices">
+            <div><div class="muted" style="font-size:11px">納入価格</div><span class="sup">${yen(x.supply_price)}</span></div>
+            ${x.recommended_price ? `<div class="rec">推奨販売価格<br><b style="color:var(--ink-2);font-size:14px">${yen(x.recommended_price)}</b></div>` : ''}
+          </div>
+          <div class="qty">
+            <input type="number" min="1" value="${cart[x.id] || 1}" id="q-${x.id}">
+            <button class="btn sm" data-add="${x.id}">${cart[x.id] ? '更新 / Update' : 'カートへ / Add'}</button>
+          </div>
+        </div>
+      </div>`).join('') : '<div class="empty">商品はまだありません / No products yet</div>';
+    $$('[data-add]').forEach(b => b.onclick = () => {
+      const id = b.dataset.add, n = Math.max(1, parseInt($('#q-' + id).value) || 1);
+      cart[id] = n; saveCart(); toast('カートに追加しました / Added'); renderCatalog();
+    });
+  }
+  $('#q').oninput = renderCatalog; $('#cat').onchange = renderCatalog;
+
+  function saveCart() {
+    Object.keys(cart).forEach(k => { if (!products.find(x => String(x.id) === String(k)) || cart[k] < 1) delete cart[k]; });
+    try { localStorage.setItem('sk-cart', JSON.stringify(cart)); } catch (e) {}
+    const ids = Object.keys(cart);
+    const qty = ids.reduce((s, k) => s + cart[k], 0);
+    const total = ids.reduce((s, k) => s + cart[k] * products.find(x => String(x.id) === k).supply_price, 0);
+    $('#cartbar').classList.toggle('hidden', !ids.length);
+    $('#cart-sum').textContent = `${qty}点 ・ 納入価格 ${yen(total)}`;
+    $('#cart-total').textContent = yen(total);
+    $('#cart-lines').innerHTML = ids.map(k => {
+      const x = products.find(y => String(y.id) === k);
+      return `<div class="cline"><div class="nm">${esc(x.name_ja)}<div class="muted">${yen(x.supply_price)}</div></div>
+        <input type="number" min="0" value="${cart[k]}" data-cq="${k}"><button class="link" data-rm="${k}">削除</button></div>`;
+    }).join('') || '<div class="empty">カートは空です</div>';
+    $$('[data-cq]').forEach(i => i.onchange = () => { cart[i.dataset.cq] = parseInt(i.value) || 0; saveCart(); renderCatalog(); });
+    $$('[data-rm]').forEach(b => b.onclick = () => { delete cart[b.dataset.rm]; saveCart(); renderCatalog(); });
+  }
+  const openCart = v => { $('#cart').classList.toggle('hidden', !v); $('#cart-bg').classList.toggle('hidden', !v); };
+  $('#open-cart').onclick = () => openCart(true);
+  $('#close-cart').onclick = $('#cart-bg').onclick = () => openCart(false);
+
+  const fo = $('#f-order');
+  fo.ship_name.value = me.shop_name; fo.ship_address.value = me.address || ''; fo.ship_phone.value = me.phone || '';
+  fo.onsubmit = async e => {
     e.preventDefault();
-    errorMessage.style.display = 'none';
-    successMessage.style.display = 'none';
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating account...';
+    const items = Object.keys(cart).map(k => ({ product_id: Number(k), qty: cart[k] }));
+    if (!items.length) return toast(errText('Cart is empty'));
+    $('#btn-order').disabled = true;
+    const { data, error } = await sb.rpc('sk_place_order', {
+      items, ship_name: fo.ship_name.value, ship_address: fo.ship_address.value,
+      ship_phone: fo.ship_phone.value, note: fo.note.value
+    });
+    $('#btn-order').disabled = false;
+    if (error) return toast(errText(error));
+    cart = {}; saveCart(); renderCatalog(); openCart(false); fo.note.value = '';
+    toast(`ご注文を受け付けました（No.${data}）/ Order received`);
+    $('.tabs [data-tab=orders]').click();
+  };
 
-    const companyName = document.getElementById('companyName').value;
-    const contactPerson = document.getElementById('contactPerson').value;
-    const email = document.getElementById('email').value;
-    const country = document.getElementById('country').value;
-    const password = document.getElementById('password').value;
-    const message = document.getElementById('message').value;
-    const agreed = document.getElementById('agreeTerms').checked;
-    if (!agreed) {
-      errorMessage.textContent = 'Please agree to the Partner Terms and the Privacy Policy to continue.';
-      errorMessage.style.display = 'block';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Partner Account';
+  renderCatalog(); saveCart();
+
+  // ---------------- STOCK ----------------
+  async function loadStock() {
+    const { data, error } = await sb.rpc('sk_stock');
+    if (error) return toast(errText(error));
+    stock = data || [];
+    $('#stock-t').innerHTML = `<tr><th>商品 / Item</th><th class="num">納品</th><th class="num">販売・紛失</th><th class="num">引上げ</th><th class="num">店頭在庫</th><th class="num">納入価格</th><th class="num">推奨販売価格</th></tr>` +
+      (stock.length ? stock.map(s => `<tr><td>${esc(s.name_ja)}<div class="muted">${esc(s.code || '')}</div></td>
+        <td class="num">${s.delivered}</td><td class="num">${s.reported}</td><td class="num">${s.withdrawn}</td>
+        <td class="num"><b>${s.on_hand}</b></td><td class="num">${yen(s.supply_price)}</td><td class="num">${s.recommended_price ? yen(s.recommended_price) : '—'}</td></tr>`).join('')
+        : `<tr><td colspan="7" class="empty">発送済みの商品はまだありません / Nothing delivered yet</td></tr>`);
+  }
+
+  // ---------------- ORDERS ----------------
+  async function loadOrders() {
+    const { data, error } = await sb.from('sk_orders').select('*, sk_order_items(*)').order('created_at', { ascending: false });
+    if (error) return toast(errText(error));
+    $('#orders').innerHTML = (data || []).length ? data.map(o => `
+      <div class="card" style="margin-bottom:12px">
+        <div class="row" style="justify-content:space-between">
+          <b>No.${o.id}</b><span class="muted">${fmtDate(o.created_at)}</span><span class="tag ${o.status}">${STATUS[o.status]}</span>
+        </div>
+        <div style="margin:10px 0 6px">${o.sk_order_items.map(i => `${esc(i.name)} × ${i.qty}`).join('<br>')}</div>
+        <div class="muted">納入価格合計 ${yen(o.total_supply)}${o.shipped_at ? ' ・ 発送日 ' + fmtDate(o.shipped_at) : ''}</div>
+      </div>`).join('') : '<div class="empty">ご注文はまだありません / No orders yet</div>';
+  }
+
+  // ---------------- REPORT ----------------
+  const ms = monthOptions(6);
+  // default = previous month during the first 10 days, otherwise this month
+  const defIdx = new Date().getDate() <= 10 ? 1 : 0;
+  $('#rep-month').innerHTML = ms.map((m, i) => `<option value="${m.value}" ${i === defIdx ? 'selected' : ''}>${m.label}</option>`).join('');
+  $('#rep-month').onchange = loadReport;
+
+  async function loadReport() {
+    const month = $('#rep-month').value;
+    const [{ data: st, error: e1 }, { data: done }] = await Promise.all([
+      sb.rpc('sk_stock'),
+      sb.from('sk_reports').select('*, sk_report_lines(*)').eq('month', month).neq('status', 'void').maybeSingle()
+    ]);
+    if (e1) return toast(errText(e1));
+    stock = st || [];
+    const sent = $('#rep-sent');
+    if (done) {
+      showNote(sent, 'ok', `${fmtMonth(month)}の報告は送信済みです（${fmtDate(done.created_at)}）。請求書タブでご確認いただけます。`);
+      $('#rep-t').innerHTML = `<tr><th>商品</th><th class="num">販売</th><th class="num">紛失・破損</th><th class="num">月末在庫</th><th class="num">金額</th></tr>` +
+        done.sk_report_lines.map(l => `<tr><td>${esc(l.name)}</td><td class="num">${l.sold}</td><td class="num">${l.missing}</td><td class="num">${l.closing_stock ?? ''}</td><td class="num">${yen(l.unit_price * (l.sold + l.missing))}</td></tr>`).join('');
+      $('#rep-total').textContent = yen(done.amount + done.tax);
+      $('#rep-send').disabled = true; $('#rep-note').value = done.note || ''; $('#rep-note').disabled = true;
       return;
     }
+    sent.classList.add('hidden'); $('#rep-send').disabled = false; $('#rep-note').disabled = false;
+    const rows = stock.filter(s => s.on_hand > 0);
+    $('#rep-t').innerHTML = `<tr><th>商品 / Item</th><th class="num">店頭在庫</th><th class="num">販売数<br><span class="en">Sold</span></th><th class="num">紛失・破損<br><span class="en">Missing</span></th><th class="num">月末在庫</th><th class="num">金額</th></tr>` +
+      (rows.length ? rows.map(s => `<tr data-pid="${s.product_id}" data-price="${s.supply_price}" data-on="${s.on_hand}">
+        <td>${esc(s.name_ja)}<div class="muted">${yen(s.supply_price)}</div></td><td class="num">${s.on_hand}</td>
+        <td class="num"><input type="number" min="0" max="${s.on_hand}" value="0" data-k="sold"></td>
+        <td class="num"><input type="number" min="0" max="${s.on_hand}" value="0" data-k="missing"></td>
+        <td class="num" data-close>${s.on_hand}</td><td class="num" data-amt>¥0</td></tr>`).join('')
+        : `<tr><td colspan="6" class="empty">店頭在庫がありません。販売がなかった月も「送信」で0件としてご報告いただけます。</td></tr>`);
+    $$('#rep-t input').forEach(i => i.oninput = calcReport);
+    calcReport();
+  }
+  function calcReport() {
+    let sum = 0, bad = false;
+    $$('#rep-t tr[data-pid]').forEach(tr => {
+      const sold = parseInt($('[data-k=sold]', tr).value) || 0, miss = parseInt($('[data-k=missing]', tr).value) || 0;
+      const on = Number(tr.dataset.on), close = on - sold - miss;
+      $('[data-close]', tr).textContent = close; $('[data-close]', tr).style.color = close < 0 ? 'var(--accent)' : '';
+      if (close < 0) bad = true;
+      const amt = (sold + miss) * Number(tr.dataset.price); sum += amt;
+      $('[data-amt]', tr).textContent = yen(amt);
+    });
+    $('#rep-total').textContent = yen(sum + Math.round(sum * SK.TAX_RATE));
+    $('#rep-send').disabled = bad;
+  }
+  $('#rep-send').onclick = async () => {
+    const month = $('#rep-month').value;
+    if (!confirm(`${fmtMonth(month)}の報告を送信します。よろしいですか？\nSend the report for this month?`)) return;
+    const lines = $$('#rep-t tr[data-pid]').map(tr => ({
+      product_id: Number(tr.dataset.pid),
+      sold: parseInt($('[data-k=sold]', tr).value) || 0,
+      missing: parseInt($('[data-k=missing]', tr).value) || 0
+    }));
+    $('#rep-send').disabled = true;
+    const { data, error } = await sb.rpc('sk_submit_report', { p_month: month, lines, p_note: $('#rep-note').value });
+    if (error) { $('#rep-send').disabled = false; return toast(errText(error)); }
+    toast('報告を送信しました。請求書を作成しました。/ Report sent');
+    loadReport(); checkReportDue();
+    window.open('invoice.html?id=' + data, '_blank');
+  };
 
-    try {
-      // Create the login account. The partner profile (company, contact, etc.)
-      // is passed along and created automatically by the database as soon as
-      // the account exists — this works even before the partner has clicked
-      // the email confirmation link.
-      const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            company_name: companyName,
-            contact_person: contactPerson,
-            country: country,
-            message: message,
-            terms_version: (typeof PARTNER_TERMS_VERSION !== 'undefined' ? PARTNER_TERMS_VERSION : '2.0'),
-            privacy_version: '2026-11-01',
-            terms_accepted_at: new Date().toISOString()
-          }
-        }
-      });
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Account created, but no user returned.');
+  // ---------------- INVOICES ----------------
+  async function loadInvoices() {
+    const { data, error } = await sb.from('sk_reports').select('*').neq('status', 'void').order('month', { ascending: false });
+    if (error) return toast(errText(error));
+    $('#inv-t').innerHTML = `<tr><th>対象月</th><th>請求書番号</th><th class="num">金額（税込）</th><th>お支払期限</th><th>状況</th><th></th></tr>` +
+      ((data || []).length ? data.map(r => `<tr><td>${fmtMonth(r.month)}</td><td>${invNo(r)}</td><td class="num">${yen(r.amount + r.tax)}</td>
+        <td>${dueDate(r.month)}</td><td><span class="tag ${r.status}">${STATUS[r.status]}</span></td>
+        <td><a class="btn ghost sm" href="invoice.html?id=${r.id}" target="_blank">表示・印刷</a></td></tr>`).join('')
+        : `<tr><td colspan="6" class="empty">請求書はまだありません / No invoices yet</td></tr>`);
+  }
+  const invNo = r => `SK-${String(r.month).slice(0, 7).replace('-', '')}-${String(r.id).padStart(4, '0')}`;
+  const dueDate = m => { const d = new Date(m); return new Date(d.getFullYear(), d.getMonth() + 2, 0).toLocaleDateString('ja-JP'); };
 
-      successMessage.style.display = 'block';
-      form.reset();
-    } catch (err) {
-      errorMessage.textContent = 'Could not create your account: ' + err.message;
-      errorMessage.style.display = 'block';
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Create Partner Account';
-    }
-  });
+  // badge: last month not reported yet (first 10 days of month)
+  async function checkReportDue() {
+    const prev = monthOptions(2)[1].value;
+    const { data } = await sb.from('sk_reports').select('id').eq('month', prev).neq('status', 'void').maybeSingle();
+    $('#report-badge').classList.toggle('hidden', !!data || new Date().getDate() > 10);
+  }
+  checkReportDue();
+
+  // ---------------- PROFILE ----------------
+  const fp = $('#f-profile');
+  ['shop_name', 'contact_name', 'phone', 'address', 'website'].forEach(k => fp[k].value = me[k] || '');
+  $('#terms-date').textContent = fmtDate(me.terms_agreed_at);
+  $('#terms-ver').textContent = me.terms_version || '—';
+  fp.onsubmit = async e => {
+    e.preventDefault();
+    const upd = {}; ['shop_name', 'contact_name', 'phone', 'address', 'website'].forEach(k => upd[k] = fp[k].value.trim());
+    const { error } = await sb.from('sk_partners').update(upd).eq('id', me.id);
+    if (error) return toast(errText(error));
+    Object.assign(me, upd); $('#who').textContent = $('#shop-title').textContent = me.shop_name;
+    toast('保存しました / Saved');
+  };
+})();
 </script>
-<script>
-  (function () {
-    var modal = document.getElementById('termsModal');
-    var frame = document.getElementById('termsFrame');
-    var title = document.getElementById('termsModalTitle');
-    var currentBox = null;
-    function open(e) {
-      e.preventDefault();
-      var link = e.currentTarget;
-      currentBox = document.getElementById(link.dataset.box);
-      var src = link.dataset.doc + '?embed=1';
-      if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
-      title.textContent = link.dataset.title;
-      modal.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }
-    function close() { modal.classList.remove('show'); document.body.style.overflow = ''; }
-    document.querySelectorAll('.terms-link[data-doc]').forEach(function (a) { a.addEventListener('click', open); });
-    document.getElementById('termsClose').addEventListener('click', close);
-    document.getElementById('termsCancel').addEventListener('click', close);
-    document.getElementById('termsAgree').addEventListener('click', function () { if (currentBox) currentBox.checked = true; close(); });
-    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal.classList.contains('show')) close(); });
-  })();
-</script>
-<script src="mobile-nav.js"></script>
-<script src="password-toggle.js"></script>
-<script src="i18n.js"></script>
 </body>
 </html>

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Админка | 白崎堂</title>
+<link rel="stylesheet" href="sk-portal.css">
+<style>
+  .thumb { width: 54px; height: 40px; border-radius: 4px; background: #ece8df center / cover; }
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter { display: flex; gap: 8px; margin: 0 0 14px; flex-wrap: wrap; }
+  .filter button.on { background: var(--ink); color: #fff; }
+  .bar-row { display: flex; align-items: center; gap: 10px; font-size: 13px; margin: 6px 0; }
+  .bar-row .lbl { width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-row .bar { height: 10px; background: var(--accent); border-radius: 3px; }
+</style>
+</head>
+<body>
+<header class="sk-top"><div class="in">
+  <a class="sk-logo" href="index.html"><span class="sk-mark">白</span><span><b>白崎堂</b><small>ADMIN</small></span></a>
+  <span class="sp"></span>
+  <button class="btn ghost sm hidden" id="logout">Выйти</button>
+</div></header>
+
+<main class="wrap">
+  <!-- login -->
+  <section id="login" class="card narrow hidden" style="margin:30px auto">
+    <h2>Вход в админку</h2>
+    <div id="lmsg" class="note hidden"></div>
+    <form id="f-login">
+      <div class="field"><label>E-mail</label><input type="email" name="email" required></div>
+      <div class="field"><label>Пароль</label><input type="password" name="password" required></div>
+      <button class="btn block">Войти</button>
+    </form>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="tabs">
+      <button data-tab="home">Обзор</button>
+      <button data-tab="partners">Партнёры<span class="badge hidden" id="b-partners"></span></button>
+      <button data-tab="orders">Заказы<span class="badge hidden" id="b-orders"></span></button>
+      <button data-tab="reports">Отчёты и счета</button>
+      <button data-tab="products">Ножи (каталог)</button>
+    </div>
+
+    <section class="pane" id="pane-home">
+      <div class="stats" id="stats"></div>
+      <div class="grid2">
+        <div class="card"><h3>Что продаётся лучше всего</h3><p class="muted">Продано по всем отчётам, шт.</p><div id="top"></div></div>
+        <div class="card"><h3>Залежалось у партнёров</h3><p class="muted">В точке 60+ дней после отправки и ни одной продажи — кандидаты на ротацию.</p><div id="slow"></div></div>
+      </div>
+    </section>
+
+    <section class="pane" id="pane-partners">
+      <div class="filter" id="pf"></div>
+      <div class="tbl-wrap"><table class="t" id="partners-t"></table></div>
+    </section>
+
+    <section class="pane" id="pane-orders">
+      <div class="filter" id="of"></div>
+      <div id="orders"></div>
+    </section>
+
+    <section class="pane" id="pane-reports">
+      <div class="tbl-wrap"><table class="t" id="reports-t"></table></div>
+    </section>
+
+    <section class="pane" id="pane-products">
+      <div class="row" style="justify-content:space-between;margin-bottom:14px">
+        <input id="pq" placeholder="Поиск" style="max-width:260px">
+        <button class="btn" id="add-prod">+ Добавить нож</button>
+      </div>
+      <div class="tbl-wrap"><table class="t" id="products-t"></table></div>
+    </section>
+  </section>
+</main>
+
+<!-- modal -->
+<div class="modal-bg hidden" id="modal"><div class="modal">
+  <div class="hd"><b id="m-title"></b><button class="link" id="m-close">Закрыть</button></div>
+  <div class="bd" id="m-body"></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="sk-config.js"></script>
+<script src="sk-common.js"></script>
+<script>
+(async function () {
+  const PST = { pending: 'Ждёт одобрения', approved: 'Активен', rejected: 'Отклонён', paused: 'Пауза' };
+  const OST = { new: 'Новый', confirmed: 'Подтверждён', shipped: 'Отправлен', cancelled: 'Отменён' };
+  const RST = { invoiced: 'Не оплачен', paid: 'Оплачен', void: 'Аннулирован' };
+  let partners = [], products = [], orders = [], reports = [];
+  let pFilter = 'all', oFilter = 'open';
+
+  const modal = $('#modal');
+  const openModal = (title, html) => { $('#m-title').textContent = title; $('#m-body').innerHTML = html; modal.classList.remove('hidden'); };
+  const closeModal = () => modal.classList.add('hidden');
+  $('#m-close').onclick = closeModal;
+  modal.onclick = e => { if (e.target === modal) closeModal(); };
+
+  // ---------- auth ----------
+  async function start() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { $('#login').classList.remove('hidden'); return; }
+    const { data: adm } = await sb.from('sk_admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    if (!adm) {
+      $('#login').classList.remove('hidden');
+      showNote($('#lmsg'), 'err', 'Этот аккаунт не админ. Выполни 2-settings.sql с этим e-mail.');
+      await sb.auth.signOut(); return;
+    }
+    $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); $('#logout').classList.remove('hidden');
+    await loadAll();
+    initTabs(render);
+  }
+  $('#f-login').onsubmit = async e => {
+    e.preventDefault();
+    const { error } = await sb.auth.signInWithPassword({ email: e.target.email.value.trim(), password: e.target.password.value });
+    if (error) return showNote($('#lmsg'), 'err', error.message);
+    start();
+  };
+  $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+  async function loadAll() {
+    const [a, b, c, d] = await Promise.all([
+      sb.from('sk_partners').select('*').order('created_at', { ascending: false }),
+      sb.from('sk_products').select('*').order('sort').order('id'),
+      sb.from('sk_orders').select('*, sk_order_items(*), sk_partners(shop_name)').order('created_at', { ascending: false }),
+      sb.from('sk_reports').select('*, sk_report_lines(*), sk_partners(shop_name)').order('month', { ascending: false })
+    ]);
+    [a, b, c, d].forEach(x => x.error && toast(x.error.message));
+    partners = a.data || []; products = b.data || []; orders = c.data || []; reports = d.data || [];
+    const pend = partners.filter(p => p.status === 'pending').length, nw = orders.filter(o => o.status === 'new').length;
+    $('#b-partners').textContent = pend; $('#b-partners').classList.toggle('hidden', !pend);
+    $('#b-orders').textContent = nw; $('#b-orders').classList.toggle('hidden', !nw);
+  }
+  function render(tab) {
+    ({ home: renderHome, partners: renderPartners, orders: renderOrders, reports: renderReports, products: renderProducts }[tab])();
+  }
+  const current = () => ($('.tabs button.on') || {}).dataset?.tab || 'home';
+  const refresh = async () => { await loadAll(); render(current()); };
+
+  // ---------- HOME ----------
+  async function renderHome() {
+    const unpaid = reports.filter(r => r.status === 'invoiced').reduce((s, r) => s + r.amount + r.tax, 0);
+    const thisMonth = monthOptions(2)[1].value;
+    const lastSales = reports.filter(r => r.month === thisMonth && r.status !== 'void').reduce((s, r) => s + r.amount, 0);
+    const active = partners.filter(p => p.status === 'approved');
+    const reportedPrev = new Set(reports.filter(r => r.month === thisMonth && r.status !== 'void').map(r => r.partner_id));
+    const missing = active.filter(p => !reportedPrev.has(p.id)).length;
+    $('#stats').innerHTML = [
+      [partners.filter(p => p.status === 'pending').length, 'Заявок ждут одобрения'],
+      [active.length, 'Активных партнёров'],
+      [orders.filter(o => o.status === 'new' || o.status === 'confirmed').length, 'Заказов к отправке'],
+      [yen(unpaid), 'Не оплачено по счетам'],
+      [yen(lastSales), 'Продажи за прошлый месяц (без налога)'],
+      [missing, 'Не прислали отчёт за прошлый месяц']
+    ].map(([v, l]) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('');
+
+    const sold = {};
+    reports.filter(r => r.status !== 'void').forEach(r => r.sk_report_lines.forEach(l => sold[l.name] = (sold[l.name] || 0) + l.sold));
+    const top = Object.entries(sold).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const max = top.length ? top[0][1] : 1;
+    $('#top').innerHTML = top.length ? top.map(([n, v]) => `<div class="bar-row"><span class="lbl">${esc(n)}</span><span class="bar" style="width:${Math.max(4, v / max * 160)}px"></span><b>${v}</b></div>`).join('') : '<div class="empty">Пока нет отчётов</div>';
+
+    // slow movers: product shipped to a partner 60+ days ago, never sold there
+    const slow = [];
+    const cutoff = Date.now() - 60 * 864e5;
+    for (const p of active) {
+      const shipped = orders.filter(o => o.partner_id === p.id && o.status === 'shipped' && new Date(o.shipped_at) < cutoff);
+      const soldHere = new Set(reports.filter(r => r.partner_id === p.id && r.status !== 'void').flatMap(r => r.sk_report_lines.filter(l => l.sold > 0).map(l => l.product_id)));
+      const ids = new Set(shipped.flatMap(o => o.sk_order_items.map(i => i.product_id)));
+      ids.forEach(pid => { if (!soldHere.has(pid)) slow.push(`${esc(p.shop_name)} — ${esc((products.find(x => x.id === pid) || {}).name_ja || '#' + pid)}`); });
+    }
+    $('#slow').innerHTML = slow.length ? slow.slice(0, 12).map(s => `<div style="font-size:13px;padding:4px 0;border-bottom:1px solid var(--line)">${s}</div>`).join('') : '<div class="empty">Всё в порядке</div>';
+  }
+
+  // ---------- PARTNERS ----------
+  function renderPartners() {
+    const f = [['all', 'Все'], ['pending', 'Ждут'], ['approved', 'Активные'], ['paused', 'Пауза'], ['rejected', 'Отклонённые']];
+    $('#pf').innerHTML = f.map(([k, l]) => `<button class="btn ghost sm ${pFilter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
+    $$('#pf [data-f]').forEach(b => b.onclick = () => { pFilter = b.dataset.f; renderPartners(); });
+    const list = partners.filter(p => pFilter === 'all' || p.status === pFilter)
+      .sort((a, b) => (a.status === 'pending' ? -1 : 0) - (b.status === 'pending' ? -1 : 0));
+    $('#partners-t').innerHTML = `<tr><th>Точка</th><th>Контакт</th><th>Адрес</th><th>Заявка</th><th>Статус</th><th></th></tr>` +
+      (list.length ? list.map(p => `<tr>
+        <td><b>${esc(p.shop_name)}</b>${p.website ? `<div><a class="muted" href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website)}</a></div>` : ''}</td>
+        <td>${esc(p.contact_name || '')}<div class="muted">${esc(p.email || '')}<br>${esc(p.phone || '')}</div></td>
+        <td style="max-width:220px">${esc(p.address || '')}</td>
+        <td class="muted">${fmtDate(p.created_at)}<br>Условия v${esc(p.terms_version || '—')}</td>
+        <td><span class="tag ${p.status}">${PST[p.status]}</span></td>
+        <td><div class="acts">
+          ${p.status !== 'approved' ? `<button class="btn sm" data-st="approved" data-id="${p.id}">Одобрить</button>` : ''}
+          ${p.status === 'pending' ? `<button class="btn ghost sm" data-st="rejected" data-id="${p.id}">Отклонить</button>` : ''}
+          ${p.status === 'approved' ? `<button class="btn ghost sm" data-st="paused" data-id="${p.id}">Пауза</button>` : ''}
+          <button class="btn ghost sm" data-open="${p.id}">Склад и детали</button>
+        </div></td></tr>`).join('') : `<tr><td colspan="6" class="empty">Пусто</td></tr>`);
+    $$('#partners-t [data-st]').forEach(b => b.onclick = async () => {
+      const { error } = await sb.from('sk_partners').update({ status: b.dataset.st }).eq('id', b.dataset.id);
+      if (error) return toast(error.message);
+      toast('Готово'); refresh();
+    });
+    $$('#partners-t [data-open]').forEach(b => b.onclick = () => partnerModal(b.dataset.open));
+  }
+
+  async function partnerModal(id) {
+    const p = partners.find(x => x.id === id);
+    const { data: st, error } = await sb.rpc('sk_stock', { p_partner: id });
+    if (error) return toast(error.message);
+    const rows = (st || []);
+    openModal(p.shop_name, `
+      <div class="tbl-wrap"><table class="t"><tr><th>Нож</th><th class="num">Отправлено</th><th class="num">Продано/потеряно</th><th class="num">Забрали</th><th class="num">Сейчас в точке</th></tr>
+        ${rows.length ? rows.map(s => `<tr><td>${esc(s.name_ja)}</td><td class="num">${s.delivered}</td><td class="num">${s.reported}</td><td class="num">${s.withdrawn}</td><td class="num"><b>${s.on_hand}</b></td></tr>`).join('') : '<tr><td colspan="5" class="empty">Ещё ничего не отправляли</td></tr>'}
+      </table></div>
+      <h3 style="margin-top:20px">Ротация: забрали ножи из точки</h3>
+      <form id="f-wd" class="row">
+        <select name="pid" style="max-width:260px">${rows.filter(s => s.on_hand > 0).map(s => `<option value="${s.product_id}">${esc(s.name_ja)} (в точке ${s.on_hand})</option>`).join('')}</select>
+        <input name="qty" type="number" min="1" value="1" style="width:80px">
+        <button class="btn sm" ${rows.some(s => s.on_hand > 0) ? '' : 'disabled'}>Записать</button>
+      </form>
+      <h3 style="margin-top:20px">Заметка (видишь только ты)</h3>
+      <textarea id="p-note" rows="3">${esc(p.admin_note || '')}</textarea>
+      <div style="margin-top:8px"><button class="btn ghost sm" id="save-note">Сохранить заметку</button></div>`);
+    $('#f-wd').onsubmit = async e => {
+      e.preventDefault();
+      const { error } = await sb.from('sk_withdrawals').insert({ partner_id: id, product_id: Number(e.target.pid.value), qty: Number(e.target.qty.value) });
+      if (error) return toast(error.message);
+      toast('Записано'); partnerModal(id);
+    };
+    $('#save-note').onclick = async () => {
+      const { error } = await sb.from('sk_partners').update({ admin_note: $('#p-note').value }).eq('id', id);
+      if (error) return toast(error.message);
+      p.admin_note = $('#p-note').value; toast('Сохранено');
+    };
+  }
+
+  // ---------- ORDERS ----------
+  function renderOrders() {
+    const f = [['open', 'К работе'], ['shipped', 'Отправленные'], ['cancelled', 'Отменённые'], ['all', 'Все']];
+    $('#of').innerHTML = f.map(([k, l]) => `<button class="btn ghost sm ${oFilter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
+    $$('#of [data-f]').forEach(b => b.onclick = () => { oFilter = b.dataset.f; renderOrders(); });
+    const list = orders.filter(o => oFilter === 'all' || (oFilter === 'open' ? ['new', 'confirmed'].includes(o.status) : o.status === oFilter));
+    $('#orders').innerHTML = list.length ? list.map(o => `
+      <div class="card" style="margin-bottom:12px">
+        <div class="row" style="justify-content:space-between">
+          <div><b>№${o.id}</b> · ${esc(o.sk_partners?.shop_name || '')} <span class="muted">· ${fmtDate(o.created_at)}</span></div>
+          <span class="tag ${o.status}">${OST[o.status]}</span>
+        </div>
+        <div class="grid2" style="margin-top:10px">
+          <div>${o.sk_order_items.map(i => `${esc(i.name)} × <b>${i.qty}</b> <span class="muted">(${yen(i.unit_price)})</span>`).join('<br>')}
+            <div class="muted" style="margin-top:6px">Сумма поставки: ${yen(o.total_supply)}</div></div>
+          <div class="muted">Куда: ${esc(o.ship_name || '')}<br>${esc(o.ship_address || '')}<br>${esc(o.ship_phone || '')}${o.note ? `<br>Пожелание: ${esc(o.note)}` : ''}</div>
+        </div>
+        <div class="acts" style="margin-top:12px">
+          ${o.status === 'new' ? `<button class="btn sm" data-os="confirmed" data-id="${o.id}">Подтвердить</button>` : ''}
+          ${['new', 'confirmed'].includes(o.status) ? `<button class="btn red sm" data-os="shipped" data-id="${o.id}">Отправлено</button>
+            <button class="btn ghost sm" data-os="cancelled" data-id="${o.id}">Отменить</button>` : ''}
+          <button class="btn ghost sm" data-dn="${o.id}">納品書 (печать)</button>
+        </div>
+      </div>`).join('') : '<div class="empty">Нет заказов</div>';
+    $$('#orders [data-os]').forEach(b => b.onclick = async () => {
+      if (b.dataset.os === 'shipped' && !confirm('Отметить как отправленный? Ножи спишутся со склада и появятся в остатках точки.')) return;
+      if (b.dataset.os === 'cancelled' && !confirm('Отменить заказ?')) return;
+      const { error } = await sb.from('sk_orders').update({ status: b.dataset.os }).eq('id', b.dataset.id);
+      if (error) return toast(error.message);
+      toast('Готово'); refresh();
+    });
+    $$('#orders [data-dn]').forEach(b => b.onclick = () => deliveryNote(orders.find(o => o.id == b.dataset.dn)));
+  }
+
+  function deliveryNote(o) {
+    const p = partners.find(x => x.id === o.partner_id) || {};
+    const w = window.open('', '_blank');
+    w.document.write(`<!doctype html><html lang="ja"><head><meta charset="utf-8"><title>納品書 No.${o.id}</title>
+      <style>body{font-family:'Noto Serif JP',serif;padding:40px;max-width:760px;margin:auto;color:#1b1a17}h1{text-align:center;letter-spacing:.6em}
+      table{width:100%;border-collapse:collapse;font-size:13px;margin-top:16px}th,td{border:1px solid #bbb;padding:7px}th{background:#f3f0ea}.r{text-align:right}
+      .top{display:flex;justify-content:space-between;margin-top:24px}.sign{margin-top:40px;font-size:13px}</style></head><body>
+      <h1>納品書</h1>
+      <div class="top"><div><b style="font-size:18px">${esc(p.shop_name || o.ship_name)}　御中</b><br>${esc(o.ship_address || '')}</div>
+      <div style="text-align:right;font-size:13px">No. ${o.id}<br>納品日：${new Date().toLocaleDateString('ja-JP')}<br><b>${esc(SK.ISSUER.name)}</b><br>${esc(SK.ISSUER.email)}</div></div>
+      <p style="font-size:13px">下記の商品を委託販売商品として納品いたします（委託販売パートナー規約に基づく）。</p>
+      <table><tr><th>品名</th><th class="r">数量</th><th class="r">納入価格（税別）</th><th class="r">小計</th></tr>
+      ${o.sk_order_items.map(i => `<tr><td>${esc(i.name)}</td><td class="r">${i.qty}</td><td class="r">${yen(i.unit_price)}</td><td class="r">${yen(i.qty * i.unit_price)}</td></tr>`).join('')}
+      <tr><td colspan="3" class="r"><b>合計</b></td><td class="r"><b>${yen(o.total_supply)}</b></td></tr></table>
+      <p style="font-size:12px;color:#666">※委託商品の所有権は販売されるまで白崎堂に帰属します。ご請求は販売された分のみ、月次報告に基づき行います。</p>
+      <div class="sign">受領確認：＿＿＿＿＿＿＿＿＿＿＿＿　　日付：＿＿＿＿＿＿＿</div>
+      <script>print()<\/script></body></html>`);
+    w.document.close();
+  }
+
+  // ---------- REPORTS ----------
+  function renderReports() {
+    $('#reports-t').innerHTML = `<tr><th>Месяц</th><th>Точка</th><th class="num">Продано шт.</th><th class="num">Потери шт.</th><th class="num">К оплате (с налогом)</th><th>Срок</th><th>Статус</th><th></th></tr>` +
+      (reports.length ? reports.map(r => {
+        const d = new Date(r.month), due = new Date(d.getFullYear(), d.getMonth() + 2, 0);
+        const late = r.status === 'invoiced' && due < new Date();
+        return `<tr><td>${fmtMonth(r.month)}</td><td>${esc(r.sk_partners?.shop_name || '')}</td>
+          <td class="num">${r.sk_report_lines.reduce((s, l) => s + l.sold, 0)}</td>
+          <td class="num">${r.sk_report_lines.reduce((s, l) => s + l.missing, 0)}</td>
+          <td class="num"><b>${yen(r.amount + r.tax)}</b></td>
+          <td style="${late ? 'color:var(--accent);font-weight:600' : ''}">${due.toLocaleDateString('ja-JP')}${late ? ' просрочен' : ''}</td>
+          <td><span class="tag ${r.status}">${RST[r.status]}</span></td>
+          <td><div class="acts">
+            <a class="btn ghost sm" href="invoice.html?id=${r.id}" target="_blank">Счёт</a>
+            ${r.status === 'invoiced' ? `<button class="btn sm" data-rs="paid" data-id="${r.id}">Оплачено</button>
+              <button class="btn ghost sm" data-rs="void" data-id="${r.id}" title="Партнёр сможет отправить отчёт заново">Аннулировать</button>` : ''}
+          </div></td></tr>`;
+      }).join('') : `<tr><td colspan="8" class="empty">Отчётов пока нет</td></tr>`);
+    $$('#reports-t [data-rs]').forEach(b => b.onclick = async () => {
+      if (b.dataset.rs === 'void' && !confirm('Аннулировать счёт? Партнёр сможет отправить отчёт за этот месяц заново.')) return;
+      const upd = { status: b.dataset.rs }; if (b.dataset.rs === 'paid') upd.paid_at = new Date().toISOString();
+      const { error } = await sb.from('sk_reports').update(upd).eq('id', b.dataset.id);
+      if (error) return toast(error.message);
+      toast('Готово'); refresh();
+    });
+  }
+
+  // ---------- PRODUCTS ----------
+  $('#pq').oninput = () => renderProducts();
+  $('#add-prod').onclick = () => productModal(null);
+  function renderProducts() {
+    const q = $('#pq').value.trim().toLowerCase();
+    const list = products.filter(x => !q || [x.name_ja, x.name_en, x.code, x.maker].join(' ').toLowerCase().includes(q));
+    $('#products-t').innerHTML = `<tr><th></th><th>Нож</th><th>Код</th><th class="num">Цена поставки</th><th class="num">Реком. цена</th><th class="num">На складе</th><th>Видят партнёры</th><th></th></tr>` +
+      (list.length ? list.map(x => `<tr>
+        <td><div class="thumb" style="${x.image_url ? `background-image:url('${esc(x.image_url)}')` : ''}"></div></td>
+        <td><b>${esc(x.name_ja)}</b><div class="muted">${esc([x.name_en, x.maker, x.category].filter(Boolean).join(' · '))}</div></td>
+        <td>${esc(x.code || '')}</td><td class="num">${yen(x.supply_price)}</td><td class="num">${x.recommended_price ? yen(x.recommended_price) : '—'}</td>
+        <td class="num" style="${x.stock <= 0 ? 'color:var(--accent)' : ''}">${x.stock}</td>
+        <td><input type="checkbox" data-act="${x.id}" ${x.active ? 'checked' : ''} style="width:auto"></td>
+        <td><button class="btn ghost sm" data-edit="${x.id}">Изменить</button></td></tr>`).join('')
+        : `<tr><td colspan="8" class="empty">Добавь первый нож кнопкой «+ Добавить нож»</td></tr>`);
+    $$('#products-t [data-edit]').forEach(b => b.onclick = () => productModal(products.find(x => x.id == b.dataset.edit)));
+    $$('#products-t [data-act]').forEach(c => c.onchange = async () => {
+      const { error } = await sb.from('sk_products').update({ active: c.checked }).eq('id', c.dataset.act);
+      if (error) return toast(error.message);
+      products.find(x => x.id == c.dataset.act).active = c.checked; toast(c.checked ? 'Показан партнёрам' : 'Скрыт');
+    });
+  }
+
+  function productModal(x) {
+    x = x || {};
+    openModal(x.id ? 'Изменить нож' : 'Новый нож', `
+      <form id="f-prod">
+        <div class="grid2">
+          <div class="field"><label>Название (японский) *</label><input name="name_ja" required value="${esc(x.name_ja || '')}" placeholder="牛刀 210mm 青二鋼"></div>
+          <div class="field"><label>Название (английский)</label><input name="name_en" value="${esc(x.name_en || '')}" placeholder="Gyuto 210mm Aogami #2"></div>
+          <div class="field"><label>Код / артикул</label><input name="code" value="${esc(x.code || '')}"></div>
+          <div class="field"><label>Мастер / бренд</label><input name="maker" value="${esc(x.maker || '')}"></div>
+          <div class="field"><label>Тип (牛刀, 三徳, ペティ…)</label><input name="category" value="${esc(x.category || '')}"></div>
+          <div class="field"><label>Лезвие, мм</label><input name="blade_mm" type="number" value="${x.blade_mm || ''}"></div>
+          <div class="field"><label>Сталь</label><input name="steel" value="${esc(x.steel || '')}"></div>
+          <div class="field"><label>На складе, шт.</label><input name="stock" type="number" value="${x.stock ?? 0}"></div>
+          <div class="field"><label>Цена поставки, ¥ (без налога) *</label><input name="supply_price" type="number" required value="${x.supply_price ?? ''}"></div>
+          <div class="field"><label>Рекомендованная цена продажи, ¥</label><input name="recommended_price" type="number" value="${x.recommended_price ?? ''}"></div>
+        </div>
+        <div class="field"><label>Описание (коротко, по-японски)</label><textarea name="description" rows="2">${esc(x.description || '')}</textarea></div>
+        <div class="field"><label>Порядок в каталоге (меньше — выше)</label><input name="sort" type="number" value="${x.sort ?? 0}" style="max-width:120px"></div>
+        <div class="field"><label>Фото</label>
+          <div class="row"><div class="thumb" id="ph-prev" style="width:90px;height:68px;${x.image_url ? `background-image:url('${esc(x.image_url)}')` : ''}"></div>
+          <input type="file" id="ph" accept="image/*" style="max-width:280px"></div></div>
+        <div class="row" style="justify-content:flex-end"><button class="btn" id="save-prod">Сохранить</button></div>
+      </form>`);
+    let imageUrl = x.image_url || null;
+    $('#ph').onchange = async e => {
+      const file = e.target.files[0]; if (!file) return;
+      const path = `${Date.now()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
+      toast('Загружаю фото…');
+      const { error } = await sb.storage.from('sk-products').upload(path, file, { upsert: true, contentType: file.type });
+      if (error) return toast(error.message);
+      imageUrl = sb.storage.from('sk-products').getPublicUrl(path).data.publicUrl;
+      $('#ph-prev').style.backgroundImage = `url('${imageUrl}')`; toast('Фото загружено');
+    };
+    $('#f-prod').onsubmit = async e => {
+      e.preventDefault();
+      const f = e.target, num = v => v === '' ? null : Number(v);
+      const row = {
+        name_ja: f.name_ja.value.trim(), name_en: f.name_en.value.trim() || null, code: f.code.value.trim() || null,
+        maker: f.maker.value.trim() || null, category: f.category.value.trim() || null, blade_mm: num(f.blade_mm.value),
+        steel: f.steel.value.trim() || null, stock: num(f.stock.value) || 0, supply_price: num(f.supply_price.value),
+        recommended_price: num(f.recommended_price.value), description: f.description.value.trim() || null,
+        sort: num(f.sort.value) || 0, image_url: imageUrl
+      };
+      $('#save-prod').disabled = true;
+      const { error } = x.id ? await sb.from('sk_products').update(row).eq('id', x.id) : await sb.from('sk_products').insert(row);
+      $('#save-prod').disabled = false;
+      if (error) return toast(error.message);
+      closeModal(); toast('Сохранено'); refresh();
+    };
+  }
+
+  start();
+})();
+</script>
+</body>
+</html>
