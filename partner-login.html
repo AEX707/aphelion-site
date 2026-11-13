@@ -84,8 +84,13 @@
   if (params.get('tab') === 'signup') $('.tabs [data-tab=signup]').click();
 
   // already logged in → go to dashboard
+  // admin → admin panel, partner → dashboard
+  const goHome = async uid => {
+    const { data: adm } = await sb.from('sk_admins').select('user_id').eq('user_id', uid).maybeSingle();
+    location.replace(adm ? 'sk-admin.html' : 'partner.html');
+  };
   const { data: { session } } = await sb.auth.getSession();
-  if (session) { location.replace('partner.html'); return; }
+  if (session) { goHome(session.user.id); return; }
 
   // terms popup
   const modal = $('#terms-modal');
@@ -97,9 +102,9 @@
   $('#f-login').onsubmit = async e => {
     e.preventDefault();
     const f = e.target;
-    const { error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
+    const { data: li, error } = await sb.auth.signInWithPassword({ email: f.email.value.trim(), password: f.password.value });
     if (error) return showNote(msg, 'err', errText(error));
-    location.href = 'partner.html';
+    goHome(li.user.id);
   };
 
   // forgot password

@@ -170,6 +170,10 @@
   }
 
   const { data: p } = await sb.from('sk_partners').select('*').eq('id', session.user.id).maybeSingle();
+  if (!p) {
+    const { data: adm } = await sb.from('sk_admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    if (adm) { location.replace('sk-admin.html'); return; }
+  }
   if (!p || p.status !== 'approved') {
     $('#pending-box').classList.remove('hidden');
     if (p && p.status === 'rejected') {
