@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /partner-dashboard.html
+Disallow: /docs.html
+Disallow: /configurator.html
+Disallow: /reset-password.html
+
+Sitemap: https://aphelionexpeditions.com/sitemap.xml

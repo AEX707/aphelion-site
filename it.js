@@ -340,5 +340,16 @@ window.AEX_I18N["it"] = {
  "We are a travel business and agree to the Booking Terms and Privacy Policy": "Siamo un'attività turistica e accettiamo le Condizioni di prenotazione e l'Informativa sulla privacy",
  "Booking Terms": "Condizioni di prenotazione",
  "Please agree to the Booking Terms and the Privacy Policy to continue.": "Accetta le Condizioni di prenotazione e l'Informativa sulla privacy per continuare.",
- "By sending a request you accept the": "Inviando una richiesta accetti le"
+ "By sending a request you accept the": "Inviando una richiesta accetti le",
+ "About Aphelion": "Chi è Aphelion",
+ "Curated experiences. Verified partners. One trusted marketplace.": "Esperienze selezionate. Partner verificati. Un marketplace affidabile.",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditions è un marketplace B2B per agenzie di viaggio. Lavoriamo solo con partner locali verificati — ogni azienda e ogni esperienza viene controllata dal nostro team in Giappone prima della pubblicazione — così le agenzie possono creare e vendere programmi in Giappone con fiducia.",
+ "Verified partners only": "Solo partner verificati",
+ "Licenses and quality are checked before any listing goes live.": "Licenze e qualità controllate prima di ogni pubblicazione.",
+ "Built for travel agencies": "Pensato per le agenzie di viaggio",
+ "Net prices, day-by-day programs, one cart and one payment.": "Prezzi netti, programmi giorno per giorno, un carrello e un unico pagamento.",
+ "Local expertise in Japan": "Competenza locale in Giappone",
+ "A team in Tokyo that knows the places and the people behind them.": "Un team a Tokyo che conosce i luoghi e le persone che li animano.",
+ "Fair for local partners": "Equo per i partner locali",
+ "15% commission inside the price — no listing or monthly fees.": "Commissione del 15% inclusa nel prezzo, nessun costo di pubblicazione o mensile."
 };

@@ -340,5 +340,16 @@ window.AEX_I18N["fr"] = {
  "We are a travel business and agree to the Booking Terms and Privacy Policy": "Nous sommes une entreprise de voyage et acceptons les Conditions de réservation et la Politique de confidentialité",
  "Booking Terms": "Conditions de réservation",
  "Please agree to the Booking Terms and the Privacy Policy to continue.": "Veuillez accepter les Conditions de réservation et la Politique de confidentialité pour continuer.",
- "By sending a request you accept the": "En envoyant une demande, vous acceptez les"
+ "By sending a request you accept the": "En envoyant une demande, vous acceptez les",
+ "About Aphelion": "À propos d'Aphelion",
+ "Curated experiences. Verified partners. One trusted marketplace.": "Des expériences sélectionnées. Des partenaires vérifiés. Une place de marché de confiance.",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditions est une place de marché B2B pour les agences de voyages. Nous travaillons uniquement avec des partenaires locaux vérifiés — chaque entreprise et chaque expérience est contrôlée par notre équipe au Japon avant sa mise en ligne — pour que les agences puissent créer et vendre des programmes au Japon en toute confiance.",
+ "Verified partners only": "Uniquement des partenaires vérifiés",
+ "Licenses and quality are checked before any listing goes live.": "Licences et qualité contrôlées avant toute mise en ligne.",
+ "Built for travel agencies": "Conçu pour les agences de voyages",
+ "Net prices, day-by-day programs, one cart and one payment.": "Prix nets, programmes jour par jour, un seul panier et un seul paiement.",
+ "Local expertise in Japan": "Expertise locale au Japon",
+ "A team in Tokyo that knows the places and the people behind them.": "Une équipe à Tokyo qui connaît les lieux et les personnes qui les font vivre.",
+ "Fair for local partners": "Équitable pour les partenaires locaux",
+ "15% commission inside the price — no listing or monthly fees.": "15 % de commission inclus dans le prix — aucuns frais de référencement ni mensuels."
 };

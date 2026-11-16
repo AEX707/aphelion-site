@@ -340,5 +340,16 @@ window.AEX_I18N["de"] = {
  "We are a travel business and agree to the Booking Terms and Privacy Policy": "Wir sind ein Reiseunternehmen und stimmen den Buchungsbedingungen und der Datenschutzerklärung zu",
  "Booking Terms": "Buchungsbedingungen",
  "Please agree to the Booking Terms and the Privacy Policy to continue.": "Bitte stimmen Sie den Buchungsbedingungen und der Datenschutzerklärung zu, um fortzufahren.",
- "By sending a request you accept the": "Mit dem Senden einer Anfrage akzeptieren Sie die"
+ "By sending a request you accept the": "Mit dem Senden einer Anfrage akzeptieren Sie die",
+ "About Aphelion": "Über Aphelion",
+ "Curated experiences. Verified partners. One trusted marketplace.": "Ausgewählte Erlebnisse. Geprüfte Partner. Ein vertrauenswürdiger Marktplatz.",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditions ist ein B2B-Marktplatz für Reisebüros. Wir arbeiten nur mit geprüften lokalen Partnern — jedes Unternehmen und jedes Erlebnis wird von unserem Team in Japan geprüft, bevor es online geht — damit Reisebüros Japan-Programme mit Vertrauen zusammenstellen und verkaufen können.",
+ "Verified partners only": "Nur geprüfte Partner",
+ "Licenses and quality are checked before any listing goes live.": "Lizenzen und Qualität werden vor jeder Veröffentlichung geprüft.",
+ "Built for travel agencies": "Für Reisebüros gemacht",
+ "Net prices, day-by-day programs, one cart and one payment.": "Nettopreise, Tagesprogramme, ein Warenkorb und eine Zahlung.",
+ "Local expertise in Japan": "Lokale Expertise in Japan",
+ "A team in Tokyo that knows the places and the people behind them.": "Ein Team in Tokio, das die Orte und die Menschen dahinter kennt.",
+ "Fair for local partners": "Fair für lokale Partner",
+ "15% commission inside the price — no listing or monthly fees.": "15 % Provision im Preis enthalten — keine Listungs- oder Monatsgebühren."
 };

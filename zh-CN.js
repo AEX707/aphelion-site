@@ -340,5 +340,16 @@ window.AEX_I18N["zh-CN"] = {
  "We are a travel business and agree to the Booking Terms and Privacy Policy": "我们是旅游企业，并同意预订条款和隐私政策",
  "Booking Terms": "预订条款",
  "Please agree to the Booking Terms and the Privacy Policy to continue.": "请同意预订条款和隐私政策以继续。",
- "By sending a request you accept the": "发送请求即表示您接受"
+ "By sending a request you accept the": "发送请求即表示您接受",
+ "About Aphelion": "关于 Aphelion",
+ "Curated experiences. Verified partners. One trusted marketplace.": "精选体验。认证合作伙伴。值得信赖的平台。",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditions 是面向旅行社的 B2B 平台。我们只与经过认证的当地合作伙伴合作——每家公司和每项体验在上线前都由我们在日本的团队审核——让旅行社可以放心地组合和销售日本行程。",
+ "Verified partners only": "仅限认证合作伙伴",
+ "Licenses and quality are checked before any listing goes live.": "上线前审核资质与品质。",
+ "Built for travel agencies": "专为旅行社打造",
+ "Net prices, day-by-day programs, one cart and one payment.": "净价、按日行程、一个购物车、一次付款。",
+ "Local expertise in Japan": "日本本地经验",
+ "A team in Tokyo that knows the places and the people behind them.": "东京团队熟悉每个地方和背后的人。",
+ "Fair for local partners": "对当地合作伙伴公平",
+ "15% commission inside the price — no listing or monthly fees.": "15% 佣金已含在价格中，无上架费或月费。"
 };

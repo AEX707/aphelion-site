@@ -495,5 +495,16 @@ window.AEX_I18N["ja"] = {
  "Could not publish:": "公開できませんでした：",
  "listing(s) published — agencies can now see and book them.": "件を公開しました。エージェンシーが閲覧・予約できるようになりました。",
  "Saved. Click \"Publish\" when you are ready.": "保存しました。準備ができたら「公開する」を押してください。",
- "★ Founding Partner": "★ 創設パートナー"
+ "★ Founding Partner": "★ 創設パートナー",
+ "About Aphelion": "Aphelionについて",
+ "Curated experiences. Verified partners. One trusted marketplace.": "厳選された体験。認証済みのパートナー。信頼できるひとつのマーケットプレイス。",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditionsは、旅行会社のためのBtoBマーケットプレイスです。私たちは認証済みの現地パートナーとのみ取引し、すべての会社と体験を日本のチームが公開前に確認しています。だから旅行会社は安心して日本のプログラムを組み、販売できます。",
+ "Verified partners only": "認証済みパートナーのみ",
+ "Licenses and quality are checked before any listing goes live.": "掲載前に許認可と品質を確認します。",
+ "Built for travel agencies": "旅行会社のために",
+ "Net prices, day-by-day programs, one cart and one payment.": "ネット料金、日ごとのプログラム、ひとつのカートとお支払い。",
+ "Local expertise in Japan": "日本の現地ノウハウ",
+ "A team in Tokyo that knows the places and the people behind them.": "場所とそこで働く人々を知る東京のチーム。",
+ "Fair for local partners": "現地パートナーにも公正",
+ "15% commission inside the price — no listing or monthly fees.": "手数料15%は料金に含まれ、掲載料・月額料金はかかりません。"
 };

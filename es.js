@@ -340,5 +340,16 @@ window.AEX_I18N["es"] = {
  "We are a travel business and agree to the Booking Terms and Privacy Policy": "Somos una empresa de viajes y aceptamos las Condiciones de reserva y la Política de privacidad",
  "Booking Terms": "Condiciones de reserva",
  "Please agree to the Booking Terms and the Privacy Policy to continue.": "Acepte las Condiciones de reserva y la Política de privacidad para continuar.",
- "By sending a request you accept the": "Al enviar una solicitud acepta las"
+ "By sending a request you accept the": "Al enviar una solicitud acepta las",
+ "About Aphelion": "Sobre Aphelion",
+ "Curated experiences. Verified partners. One trusted marketplace.": "Experiencias seleccionadas. Socios verificados. Un marketplace de confianza.",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditions es un marketplace B2B para agencias de viajes. Solo trabajamos con socios locales verificados — nuestro equipo en Japón revisa cada empresa y cada experiencia antes de publicarla — para que las agencias puedan crear y vender programas en Japón con confianza.",
+ "Verified partners only": "Solo socios verificados",
+ "Licenses and quality are checked before any listing goes live.": "Revisamos licencias y calidad antes de publicar cualquier ficha.",
+ "Built for travel agencies": "Pensado para agencias de viajes",
+ "Net prices, day-by-day programs, one cart and one payment.": "Precios netos, programas día a día, un carrito y un solo pago.",
+ "Local expertise in Japan": "Experiencia local en Japón",
+ "A team in Tokyo that knows the places and the people behind them.": "Un equipo en Tokio que conoce los lugares y a las personas detrás de ellos.",
+ "Fair for local partners": "Justo para los socios locales",
+ "15% commission inside the price — no listing or monthly fees.": "15 % de comisión incluida en el precio, sin tarifas de publicación ni mensuales."
 };

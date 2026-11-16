@@ -340,5 +340,16 @@ window.AEX_I18N["ko"] = {
  "We are a travel business and agree to the Booking Terms and Privacy Policy": "당사는 여행업체이며 예약 약관 및 개인정보 처리방침에 동의합니다",
  "Booking Terms": "예약 약관",
  "Please agree to the Booking Terms and the Privacy Policy to continue.": "계속하려면 예약 약관과 개인정보 처리방침에 동의해 주세요.",
- "By sending a request you accept the": "요청을 보내면 다음에 동의하는 것으로 간주됩니다:"
+ "By sending a request you accept the": "요청을 보내면 다음에 동의하는 것으로 간주됩니다:",
+ "About Aphelion": "Aphelion 소개",
+ "Curated experiences. Verified partners. One trusted marketplace.": "엄선된 체험. 검증된 파트너. 신뢰할 수 있는 하나의 마켓플레이스.",
+ "Aphelion Expeditions is a B2B marketplace for travel agencies. We work only with verified local partners — every company and every experience is checked by our team in Japan before it goes live — so agencies can build and sell Japan programs with confidence.": "Aphelion Expeditions는 여행사를 위한 B2B 마켓플레이스입니다. 검증된 현지 파트너와만 일하며, 모든 회사와 체험은 공개 전에 일본 현지 팀이 확인합니다. 그래서 여행사는 안심하고 일본 프로그램을 구성하고 판매할 수 있습니다.",
+ "Verified partners only": "검증된 파트너만",
+ "Licenses and quality are checked before any listing goes live.": "게시 전에 허가와 품질을 확인합니다.",
+ "Built for travel agencies": "여행사를 위해 만들었습니다",
+ "Net prices, day-by-day programs, one cart and one payment.": "넷 요금, 일자별 프로그램, 하나의 장바구니와 한 번의 결제.",
+ "Local expertise in Japan": "일본 현지 전문성",
+ "A team in Tokyo that knows the places and the people behind them.": "장소와 그곳의 사람들을 아는 도쿄 팀.",
+ "Fair for local partners": "현지 파트너에게도 공정하게",
+ "15% commission inside the price — no listing or monthly fees.": "수수료 15%는 가격에 포함, 등록비·월 이용료 없음."
 };
