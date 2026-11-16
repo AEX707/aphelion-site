@@ -166,8 +166,10 @@
 
   <div class="form-card" id="formCard" style="display:none;">
     <h3 id="formTitle">Add Tour</h3>
+    <div id="f_invite_note" style="display:none; margin:-6px 0 16px; padding:10px 14px; border-radius:8px; background:rgba(201,169,97,.14); border:1px solid rgba(201,169,97,.45); font-size:13px;"></div>
     <form id="tourForm">
       <input type="hidden" id="f_id">
+      <input type="hidden" id="f_invite_id">
       <div class="form-group">
         <label>Title</label>
         <input type="text" id="f_title" required>
@@ -200,7 +202,7 @@
         <input type="hidden" id="f_group">
       </div>
       <div class="form-group">
-        <label>Price per person for agencies (JPY ¥, number only — Aphelion's 10% is included)</label>
+        <label>Price per person for agencies (JPY ¥, number only — Aphelion's 15% is included)</label>
         <input type="number" step="1" min="0" id="f_price" required>
       </div>
       <div class="form-group">
@@ -249,6 +251,51 @@
         <button type="button" class="btn btn-outline" onclick="closeForm()">Cancel</button>
       </div>
     </form>
+  </div>
+
+  <hr class="section-divider">
+
+  <div class="admin-header">
+    <h1 style="font-size:32px;">Invite Partners</h1>
+    <button class="btn btn-primary" onclick="inviteToggleForm(true)">+ Invite a partner</button>
+  </div>
+  <p style="color:var(--muted); font-size:13px; margin:-18px 0 18px;">Prepare a partner's listings for them from their catalog. They register with their own link, accept the terms, check prices and click “Publish”. Reminders go out automatically after 3 days.</p>
+
+  <div id="inviteStatusMsg" class="status-msg"></div>
+
+  <div class="form-card" id="inviteFormCard" style="display:none; margin-bottom:24px;">
+    <h3>Invite a partner</h3>
+    <form id="inviteForm" onsubmit="inviteCreate(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Company name</label>
+          <input type="text" id="inv_company" required placeholder="ZENRISE">
+        </div>
+        <div class="form-group">
+          <label>Contact person (optional)</label>
+          <input type="text" id="inv_contact" placeholder="Name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email — the partner must register with this address</label>
+        <input type="email" id="inv_email" required placeholder="hello@zenrise.jp">
+      </div>
+      <div class="form-group">
+        <label>Note for yourself (optional)</label>
+        <input type="text" id="inv_note" placeholder="Kamakura · Premium collection · 15% reseller discount">
+      </div>
+      <div class="form-group">
+        <label style="display:flex; gap:8px; align-items:center; text-transform:none;"><input type="checkbox" id="inv_founding" checked style="width:auto;"> Founding Partner (listings set up for them · badge · 15% fixed for 24 months)</label>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn btn-primary">Create invite</button>
+        <button type="button" class="btn btn-outline" onclick="inviteToggleForm(false)">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="inviteList" class="admin-list">
+    <p style="color:var(--muted);">Loading invites…</p>
   </div>
 
   <hr class="section-divider">
@@ -314,6 +361,7 @@
 <script src="admin-analytics.js"></script>
 <script src="terms-version.js"></script>
 <script src="password-toggle.js"></script>
+<script src="admin-invites.js"></script>
 <script>
   // --- Real admin sign-in (Supabase Auth) ---
   // The admin signs in with email + password. The database itself checks that
@@ -339,7 +387,7 @@
     document.getElementById('gate').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
     markAdminActivity();
-    loadList();
+    (window.loadInvites ? loadInvites() : Promise.resolve()).finally(loadList);
     loadPartners();
     loadBookings();
     loadReviewsAdmin();
@@ -505,6 +553,7 @@
       if (pr.ok) (await pr.json()).forEach(p => { partnerNames[p.id] = p.company_name; });
     } catch (e) {}
     const byWhom = t => {
+      if (!t.partner_id && t.invite_id) return ` · prepared for <b style="color:var(--wood);">${esc((typeof inviteCompanyFor === 'function' && inviteCompanyFor(t.invite_id)) || 'invited partner')}</b>`;
       if (!t.partner_id) return ' · <b>Aphelion</b> (own listing)';
       const name = partnerNames[t.partner_id];
       const safe = String(name || 'unknown partner').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -519,13 +568,13 @@
       <div class="admin-row">
         <img src="${t.image || ''}" onerror="this.style.opacity=0.2">
         <div class="info">
-          <h4><span class="tour-code">${tourCode(t)}</span><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:inherit; text-decoration:none; border-bottom:1px dashed rgba(201,169,97,.6);">${t.title} ↗</a> <span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span></h4>
+          <h4><span class="tour-code">${tourCode(t)}</span><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:inherit; text-decoration:none; border-bottom:1px dashed rgba(201,169,97,.6);">${t.title} ↗</a> ${t.awaiting_partner ? '<span class="status-pill awaiting">waiting for partner</span>' : `<span class="status-pill ${t.status || 'approved'}">${t.status || 'approved'}</span>`}</h4>
           <span>${t.location} · ¥${Number(t.price).toLocaleString('ja-JP')} (AEX ¥${(Number(t.price) - partnerPayout(t.price)).toLocaleString('ja-JP')}) · ${t.category}${byWhom(t)}${t.edited_at ? ` · <span style="color:#E0482D; font-weight:600;">✏ edited by partner ${new Date(t.edited_at).toLocaleDateString('en-GB')} — check &amp; Approve</span>` : ''}<span class="tr-state">${translationState(t)}</span></span>
         </div>
         <div class="actions">
-          <button class="btn-go${(t.status || 'approved') === 'approved' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'approved', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Approve</button>
+          ${t.awaiting_partner ? '' : `<button class="btn-go${(t.status || 'approved') === 'approved' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'approved', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Approve</button>
           <button class="btn-wait${t.status === 'pending' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'pending', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Pending</button>
-          <button class="btn-stop${t.status === 'rejected' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'rejected', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Reject</button>
+          <button class="btn-stop${t.status === 'rejected' ? ' is-current' : ''}" onclick="setTourStatus(${t.id}, 'rejected', ${t.partner_id ? `'${t.partner_id}'` : 'null'}, '${(t.title || '').replace(/'/g, "\\'")}')">Reject</button>`}
           <button class="btn-edit" onclick='editTour(${JSON.stringify(t).replace(/'/g, "&apos;")})'>Edit</button>
           <button class="btn-delete" onclick="deleteTour(${t.id}, '${(t.title || '').replace(/'/g, "\\'")}')">Delete</button>
         </div>
@@ -680,6 +729,7 @@
     document.getElementById('formTitle').textContent = 'Add Tour';
     document.getElementById('tourForm').reset();
     document.getElementById('f_id').value = '';
+    if (typeof setInviteOnForm === 'function') setInviteOnForm(null);
     editingImages = [];
     renderPhotoPreview();
     document.getElementById('formCard').style.display = 'block';
@@ -693,6 +743,10 @@
   function editTour(t) {
     document.getElementById('formTitle').textContent = 'Edit Tour';
     document.getElementById('f_id').value = t.id;
+    if (typeof setInviteOnForm === 'function') {
+      setInviteOnForm(t.awaiting_partner ? t.invite_id : null, t.awaiting_partner ? (inviteCompanyFor(t.invite_id) || 'invited partner') : '');
+      if (t.awaiting_partner) document.getElementById('formTitle').textContent = 'Edit prepared tour';
+    }
     document.getElementById('f_title').value = t.title || '';
     document.getElementById('f_location').value = t.location || '';
     document.getElementById('f_destination').value = t.destination || '';
@@ -755,7 +809,15 @@
       meeting_point: document.getElementById('f_meeting_point').value,
       agency_notes: document.getElementById('f_agency_notes').value
     };
-    if (!id) payload.status = 'approved'; // tours added directly by admin go live right away
+    const inviteId = document.getElementById('f_invite_id').value;
+    if (!id && inviteId) {
+      // Prepared for an invited partner: hidden draft until the partner publishes it.
+      payload.invite_id = inviteId;
+      payload.awaiting_partner = true;
+      payload.status = 'pending';
+    } else if (!id) {
+      payload.status = 'approved'; // tours added directly by admin go live right away
+    }
 
     try {
       let res;
@@ -784,9 +846,10 @@
       }
       if (!res.ok) throw new Error('Status ' + res.status);
       _toursCache = null; // clear public cache so the change shows up immediately
-      showStatus(id ? 'Tour updated.' : 'Tour added.', true);
+      showStatus(id ? 'Tour updated.' : (inviteId ? 'Tour prepared — hidden until the partner publishes it.' : 'Tour added.'), true);
       closeForm();
       loadList();
+      if (inviteId && typeof loadInvites === 'function') loadInvites();
       // Translation happens automatically in the database when the tour is approved.
     } catch (err) {
       showStatus('Could not save: ' + err.message, false);
@@ -1264,7 +1327,7 @@
     }
   }
 
-  // COMMISSION_RATE (10%) and publicPrice() come from tours-data.js, so the
+  // COMMISSION_RATE (15%) and publicPrice() come from tours-data.js, so the
   // amount charged always matches the per-person price shown on the site.
 
   async function createPaymentLink(amount, description, buyerEmail, referenceId) {

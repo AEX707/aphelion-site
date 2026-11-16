@@ -6,7 +6,7 @@
 //
 // Money: until online payments are connected, the amount of a booking is
 // the amount charged (charge_amount) or, if empty, tour price x guests.
-// Prices already include Aphelion's 10% (Partner Terms v2.0).
+// Prices already include Aphelion's commission (COMMISSION_RATE in tours-data.js, 15% — Partner Terms v2.1).
 
 (function () {
   const AN = { bookings: [], tours: [], partners: [], reviews: [], searches: null, period: 30 };
@@ -111,7 +111,7 @@
       ['Declined', num(rows.filter(r => r.declined).length), ''],
       ['Guests (confirmed)', num(sum(conf, r => r.guests)), ''],
       ['Turnover (confirmed)', yen(turnover), `paid: ${yen(sum(conf.filter(r => r.paid), r => r.amount))}`],
-      ['Aphelion income · 10%', yen(turnover * 0.10), `partners' 90%: ${yen(turnover * 0.90)}`]
+      (() => { const cr = (typeof COMMISSION_RATE !== 'undefined' ? COMMISSION_RATE : 0.15); const p = Math.round(cr * 100); return [`Aphelion income · ${p}%`, yen(turnover * cr), `partners' ${100 - p}%: ${yen(turnover * (1 - cr))}`]; })()
     ];
 
     // ---- Requests per month, last 12 months ----

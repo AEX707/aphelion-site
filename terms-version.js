@@ -7,9 +7,10 @@
 //  - the next time you open the admin panel, every partner who has not
 //    accepted yet gets an email (sent once per version);
 //  - the admin panel shows who accepted which version and when.
-const PARTNER_TERMS_VERSION = '2.0';
+const PARTNER_TERMS_VERSION = '2.1';
 const PARTNER_TERMS_SUMMARY = [
-  "Aphelion's 10% commission is now included in your price. The price you enter is the final price agencies pay; you receive 90% of it.",
-  "Founding Partner benefits updated: the standard 10% commission applies to everyone, with no listing, sign-up or monthly fees.",
-  "Cancellation payouts are now calculated from your payout (90% of the price)."
+  "Aphelion's commission is now 15%, still included in your price. The price you enter is the final price agencies pay; you receive 85% of it.",
+  "For partners who joined before this update, the new rate applies from 17 December 2026 (30 days' notice).",
+  "Agencies can now pay by bank transfer against our invoice, or online.",
+  "New Founding Partner benefits: we set up your listings for you, a Founding Partner badge, and the 15% rate fixed for 24 months."
 ];

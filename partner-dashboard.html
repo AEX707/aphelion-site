@@ -98,6 +98,13 @@
   .tour-admin-row .actions button { border:1px solid var(--border); background:transparent; color:var(--muted); padding:8px 14px; border-radius:8px; font-size:12px; cursor:pointer; text-transform:uppercase; letter-spacing:.4px; }
   .tour-admin-row .actions button:hover { border-color: var(--gold); color: var(--gold); }
   .tour-admin-row .actions button.danger:hover { border-color:#B42318; color:#B42318; }
+  .tour-admin-row .actions button.publish { background:#2E7D5B; border-color:#2E7D5B; color:#fff; font-weight:700; }
+  .tour-admin-row .actions button.publish:hover { filter:brightness(1.1); color:#fff; border-color:#2E7D5B; }
+  .tour-admin-row.awaiting { border-color:rgba(46,125,91,.55); box-shadow:0 0 0 3px rgba(46,125,91,.08); }
+  .status-pill.review { background:rgba(46,125,91,.10); color:#2E7D5B; border:1px solid rgba(46,125,91,.4); }
+  .founding-badge { display:inline-block; vertical-align:middle; margin-left:10px; font:700 11px var(--sans); letter-spacing:.8px; text-transform:uppercase; color:#7c4a03; background:#fde68a; border-radius:20px; padding:4px 12px; }
+  .prepared-box { margin:0 0 18px; padding:16px 18px; border-radius:12px; background:rgba(46,125,91,.07); border:1px solid rgba(46,125,91,.35); font-size:14px; line-height:1.55; }
+  .prepared-box .btn { margin-top:10px; }
   .status-msg { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:20px; display:none; }
   .status-msg.ok { background:rgba(46,125,91,.10); border:1px solid rgba(46,125,91,.4); color:#2E7D5B; display:block; }
   .status-msg.err { background:rgba(180,35,24,.08); border:1px solid rgba(180,35,24,.35); color:#B42318; display:block; }
@@ -188,7 +195,7 @@
   <div id="dashContent" style="display:none;">
     <div class="dash-head">
       <div>
-        <h1><span id="companyNameOut"></span></h1>
+        <h1><span id="companyNameOut"></span><span id="foundingBadge" class="founding-badge" style="display:none;">★ Founding Partner</span></h1>
         <p>Partner dashboard · <span id="statusOut" class="status-pill"></span></p>
       </div>
       <button class="btn btn-primary" onclick="showTab('tours'); openTourForm()">+ Add New Tour</button>
@@ -259,6 +266,7 @@
       </div>
 
       <div id="tourStatusMsg" class="status-msg"></div>
+      <div id="preparedBox" class="prepared-box" style="display:none;"></div>
 
       <div id="myToursList" class="tour-admin-list">
         <p style="color:var(--muted);">Loading your tours…</p>
@@ -332,7 +340,7 @@
           </div>
 
           <h4 class="form-step"><span class="n">4</span> Prices <span style="font:400 13px var(--sans); color:var(--muted);">— final price for agencies, in yen</span></h4>
-          <p class="form-hint">Enter the final price agencies pay. Aphelion's 10% commission is already included — nothing is added on top. You receive 90%. Keep prices simple and clear: one adult price, and optionally a child price and a price for a private group.</p>
+          <p class="form-hint">Enter the final price agencies pay. Aphelion's 15% commission is already included — nothing is added on top. You receive 85%. Keep prices simple and clear: one adult price, and optionally a child price and a price for a private group.</p>
           <div class="price-grid">
             <div class="form-group">
               <label>Price per adult (JPY ¥, number only)</label>
@@ -476,8 +484,8 @@
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const yen = n => '¥' + Math.round(Number(n) || 0).toLocaleString('ja-JP');
   // Aphelion's commission is INCLUDED in the price the partner enters
-  // (Partner Terms v2.0): agencies pay the price, the partner receives 90%.
-  const COMMISSION_RATE = 0.10;
+  // (Partner Terms v2.1): agencies pay the price, the partner receives 85%.
+  const COMMISSION_RATE = 0.15;
   const payoutOf = price => Math.round((Number(price) || 0) * (1 - COMMISSION_RATE));
   const FORMAT_LABELS = { half_day: 'Half-day', full_day: 'Full-day', evening: 'Evening', flexible: 'Flexible' };
 
@@ -553,6 +561,17 @@
       document.getElementById('statusOut').textContent = 'No profile found';
       return;
     }
+    // Invited partner? Link the listings Aphelion prepared for them.
+    try {
+      const token = (session.user.user_metadata || {}).invite_token || null;
+      const { data: claim } = await supabaseClient.rpc('claim_partner_invite', { p_token: token });
+      if (claim && claim.claimed) {
+        const { data: p2 } = await supabaseClient.from('partners').select('*').eq('id', session.user.id).single();
+        if (p2) Object.assign(profile, p2);
+        if (claim.tours) showTab('tours');
+      }
+    } catch (e) {}
+    if (profile.founding_partner) document.getElementById('foundingBadge').style.display = 'inline-block';
     checkTermsGate(profile);
     // Documents requested by Aphelion's team? Show a notice with a link to upload them.
     try {
@@ -628,8 +647,8 @@
     setText('kConf', s.bookings_confirmed || 0);
     setText('kConfSub', (s.bookings_pending || 0) + ' ' + tr('waiting for confirmation'));
     setText('kGuests', (s.guests_confirmed || 0).toLocaleString());
-    // Prices are agency prices with the 10% commission inside, so the
-    // partner's earnings are 90% of them.
+    // Prices are agency prices with the 15% commission inside, so the
+    // partner's earnings are 85% of them.
     setText('kEarn', yen(payoutOf(s.earnings_confirmed)));
     setText('kEarnSub', tr('already paid') + ': ' + yen(payoutOf(s.earnings_paid)));
     if (s.reviews_count) {
@@ -733,6 +752,7 @@
       return;
     }
     myTours = tours || [];
+    renderPreparedBox();
     if (!myTours.length) {
       list.innerHTML = '<p style="color:var(--muted);">You have no tours yet. Add your first one above.</p>';
       return;
@@ -740,10 +760,10 @@
     list.innerHTML = myTours.map((t, i) => {
       const q = tourQuality(t);
       return `
-      <div class="tour-admin-row">
+      <div class="tour-admin-row${t.awaiting_partner ? ' awaiting' : ''}">
         <img src="${esc(t.image || '')}" alt="" onerror="this.style.opacity=0.2">
         <div class="info">
-          <h4><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" class="tour-link">${esc(t.title)} ↗</a> <span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span></h4>
+          <h4><a href="tour.html?id=${t.id}" target="_blank" rel="noopener" class="tour-link">${esc(t.title)} ↗</a> ${t.awaiting_partner ? `<span class="status-pill review">${esc(tr('Ready for your review'))}</span>` : `<span class="status-pill ${esc(t.status || 'pending')}">${esc(t.status || 'pending')}</span>`}</h4>
           <span>${esc(t.location)} · ${yen(t.price)} · ${esc(t.category)}${t.tour_format ? ' · ' + esc(tr(FORMAT_LABELS[t.tour_format] || t.tour_format)) : ''}</span>
           <div class="quality" title="${esc(q.missing.length ? tr('Missing') + ': ' + q.missing.map(m => tr(m)).join(', ') : '')}">
             <div class="quality-track"><div class="quality-fill" style="width:${q.pct}%"></div></div>
@@ -752,11 +772,34 @@
         </div>
         <div class="actions">
           <a href="tour.html?id=${t.id}" target="_blank" rel="noopener" class="view-btn">${esc(tr(t.status === 'approved' ? 'View' : 'Preview'))}</a>
-          <button onclick="editMyTour(${i})">Edit</button>
+          ${t.awaiting_partner ? `<button class="publish" onclick="publishPrepared([${t.id}])">${esc(tr('Publish'))}</button>` : ''}
+          <button onclick="editMyTour(${i})">${esc(tr(t.awaiting_partner ? 'Check & edit' : 'Edit'))}</button>
           <button class="danger" onclick="deleteMyTour(${i})">Delete</button>
         </div>
       </div>`;
     }).join('');
+  }
+
+  // ---------- Listings prepared by Aphelion (invited partners) ----------
+  function renderPreparedBox() {
+    const box = document.getElementById('preparedBox');
+    const waiting = (myTours || []).filter(t => t.awaiting_partner);
+    if (!waiting.length) { box.style.display = 'none'; return; }
+    box.innerHTML = '<b>' + esc(tr('Your listings are ready')) + '</b> — ' +
+      esc(tr('we prepared them from your catalog. Please check the content and especially the prices (Aphelion\'s 15% is included in the price), edit anything you like, then publish. Nothing is shown to agencies until you publish.')) +
+      '<br><button class="btn btn-primary" onclick="publishPrepared(null)">' + esc(tr('Publish all')) + ' (' + waiting.length + ')</button>';
+    box.style.display = 'block';
+  }
+  async function publishPrepared(ids) {
+    const waiting = (myTours || []).filter(t => t.awaiting_partner && (!ids || ids.includes(t.id)));
+    if (!waiting.length) return;
+    const lines = waiting.map(t => '• ' + t.title + ' — ' + yen(t.price) + ' (' + tr('you receive') + ' ' + yen(payoutOf(t.price)) + ')').join('\n');
+    if (!confirm(tr('Publish these listings? Agencies will see them right away.') + '\n\n' + lines)) return;
+    const { data, error } = await supabaseClient.rpc('publish_prepared_tours', { p_ids: ids });
+    if (error) { showTourStatus(tr('Could not publish:') + ' ' + error.message, false); return; }
+    showTourStatus((data || 0) + ' ' + tr('listing(s) published — agencies can now see and book them.'), true);
+    await loadMyTours();
+    loadStats();
   }
 
   // ---------- Photos ----------
@@ -929,7 +972,7 @@
       const out = document.getElementById(id + '_payout');
       if (v === '' || Number(v) <= 0) { out.innerHTML = ''; return; }
       const price = Math.round(Number(v));
-      out.innerHTML = tr('Agencies pay') + ' ' + yen(price) + ' · ' + tr('Aphelion 10%') + ': ' + yen(price - payoutOf(price)) + ' · ' + tr('You receive') + ': <b>' + yen(payoutOf(price)) + '</b>';
+      out.innerHTML = tr('Agencies pay') + ' ' + yen(price) + ' · ' + tr('Aphelion 15%') + ': ' + yen(price - payoutOf(price)) + ' · ' + tr('You receive') + ': <b>' + yen(payoutOf(price)) + '</b>';
     });
   }
   ['t_price', 't_child_price', 't_private_price'].forEach(id => document.getElementById(id).addEventListener('input', updatePayouts));
@@ -1003,6 +1046,7 @@
 
   // ---------- Open / edit / delete ----------
   let editingTourStatus = null;
+  let editingTourAwaiting = false;
   function resetExtras() {
     document.querySelectorAll('input[name="t_format"]').forEach(r => r.checked = false);
     document.querySelectorAll('#seasonChoices input').forEach(c => c.checked = false);
@@ -1011,6 +1055,7 @@
   }
   function openTourForm() {
     editingTourStatus = null;
+    editingTourAwaiting = false;
     document.getElementById('tourFormTitle').textContent = 'Add Tour';
     document.getElementById('myTourForm').reset();
     document.getElementById('t_id').value = '';
@@ -1030,6 +1075,7 @@
     if (!t) return;
     showTab('tours');
     editingTourStatus = t.status || null;
+    editingTourAwaiting = !!t.awaiting_partner;
     document.getElementById('myTourForm').reset();
     resetExtras();
     document.getElementById('tourFormTitle').textContent = 'Edit Tour';
@@ -1130,6 +1176,10 @@
         delete payload.status;
         payload.edited_at = new Date().toISOString();
       }
+      // A listing prepared by Aphelion stays a private draft until the
+      // partner clicks "Publish" — saving changes doesn't publish it.
+      const preparedDraft = id && editingTourAwaiting;
+      if (preparedDraft) delete payload.status;
 
       let error;
       if (id) ({ error } = await supabaseClient.from('tours').update(payload).eq('id', id).eq('partner_id', currentUserId));
@@ -1140,7 +1190,7 @@
       _draftPaused = true;
       closeTourForm();
       _draftPaused = false;
-      showTourStatus(keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.'), true);
+      showTourStatus(preparedDraft ? 'Saved. Click "Publish" when you are ready.' : (keepLive ? 'Tour updated — your changes are live.' : (id ? 'Tour updated — sent for review.' : 'Tour added — pending review before it goes live.')), true);
       await loadMyTours();
       loadStats();
     } catch (err) {

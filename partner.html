@@ -72,7 +72,8 @@
       </ul>
     </div>
     <div class="form-card">
-      <h3>Partner Application</h3>
+      <h3 id="formHeading">Partner Application</h3>
+      <div id="inviteBanner" style="display:none; margin:0 0 18px; padding:14px 16px; border-radius:10px; background:rgba(201,169,97,.14); border:1px solid rgba(201,169,97,.5); font-size:14px; line-height:1.55;"></div>
       <div class="success-message" id="successMessage">Account created! Please check your inbox and click the confirmation link we sent you, then log in with your email and password. Your partnership will show as "pending" until our team reviews it.</div>
       <div class="error-message" id="errorMessage"></div>
       <form id="partnerForm">
@@ -171,6 +172,33 @@
   const successMessage = document.getElementById('successMessage');
   const errorMessage = document.getElementById('errorMessage');
 
+  // Personal invitation link (partner.html?invite=…): pre-fill the form and
+  // show the partner that their listings are already prepared.
+  const inviteToken = (new URLSearchParams(location.search).get('invite') || '').trim() || null;
+  (async () => {
+    if (!inviteToken) return;
+    try {
+      const { data, error } = await supabaseClient.rpc('get_partner_invite', { p_token: inviteToken });
+      const inv = Array.isArray(data) ? data[0] : data;
+      if (error || !inv) return;
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v && !el.value) el.value = v; };
+      set('companyName', inv.company_name);
+      set('contactPerson', inv.contact_person);
+      set('email', inv.email);
+      set('country', 'Japan');
+      const n = inv.tours_count || 0;
+      const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const b = document.getElementById('inviteBanner');
+      b.innerHTML = '<b>Welcome, ' + esc(inv.company_name) + '!</b><br>' +
+        (n ? 'We have already prepared <b>' + n + ' listing' + (n > 1 ? 's' : '') + '</b> for you. ' : 'Your partner account is ready. ') +
+        'Create your account below (about 2 minutes) — then check the content and prices in your dashboard and click "Publish". Nothing goes live without your approval.' +
+        '<br><span style="font-size:12px; color:var(--muted);">Please keep the email ' + esc(inv.email) + ' — your listings are linked to it.</span>';
+      b.style.display = 'block';
+      document.getElementById('formHeading').textContent = 'Create your partner account';
+      document.getElementById('message').placeholder = 'Optional';
+    } catch (e) {}
+  })();
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorMessage.style.display = 'none';
@@ -209,13 +237,17 @@
             message: message,
             terms_version: (typeof PARTNER_TERMS_VERSION !== 'undefined' ? PARTNER_TERMS_VERSION : '2.0'),
             privacy_version: '2026-11-01',
-            terms_accepted_at: new Date().toISOString()
+            terms_accepted_at: new Date().toISOString(),
+            invite_token: inviteToken || null
           }
         }
       });
       if (authError) throw authError;
       if (!authData.user) throw new Error('Account created, but no user returned.');
 
+      if (inviteToken) {
+        successMessage.textContent = 'Account created! Please check your inbox and click the confirmation link, then log in. Your prepared listings will be waiting in your dashboard — check them and click "Publish".';
+      }
       successMessage.style.display = 'block';
       form.reset();
     } catch (err) {
