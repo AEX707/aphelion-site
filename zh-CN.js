@@ -351,5 +351,19 @@ window.AEX_I18N["zh-CN"] = {
  "Local expertise in Japan": "日本本地经验",
  "A team in Tokyo that knows the places and the people behind them.": "东京团队熟悉每个地方和背后的人。",
  "Fair for local partners": "对当地合作伙伴公平",
- "15% commission inside the price — no listing or monthly fees.": "15% 佣金已含在价格中，无上架费或月费。"
+ "15% commission inside the price — no listing or monthly fees.": "15% 佣金已含在价格中，无上架费或月费。",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "面向旅行社的 B2B 平台 · 从东京开始",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "经过认证的当地体验，以净价预订，并以您自己的品牌销售。",
+ "How it works": "使用流程",
+ "Build a Japan program in three steps.": "三步打造日本行程。",
+ "Everything your team needs to sell Japan, in one place.": "销售日本所需的一切，尽在一处。",
+ "Choose": "选择",
+ "Browse experiences from local companies we have visited and approved.": "浏览我们实地拜访并审核通过的当地公司的体验。",
+ "Combine": "组合",
+ "Put them into a day-by-day program for your clients, under your own brand.": "为客户组成按日行程，使用您自己的品牌。",
+ "Book once": "一次预订",
+ "One cart, one payment in yen. We handle each local partner.": "一个购物车，一次日元付款。每家当地合作伙伴由我们对接。",
+ "For travel agencies · Tokyo first, all of Japan next": "面向旅行社 · 先从东京开始，再到全日本",
+ "Sell Japan with local partners you can trust.": "与值得信赖的当地伙伴一起销售日本。",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "经过认证的体验，净价供应。组合按日行程，一次付款完成预订。"
 };

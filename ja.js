@@ -506,5 +506,19 @@ window.AEX_I18N["ja"] = {
  "Local expertise in Japan": "日本の現地ノウハウ",
  "A team in Tokyo that knows the places and the people behind them.": "場所とそこで働く人々を知る東京のチーム。",
  "Fair for local partners": "現地パートナーにも公正",
- "15% commission inside the price — no listing or monthly fees.": "手数料15%は料金に含まれ、掲載料・月額料金はかかりません。"
+ "15% commission inside the price — no listing or monthly fees.": "手数料15%は料金に含まれ、掲載料・月額料金はかかりません。",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "旅行会社向けBtoBマーケットプレイス · 東京から",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "認証済みの現地体験を、ネット料金で予約し、自社ブランドで販売できます。",
+ "How it works": "ご利用の流れ",
+ "Build a Japan program in three steps.": "3ステップで日本のプログラムを。",
+ "Everything your team needs to sell Japan, in one place.": "日本を販売するために必要なものが、ひとつの場所に。",
+ "Choose": "選ぶ",
+ "Browse experiences from local companies we have visited and approved.": "私たちが訪問し承認した現地企業の体験から選べます。",
+ "Combine": "組み合わせる",
+ "Put them into a day-by-day program for your clients, under your own brand.": "お客様向けの日ごとのプログラムに、自社ブランドでまとめます。",
+ "Book once": "一度で予約",
+ "One cart, one payment in yen. We handle each local partner.": "カートもお支払いもひとつ、円建て。各現地パートナーとの調整は当社が行います。",
+ "For travel agencies · Tokyo first, all of Japan next": "旅行会社向け · まず東京から、そして日本全国へ",
+ "Sell Japan with local partners you can trust.": "信頼できる現地パートナーと、日本を販売。",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "認証済みの体験をネット料金で。日ごとのプログラムを組み、まとめて一度のお支払いで予約できます。"
 };

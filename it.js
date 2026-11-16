@@ -351,5 +351,19 @@ window.AEX_I18N["it"] = {
  "Local expertise in Japan": "Competenza locale in Giappone",
  "A team in Tokyo that knows the places and the people behind them.": "Un team a Tokyo che conosce i luoghi e le persone che li animano.",
  "Fair for local partners": "Equo per i partner locali",
- "15% commission inside the price — no listing or monthly fees.": "Commissione del 15% inclusa nel prezzo, nessun costo di pubblicazione o mensile."
+ "15% commission inside the price — no listing or monthly fees.": "Commissione del 15% inclusa nel prezzo, nessun costo di pubblicazione o mensile.",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "Marketplace B2B per agenzie di viaggio · Si parte da Tokyo",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "Esperienze locali verificate, prenotabili a prezzi netti e pronte da vendere con il tuo marchio.",
+ "How it works": "Come funziona",
+ "Build a Japan program in three steps.": "Un programma in Giappone in tre passi.",
+ "Everything your team needs to sell Japan, in one place.": "Tutto ciò che serve al tuo team per vendere il Giappone, in un unico posto.",
+ "Choose": "Scegli",
+ "Browse experiences from local companies we have visited and approved.": "Sfoglia le esperienze di aziende locali che abbiamo visitato e approvato.",
+ "Combine": "Combina",
+ "Put them into a day-by-day program for your clients, under your own brand.": "Inseriscile in un programma giorno per giorno per i tuoi clienti, con il tuo marchio.",
+ "Book once": "Prenota una volta",
+ "One cart, one payment in yen. We handle each local partner.": "Un carrello, un pagamento in yen. Gestiamo noi ogni partner locale.",
+ "For travel agencies · Tokyo first, all of Japan next": "Per agenzie di viaggio · Prima Tokyo, poi tutto il Giappone",
+ "Sell Japan with local partners you can trust.": "Vendi il Giappone con partner locali affidabili.",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "Esperienze verificate a prezzi netti. Crea programmi giorno per giorno e prenotali con un unico pagamento."
 };

@@ -351,5 +351,19 @@ window.AEX_I18N["es"] = {
  "Local expertise in Japan": "Experiencia local en Japón",
  "A team in Tokyo that knows the places and the people behind them.": "Un equipo en Tokio que conoce los lugares y a las personas detrás de ellos.",
  "Fair for local partners": "Justo para los socios locales",
- "15% commission inside the price — no listing or monthly fees.": "15 % de comisión incluida en el precio, sin tarifas de publicación ni mensuales."
+ "15% commission inside the price — no listing or monthly fees.": "15 % de comisión incluida en el precio, sin tarifas de publicación ni mensuales.",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "Marketplace B2B para agencias de viajes · Empezando en Tokio",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "Experiencias locales verificadas, reservables a precios netos y listas para vender con su propia marca.",
+ "How it works": "Cómo funciona",
+ "Build a Japan program in three steps.": "Un programa en Japón en tres pasos.",
+ "Everything your team needs to sell Japan, in one place.": "Todo lo que su equipo necesita para vender Japón, en un solo lugar.",
+ "Choose": "Elegir",
+ "Browse experiences from local companies we have visited and approved.": "Explore experiencias de empresas locales que hemos visitado y aprobado.",
+ "Combine": "Combinar",
+ "Put them into a day-by-day program for your clients, under your own brand.": "Organícelas en un programa día a día para sus clientes, con su propia marca.",
+ "Book once": "Reservar una vez",
+ "One cart, one payment in yen. We handle each local partner.": "Un carrito, un pago en yenes. Nosotros gestionamos a cada socio local.",
+ "For travel agencies · Tokyo first, all of Japan next": "Para agencias de viajes · Primero Tokio, luego todo Japón",
+ "Sell Japan with local partners you can trust.": "Venda Japón con socios locales de confianza.",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "Experiencias verificadas a precios netos. Cree programas día a día y resérvelos en un solo pago."
 };

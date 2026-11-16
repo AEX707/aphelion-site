@@ -654,3 +654,7 @@ nav .nav-login-mobile { display: none; }
 .docs-h { font: 600 18px var(--serif); margin: 22px 0 8px; }
 .docs-files { list-style: none; font-size: 14px; }
 .docs-files li { padding: 6px 0; border-bottom: 1px solid rgba(21,33,61,.08); }
+
+/* Ink & Gold (Nov 2026): one dark card style instead of pastels */
+.pillar-icon { border-radius: 14px; }
+.cat-art { font-weight: 700; }

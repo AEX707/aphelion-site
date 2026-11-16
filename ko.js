@@ -351,5 +351,19 @@ window.AEX_I18N["ko"] = {
  "Local expertise in Japan": "일본 현지 전문성",
  "A team in Tokyo that knows the places and the people behind them.": "장소와 그곳의 사람들을 아는 도쿄 팀.",
  "Fair for local partners": "현지 파트너에게도 공정하게",
- "15% commission inside the price — no listing or monthly fees.": "수수료 15%는 가격에 포함, 등록비·월 이용료 없음."
+ "15% commission inside the price — no listing or monthly fees.": "수수료 15%는 가격에 포함, 등록비·월 이용료 없음.",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "여행사를 위한 B2B 마켓플레이스 · 도쿄에서 시작",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "검증된 현지 체험을 넷 요금으로 예약하고, 자사 브랜드로 판매하세요.",
+ "How it works": "이용 방법",
+ "Build a Japan program in three steps.": "세 단계로 일본 프로그램 만들기.",
+ "Everything your team needs to sell Japan, in one place.": "일본을 판매하는 데 필요한 모든 것을 한곳에서.",
+ "Choose": "선택",
+ "Browse experiences from local companies we have visited and approved.": "저희가 방문하고 승인한 현지 업체의 체험을 둘러보세요.",
+ "Combine": "조합",
+ "Put them into a day-by-day program for your clients, under your own brand.": "고객을 위한 일자별 프로그램으로, 자사 브랜드로 구성하세요.",
+ "Book once": "한 번에 예약",
+ "One cart, one payment in yen. We handle each local partner.": "장바구니도 결제도 하나, 엔화로. 각 현지 파트너는 저희가 관리합니다.",
+ "For travel agencies · Tokyo first, all of Japan next": "여행사를 위한 · 도쿄부터, 그다음 일본 전역",
+ "Sell Japan with local partners you can trust.": "믿을 수 있는 현지 파트너와 함께 일본을 판매하세요.",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "검증된 체험을 넷 요금으로. 일자별 프로그램을 만들고 한 번의 결제로 예약하세요."
 };

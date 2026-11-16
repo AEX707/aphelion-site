@@ -351,5 +351,19 @@ window.AEX_I18N["de"] = {
  "Local expertise in Japan": "Lokale Expertise in Japan",
  "A team in Tokyo that knows the places and the people behind them.": "Ein Team in Tokio, das die Orte und die Menschen dahinter kennt.",
  "Fair for local partners": "Fair für lokale Partner",
- "15% commission inside the price — no listing or monthly fees.": "15 % Provision im Preis enthalten — keine Listungs- oder Monatsgebühren."
+ "15% commission inside the price — no listing or monthly fees.": "15 % Provision im Preis enthalten — keine Listungs- oder Monatsgebühren.",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "B2B-Marktplatz für Reisebüros · Start in Tokio",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "Geprüfte lokale Erlebnisse, buchbar zu Nettopreisen und bereit zum Verkauf unter Ihrer eigenen Marke.",
+ "How it works": "So funktioniert es",
+ "Build a Japan program in three steps.": "Ein Japan-Programm in drei Schritten.",
+ "Everything your team needs to sell Japan, in one place.": "Alles, was Ihr Team für den Verkauf von Japan braucht, an einem Ort.",
+ "Choose": "Auswählen",
+ "Browse experiences from local companies we have visited and approved.": "Erlebnisse lokaler Unternehmen, die wir besucht und freigegeben haben.",
+ "Combine": "Kombinieren",
+ "Put them into a day-by-day program for your clients, under your own brand.": "Stellen Sie daraus ein Tagesprogramm für Ihre Kunden zusammen, unter Ihrer eigenen Marke.",
+ "Book once": "Einmal buchen",
+ "One cart, one payment in yen. We handle each local partner.": "Ein Warenkorb, eine Zahlung in Yen. Wir kümmern uns um jeden lokalen Partner.",
+ "For travel agencies · Tokyo first, all of Japan next": "Für Reisebüros · Zuerst Tokio, dann ganz Japan",
+ "Sell Japan with local partners you can trust.": "Verkaufen Sie Japan mit lokalen Partnern, denen Sie vertrauen können.",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "Geprüfte Erlebnisse zu Nettopreisen. Stellen Sie Tagesprogramme zusammen und buchen Sie alles mit einer Zahlung."
 };

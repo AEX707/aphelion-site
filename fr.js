@@ -351,5 +351,19 @@ window.AEX_I18N["fr"] = {
  "Local expertise in Japan": "Expertise locale au Japon",
  "A team in Tokyo that knows the places and the people behind them.": "Une équipe à Tokyo qui connaît les lieux et les personnes qui les font vivre.",
  "Fair for local partners": "Équitable pour les partenaires locaux",
- "15% commission inside the price — no listing or monthly fees.": "15 % de commission inclus dans le prix — aucuns frais de référencement ni mensuels."
+ "15% commission inside the price — no listing or monthly fees.": "15 % de commission inclus dans le prix — aucuns frais de référencement ni mensuels.",
+ "B2B marketplace for travel agencies · Starting in Tokyo": "Place de marché B2B pour les agences de voyages · Débute à Tokyo",
+ "Verified local experiences, bookable at net prices and ready to sell under your own brand.": "Des expériences locales vérifiées, réservables à prix nets et prêtes à vendre sous votre propre marque.",
+ "How it works": "Comment ça marche",
+ "Build a Japan program in three steps.": "Un programme au Japon en trois étapes.",
+ "Everything your team needs to sell Japan, in one place.": "Tout ce dont votre équipe a besoin pour vendre le Japon, au même endroit.",
+ "Choose": "Choisir",
+ "Browse experiences from local companies we have visited and approved.": "Parcourez les expériences d'entreprises locales que nous avons visitées et validées.",
+ "Combine": "Combiner",
+ "Put them into a day-by-day program for your clients, under your own brand.": "Assemblez-les en un programme jour par jour pour vos clients, sous votre marque.",
+ "Book once": "Réserver en une fois",
+ "One cart, one payment in yen. We handle each local partner.": "Un panier, un paiement en yens. Nous gérons chaque partenaire local.",
+ "For travel agencies · Tokyo first, all of Japan next": "Pour les agences de voyages · Tokyo d'abord, puis tout le Japon",
+ "Sell Japan with local partners you can trust.": "Vendez le Japon avec des partenaires locaux de confiance.",
+ "Verified experiences at net prices. Build day-by-day programs and book them in one payment.": "Des expériences vérifiées à prix nets. Créez des programmes jour par jour et réservez-les en un seul paiement."
 };
