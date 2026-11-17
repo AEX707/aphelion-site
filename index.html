@@ -95,6 +95,27 @@
   .home .home-top.on-light .btn-outline { color: #15213D; border-color: rgba(21,33,61,.45); }
   .home .home-top.on-light .menu-toggle { border-color: rgba(21,33,61,.45); }
   .home .home-top.on-light .menu-toggle span { background: #15213D; }
+
+  /* Category photo cards: 3 photos per card, slow crossfade */
+  .cat-photos { position: relative; overflow: hidden; }
+  .cat-photos img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; animation: catFade 15s infinite; transition: transform .6s ease; }
+  .cat-photos img:nth-of-type(1) { opacity: 1; }
+  .cat-card:nth-child(1) .cat-photos img:nth-of-type(1) { animation-delay: -1s; }
+  .cat-card:nth-child(1) .cat-photos img:nth-of-type(2) { animation-delay: 4s; }
+  .cat-card:nth-child(1) .cat-photos img:nth-of-type(3) { animation-delay: 9s; }
+  .cat-card:nth-child(2) .cat-photos img:nth-of-type(1) { animation-delay: -2.2s; }
+  .cat-card:nth-child(2) .cat-photos img:nth-of-type(2) { animation-delay: 2.8s; }
+  .cat-card:nth-child(2) .cat-photos img:nth-of-type(3) { animation-delay: 7.8s; }
+  .cat-card:nth-child(3) .cat-photos img:nth-of-type(1) { animation-delay: -3.4s; }
+  .cat-card:nth-child(3) .cat-photos img:nth-of-type(2) { animation-delay: 1.6s; }
+  .cat-card:nth-child(3) .cat-photos img:nth-of-type(3) { animation-delay: 6.6s; }
+  .cat-card:nth-child(4) .cat-photos img:nth-of-type(1) { animation-delay: -4.6s; }
+  .cat-card:nth-child(4) .cat-photos img:nth-of-type(2) { animation-delay: 0.4s; }
+  .cat-card:nth-child(4) .cat-photos img:nth-of-type(3) { animation-delay: 5.4s; }
+  .cat-card:hover .cat-photos img { transform: scale(1.05); }
+  .cat-photos::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(21,33,61,0) 60%, rgba(21,33,61,.25) 100%); pointer-events: none; }
+  @keyframes catFade { 0% { opacity: 0; } 6% { opacity: 1; } 33% { opacity: 1; } 40% { opacity: 0; } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .cat-photos img { animation: none; opacity: 0; } .cat-photos img:nth-of-type(1) { opacity: 1; } }
   /* About block */
   .about-aex { padding: 88px 0 72px; background: #fff; border-top: 1px solid rgba(21,33,61,.06); }
   .about-aex .about-head { max-width: 760px; margin: 0 auto 44px; text-align: center; }
@@ -246,7 +267,7 @@
         <div class="eyebrow">How it works</div>
         <h2>Build a Japan program in three steps.</h2>
       </div>
-      <p>Everything your team needs to sell Japan, in one place.</p>
+      <p>Plan, build and book your clients’ Japan program — all in one place.</p>
     </div>
     <div class="pillars-grid">
       <div class="pillar">
@@ -279,19 +300,19 @@
     </div>
     <div class="cat-grid" style="margin-bottom:56px;">
       <a href="tours.html?type=food" class="cat-card">
-        <div class="cat-art" style="background:#15213D; color:#E8C987;">食</div>
+        <div class="cat-art cat-photos" style="background:#15213D; color:#E8C987;"><span class="cat-fallback">食</span><img src="https://images.unsplash.com/photo-1608060146923-7b8ab13e22bb?auto=format&fit=crop&w=900&q=75" alt="Food and drink in Tokyo" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1502364271109-0a9a75a2a9df?auto=format&fit=crop&w=900&q=75" alt="Food and drink in Tokyo" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1761393574666-c7b435ef2983?auto=format&fit=crop&w=900&q=75" alt="Food and drink in Tokyo" loading="lazy" onerror="this.remove()"></div>
         <div class="cat-body"><h3>Food &amp; Drink</h3><p>Markets, izakaya, sake, cooking classes</p></div>
       </a>
       <a href="tours.html?type=culture" class="cat-card">
-        <div class="cat-art" style="background:#15213D; color:#E8C987;">寺</div>
-        <div class="cat-body"><h3>Culture</h3><p>Temples, tea ceremony, traditional arts</p></div>
+        <div class="cat-art cat-photos" style="background:#15213D; color:#E8C987;"><span class="cat-fallback">茶</span><img src="https://images.unsplash.com/photo-1759933164283-ab161f34bd02?auto=format&fit=crop&w=900&q=75" alt="Japanese tea ceremony and culture" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1765035058192-edd7ee3e0df0?auto=format&fit=crop&w=900&q=75" alt="Japanese tea ceremony and culture" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1761112556637-8543adfcba64?auto=format&fit=crop&w=900&q=75" alt="Japanese tea ceremony and culture" loading="lazy" onerror="this.remove()"></div>
+        <div class="cat-body"><h3>Culture</h3><p>Tea ceremony, calligraphy, taiko drums, kimono, Japanese swords</p></div>
       </a>
       <a href="tours.html?type=crafts" class="cat-card">
-        <div class="cat-art" style="background:#15213D; color:#E8C987;">匠</div>
+        <div class="cat-art cat-photos" style="background:#15213D; color:#E8C987;"><span class="cat-fallback">匠</span><img src="https://images.unsplash.com/photo-1617790787311-6bdca44dac77?auto=format&fit=crop&w=900&q=75" alt="Japanese knives and crafts" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1717126916200-ad452960c7ee?auto=format&fit=crop&w=900&q=75" alt="Japanese knives and crafts" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1598815272841-4e85a77e0a67?auto=format&fit=crop&w=900&q=75" alt="Japanese knives and crafts" loading="lazy" onerror="this.remove()"></div>
         <div class="cat-body"><h3>Crafts</h3><p>Knives, ceramics, indigo, workshops</p></div>
       </a>
       <a href="tours.html?type=night" class="cat-card">
-        <div class="cat-art" style="background:#15213D; color:#E8C987;">夜</div>
+        <div class="cat-art cat-photos" style="background:#15213D; color:#E8C987;"><span class="cat-fallback">夜</span><img src="https://images.unsplash.com/photo-1573455494060-c5595004fb6c?auto=format&fit=crop&w=900&q=75" alt="Tokyo at night" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=900&q=75" alt="Tokyo at night" loading="lazy" onerror="this.remove()"><img src="https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=900&q=75" alt="Tokyo at night" loading="lazy" onerror="this.remove()"></div>
         <div class="cat-body"><h3>Tokyo After Dark</h3><p>Night food tours, bars, city lights</p></div>
       </a>
     </div>
