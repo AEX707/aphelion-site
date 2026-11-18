@@ -103,17 +103,20 @@
           const preview = url && isImg(f.name)
             ? `<img src="${e(url)}" alt="${label}" style="width:100%; height:130px; object-fit:cover; border-radius:10px; display:block; background:#f3f3f3;">`
             : `<div style="height:130px; border-radius:10px; background:#f3f1ea; display:flex; align-items:center; justify-content:center; font-size:40px;">${isPdf(f.name) ? '📕' : '📄'}</div>`;
-          return `<a href="${url ? e(url) : '#'}" ${url ? 'target="_blank" rel="noopener"' : `onclick="openDocFile('${jsq(path)}'); return false;"`} style="text-decoration:none; color:var(--wood); border:1px solid #eee; border-radius:12px; padding:8px; display:block;">
+          return `<div style="position:relative;">
+            <a href="${url ? e(url) : '#'}" ${url ? 'target="_blank" rel="noopener"' : `onclick="openDocFile('${jsq(path)}'); return false;"`} style="text-decoration:none; color:var(--wood); border:1px solid #eee; border-radius:12px; padding:8px; display:block;">
               ${preview}
               <div style="font-size:12px; margin-top:6px; word-break:break-all;">${label}</div>
               <div style="font-size:11px; color:var(--muted);">${date} · ${isPdf(f.name) ? 'PDF' : isImg(f.name) ? 'Photo' : 'File'} · open ↗</div>
-            </a>`;
+            </a>
+            <button type="button" title="Delete this file" onclick="deleteDocFile('${jsq(path)}', '${jsq(accountId)}', '${type}', '${jsq(email)}', '${jsq(name)}')" style="position:absolute; top:12px; right:12px; width:28px; height:28px; border-radius:50%; border:0; background:rgba(180,35,24,.9); color:#fff; font-size:15px; line-height:28px; cursor:pointer; padding:0;">🗑</button>
+          </div>`;
         }).join('') + '</div>';
       }
     } catch (err) { filesHtml = '<p style="color:#b42318; font-size:13px;">Could not list files: ' + e(err.message) + '</p>'; }
 
     const history = mine.length
-      ? '<ul style="margin:0 0 0 18px; font-size:13px;">' + mine.map(r => `<li>${new Date(r.created_at).toLocaleDateString('en-GB')} · <b>${e(r.status === 'closed' ? 'checked' : r.status)}</b> · ${e((r.items || []).join('; '))}${r.status !== 'requested' ? ` · <span style="color:${fileCount[r.id] ? '#2E7D5B' : '#b42318'};">${fileCount[r.id] || 0} file(s)</span>` : ''}${r.status === 'submitted' ? ` · <a href="#" onclick="closeDocRequest(${r.id}, '${accountId}', '${type}', '${jsq(email)}', '${jsq(name)}'); return false;" style="color:var(--wood);">mark as checked</a>` : ''}</li>`).join('') + '</ul>'
+      ? '<ul style="margin:0 0 0 18px; font-size:13px;">' + mine.map(r => `<li>${new Date(r.created_at).toLocaleDateString('en-GB')} · <b>${e(r.status === 'closed' ? 'checked' : r.status)}</b> · ${e((r.items || []).join('; '))}${r.status !== 'requested' ? ` · <span style="color:${fileCount[r.id] ? '#2E7D5B' : '#b42318'};">${fileCount[r.id] || 0} file(s)</span>` : ''}${r.status === 'submitted' ? ` · <a href="#" onclick="closeDocRequest(${r.id}, '${accountId}', '${type}', '${jsq(email)}', '${jsq(name)}'); return false;" style="color:var(--wood);">mark as checked</a>` : ''} · <a href="#" onclick="deleteDocRequest(${r.id}, '${jsq(accountId)}', '${type}', '${jsq(email)}', '${jsq(name)}'); return false;" style="color:#b42318;">delete</a></li>`).join('') + '</ul>'
       : '<p style="color:var(--muted); font-size:13px;">No requests yet.</p>';
 
     modal(`
@@ -189,6 +192,37 @@
       await decorateDocBadges();
       if (reopen) reopen();
     } catch (ex) { alert('Could not mark as checked: ' + ex.message); }
+  };
+
+  // Delete one uploaded file (cannot be undone).
+  window.deleteDocFile = async function (path, accountId, type, email, name) {
+    if (!confirm('Delete this file permanently?\n\n' + path.split('/').pop().replace(/^\d+-\d+-/, ''))) return;
+    try {
+      const { data, error } = await supabaseClient.storage.from('verification').remove([path]);
+      if (error) throw error;
+      if (!data || !data.length) throw new Error('not allowed — run doc-delete.sql in Supabase first');
+      openDocRequest(accountId, type, email, name);
+    } catch (ex) { alert('Could not delete the file: ' + ex.message); }
+  };
+
+  // Delete a request (and the files sent for it).
+  window.deleteDocRequest = async function (id, accountId, type, email, name) {
+    if (!confirm('Delete this document request and the files sent for it?\nThis cannot be undone.')) return;
+    try {
+      let paths = [];
+      try {
+        const { data: rows } = await supabaseClient.rpc('admin_doc_files', { p_account: accountId });
+        paths = (rows || []).map(r => r.path).filter(p => (p.split('/')[1] || '').startsWith(id + '-'));
+      } catch (er) {}
+      if (paths.length) {
+        const { error } = await supabaseClient.storage.from('verification').remove(paths);
+        if (error) throw error;
+      }
+      const rows = await api(`doc_requests?id=eq.${id}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+      if (!rows || !rows.length) throw new Error('not allowed — run doc-delete.sql in Supabase first');
+      await decorateDocBadges();
+      openDocRequest(accountId, type, email, name);
+    } catch (ex) { alert('Could not delete: ' + ex.message); }
   };
 
   window.closeDocRequest = async function (id, accountId, type, email, name) {
