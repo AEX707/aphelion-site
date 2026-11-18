@@ -102,7 +102,7 @@
     const open = (reqs || []).filter(r => r.status === 'requested');
     const files = await listFiles();
     const fileList = files.length
-      ? '<ul class="docs-files">' + files.map(f => '<li>📄 ' + esc(f.name.replace(/^\d+-\d+-/, '')) + '</li>').join('') + '</ul>'
+      ? '<ul class="docs-files">' + files.map(f => '<li>📄 ' + esc(f.name.replace(/^\d+-\d+-(d\d+-)?/, '')) + '</li>').join('') + '</ul>'
       : '<p style="color:var(--muted); font-size:13px;">' + esc(t('No files uploaded yet.')) + '</p>';
     if (!open.length) {
       box.innerHTML = '<h3>' + esc(t('Thank you')) + '</h3><p>' + esc(t('There are no open document requests for your account.')) + '</p><h4 class="docs-h">' + esc(t('Your uploaded files')) + '</h4>' + fileList;
@@ -111,29 +111,34 @@
     box.innerHTML = open.map(r => `
       <div class="docs-req">
         <h3>${esc(t('Requested documents'))}</h3>
-        <ul class="docs-items">${(r.items || []).map(i => '<li>' + esc(t(i)) + '</li>').join('')}</ul>
         ${r.note ? '<p class="docs-note">' + esc(r.note) + '</p>' : ''}
-        <div class="form-group">
-          <label for="f${r.id}">${esc(t('Upload files (PDF, JPG or PNG, up to 10 MB each)'))}</label>
-          <input type="file" id="f${r.id}" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*">
-        </div>
+        <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">${esc(t('PDF, JPG or PNG, up to 10 MB each. You can add several files per document.'))}</p>
+        ${(r.items || []).map((it, i) => `
+        <div class="form-group" style="padding:12px 14px; border:1px solid var(--border-soft); border-radius:12px; margin-bottom:12px;">
+          <label for="f${r.id}_${i}" style="text-transform:none; letter-spacing:0; font-size:15px; font-weight:600;">${i + 1}. ${esc(t(it))}</label>
+          <input type="file" id="f${r.id}_${i}" multiple accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*">
+        </div>`).join('')}
         <div class="error-message" id="e${r.id}"></div>
         <button type="button" class="btn btn-primary" style="width:100%;" id="b${r.id}" onclick="upload(${r.id})">${esc(t('Send documents'))}</button>
       </div>`).join('') + '<h4 class="docs-h">' + esc(t('Your uploaded files')) + '</h4>' + fileList;
   }
 
   async function upload(reqId) {
-    const input = document.getElementById('f' + reqId), err = document.getElementById('e' + reqId), btn = document.getElementById('b' + reqId);
+    const err = document.getElementById('e' + reqId), btn = document.getElementById('b' + reqId);
     err.style.display = 'none';
-    const files = [...(input.files || [])];
-    if (!files.length) { err.textContent = t('Please choose at least one file.'); err.style.display = 'block'; return; }
+    // One upload field per requested document; each file remembers which one it is for (-d<n>-).
+    const inputs = [...document.querySelectorAll(`input[type=file][id^="f${reqId}_"]`)];
+    const missing = inputs.findIndex(inp => !(inp.files && inp.files.length));
+    if (missing >= 0) { err.textContent = t('Please add a file for document') + ' ' + (missing + 1) + '.'; err.style.display = 'block'; inputs[missing].focus(); return; }
+    const files = [];
+    inputs.forEach((inp, i) => [...inp.files].forEach(f => { f._doc = i; files.push(f); }));
     const tooBig = files.find(f => f.size > 10 * 1024 * 1024);
     if (tooBig) { err.textContent = t('This file is larger than 10 MB: ') + tooBig.name; err.style.display = 'block'; return; }
     btn.disabled = true; btn.textContent = t('Uploading…');
     try {
       for (const f of files) {
         const safe = f.name.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(-80);
-        const path = `${userId}/${reqId}-${Date.now()}-${safe}`;
+        const path = `${userId}/${reqId}-${Date.now()}-d${f._doc}-${safe}`;
         const { error } = await supabaseClient.storage.from('verification').upload(path, f, { contentType: f.type || 'application/octet-stream' });
         if (error) throw error;
       }

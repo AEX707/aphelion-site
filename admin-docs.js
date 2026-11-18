@@ -98,10 +98,14 @@
         filesHtml = `<p style="font-size:13px; color:var(--muted); margin:0 0 8px;">${files.length} file${files.length > 1 ? 's' : ''} in total</p>` + '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">' + files.map(f => {
           const path = f.path;
           const url = urls[path];
-          const label = e(f.name.replace(/^\d+-\d+-/, ''));
+          // Which requested document this file is for (files named <req>-<time>-d<n>-name).
+          const mm = /^(\d+)-\d+-d(\d+)-/.exec(f.name);
+          const req = mm ? reqs.find(r => String(r.id) === mm[1]) : null;
+          const docName = req && req.items ? req.items[Number(mm[2])] : '';
+          const label = (docName ? '<b>' + e(docName) + '</b><br>' : '') + e(f.name.replace(/^\d+-\d+-(d\d+-)?/, ''));
           const date = f.created_at ? new Date(f.created_at).toLocaleDateString('en-GB') : '';
           const preview = url && isImg(f.name)
-            ? `<img src="${e(url)}" alt="${label}" style="width:100%; height:130px; object-fit:cover; border-radius:10px; display:block; background:#f3f3f3;">`
+            ? `<img src="${e(url)}" alt="" style="width:100%; height:130px; object-fit:cover; border-radius:10px; display:block; background:#f3f3f3;">`
             : `<div style="height:130px; border-radius:10px; background:#f3f1ea; display:flex; align-items:center; justify-content:center; font-size:40px;">${isPdf(f.name) ? '📕' : '📄'}</div>`;
           return `<div style="position:relative;">
             <a href="${url ? e(url) : '#'}" ${url ? 'target="_blank" rel="noopener"' : `onclick="openDocFile('${jsq(path)}'); return false;"`} style="text-decoration:none; color:var(--wood); border:1px solid #eee; border-radius:12px; padding:8px; display:block;">
@@ -199,7 +203,7 @@
 
   // Delete one uploaded file (cannot be undone).
   window.deleteDocFile = async function (path, accountId, type, email, name) {
-    if (!confirm('Delete this file permanently?\n\n' + path.split('/').pop().replace(/^\d+-\d+-/, ''))) return;
+    if (!confirm('Delete this file permanently?\n\n' + path.split('/').pop().replace(/^\d+-\d+-(d\d+-)?/, ''))) return;
     try {
       const { data, error } = await supabaseClient.storage.from('verification').remove([path]);
       if (error) throw error;
