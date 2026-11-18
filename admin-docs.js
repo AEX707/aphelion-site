@@ -66,11 +66,35 @@
     const mine = reqs.filter(r => r.account_id === accountId);
     let filesHtml = '<p style="color:var(--muted); font-size:13px;">No files uploaded yet.</p>';
     try {
-      const { data } = await supabaseClient.storage.from('verification').list(accountId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-      const files = (data || []).filter(f => f.name && !f.name.startsWith('.'));
+      const { data, error } = await supabaseClient.storage.from('verification').list(accountId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+      if (error) throw error;
+      const files = (data || []).filter(f => f.name && !f.name.startsWith('.') && f.id);
       if (files.length) {
-        filesHtml = '<ul style="list-style:none; padding:0; margin:0;">' + files.map(f =>
-          `<li style="padding:6px 0; border-bottom:1px solid #eee; font-size:14px;">📄 <a href="#" onclick="openDocFile('${jsq(accountId + '/' + f.name)}'); return false;" style="color:var(--wood); text-decoration:underline;">${e(f.name.replace(/^\d+-\d+-/, ''))}</a> <span style="color:var(--muted); font-size:12px;">${f.created_at ? new Date(f.created_at).toLocaleDateString('en-GB') : ''}</span></li>`).join('') + '</ul>';
+        // Signed links made up front (valid 1 hour): photos are shown right
+        // here as previews, other files (PDF…) open with a plain link, so
+        // the browser's pop-up blocker never gets in the way.
+        const paths = files.map(f => accountId + '/' + f.name);
+        let urls = {};
+        try {
+          const { data: signed } = await supabaseClient.storage.from('verification').createSignedUrls(paths, 3600);
+          (signed || []).forEach(x => { if (x && x.signedUrl) urls[x.path] = x.signedUrl; });
+        } catch (er) {}
+        const isImg = n => /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(n);
+        const isPdf = n => /\.pdf$/i.test(n);
+        filesHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">' + files.map(f => {
+          const path = accountId + '/' + f.name;
+          const url = urls[path];
+          const label = e(f.name.replace(/^\d+-\d+-/, ''));
+          const date = f.created_at ? new Date(f.created_at).toLocaleDateString('en-GB') : '';
+          const preview = url && isImg(f.name)
+            ? `<img src="${e(url)}" alt="${label}" style="width:100%; height:130px; object-fit:cover; border-radius:10px; display:block; background:#f3f3f3;">`
+            : `<div style="height:130px; border-radius:10px; background:#f3f1ea; display:flex; align-items:center; justify-content:center; font-size:40px;">${isPdf(f.name) ? '📕' : '📄'}</div>`;
+          return `<a href="${url ? e(url) : '#'}" ${url ? 'target="_blank" rel="noopener"' : `onclick="openDocFile('${jsq(path)}'); return false;"`} style="text-decoration:none; color:var(--wood); border:1px solid #eee; border-radius:12px; padding:8px; display:block;">
+              ${preview}
+              <div style="font-size:12px; margin-top:6px; word-break:break-all;">${label}</div>
+              <div style="font-size:11px; color:var(--muted);">${date} · ${isPdf(f.name) ? 'PDF' : isImg(f.name) ? 'Photo' : 'File'} · open ↗</div>
+            </a>`;
+        }).join('') + '</div>';
       }
     } catch (err) { filesHtml = '<p style="color:#b42318; font-size:13px;">Could not list files: ' + e(err.message) + '</p>'; }
 
@@ -101,7 +125,9 @@
   window.openDocFile = async function (path) {
     const { data, error } = await supabaseClient.storage.from('verification').createSignedUrl(path, 600);
     if (error || !data) { alert('Could not open the file: ' + (error ? error.message : '')); return; }
-    window.open(data.signedUrl, '_blank', 'noopener');
+    // Same tab if the pop-up blocker stops the new one.
+    const w = window.open(data.signedUrl, '_blank');
+    if (!w) window.location.href = data.signedUrl;
   };
 
   window.sendDocRequest = async function (accountId, type, email, name) {
