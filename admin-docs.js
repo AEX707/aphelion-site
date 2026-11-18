@@ -41,9 +41,12 @@
       const mine = reqs.filter(r => r.account_id === el.dataset.acc);
       if (!mine.length) { el.innerHTML = ''; return; }
       const last = mine[0];
-      const label = last.status === 'submitted' ? '📎 Documents received — check' : last.status === 'requested' ? '⏳ Documents requested' : 'Documents checked';
-      const color = last.status === 'submitted' ? '#1d4ed8' : last.status === 'requested' ? '#b45309' : 'var(--muted)';
-      el.innerHTML = `<span style="display:inline-block; margin-top:4px; font-size:12px; font-weight:700; color:${color};">${label}</span>`;
+      const label = last.status === 'submitted' ? '📎 Documents received' : last.status === 'requested' ? '⏳ Documents requested — waiting for the company' : '✓ Documents checked';
+      const color = last.status === 'submitted' ? '#1d4ed8' : last.status === 'requested' ? '#b45309' : '#2E7D5B';
+      const btn = last.status === 'submitted'
+        ? ` <button type="button" onclick="acceptDocs('${jsq(el.dataset.acc)}')" style="margin-left:8px; padding:3px 10px; border-radius:12px; border:1px solid #2E7D5B; background:#2E7D5B; color:#fff; font-size:11px; font-weight:700; cursor:pointer;">✓ Accept</button>`
+        : '';
+      el.innerHTML = `<span style="display:inline-block; margin-top:4px; font-size:12px; font-weight:700; color:${color};">${label}</span>${btn}`;
     });
   };
 
@@ -65,10 +68,12 @@
     const reqs = (await loadRequests()) || [];
     const mine = reqs.filter(r => r.account_id === accountId);
     let filesHtml = '<p style="color:var(--muted); font-size:13px;">No files uploaded yet.</p>';
+    let fileCount = {};   // request id -> number of files uploaded for it
     try {
       const { data, error } = await supabaseClient.storage.from('verification').list(accountId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
       if (error) throw error;
       const files = (data || []).filter(f => f.name && !f.name.startsWith('.') && f.id);
+      files.forEach(f => { const m = /^(\d+)-/.exec(f.name); if (m) fileCount[m[1]] = (fileCount[m[1]] || 0) + 1; });
       if (files.length) {
         // Signed links made up front (valid 1 hour): photos are shown right
         // here as previews, other files (PDF…) open with a plain link, so
@@ -81,7 +86,7 @@
         } catch (er) {}
         const isImg = n => /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(n);
         const isPdf = n => /\.pdf$/i.test(n);
-        filesHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">' + files.map(f => {
+        filesHtml = `<p style="font-size:13px; color:var(--muted); margin:0 0 8px;">${files.length} file${files.length > 1 ? 's' : ''} in total</p>` + '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">' + files.map(f => {
           const path = accountId + '/' + f.name;
           const url = urls[path];
           const label = e(f.name.replace(/^\d+-\d+-/, ''));
@@ -99,7 +104,7 @@
     } catch (err) { filesHtml = '<p style="color:#b42318; font-size:13px;">Could not list files: ' + e(err.message) + '</p>'; }
 
     const history = mine.length
-      ? '<ul style="margin:0 0 0 18px; font-size:13px;">' + mine.map(r => `<li>${new Date(r.created_at).toLocaleDateString('en-GB')} · <b>${e(r.status)}</b> · ${e((r.items || []).join('; '))}${r.status === 'submitted' ? ` · <a href="#" onclick="closeDocRequest(${r.id}, '${accountId}', '${type}', '${jsq(email)}', '${jsq(name)}'); return false;" style="color:var(--wood);">mark as checked</a>` : ''}</li>`).join('') + '</ul>'
+      ? '<ul style="margin:0 0 0 18px; font-size:13px;">' + mine.map(r => `<li>${new Date(r.created_at).toLocaleDateString('en-GB')} · <b>${e(r.status === 'closed' ? 'checked' : r.status)}</b> · ${e((r.items || []).join('; '))}${r.status !== 'requested' ? ` · <span style="color:${fileCount[r.id] ? '#2E7D5B' : '#b42318'};">${fileCount[r.id] || 0} file(s)</span>` : ''}${r.status === 'submitted' ? ` · <a href="#" onclick="closeDocRequest(${r.id}, '${accountId}', '${type}', '${jsq(email)}', '${jsq(name)}'); return false;" style="color:var(--wood);">mark as checked</a>` : ''}</li>`).join('') + '</ul>'
       : '<p style="color:var(--muted); font-size:13px;">No requests yet.</p>';
 
     modal(`
@@ -108,11 +113,16 @@
         <button type="button" onclick="closeDocModal()" style="font-size:24px; line-height:1;">×</button>
       </div>
       <p style="color:var(--muted); font-size:13px; margin:4px 0 16px;">${type === 'agency' ? 'Travel agency' : 'Partner'} · ${e(email)}</p>
+      ${mine.some(r => r.status === 'submitted') ? `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 14px; margin:0 0 16px; border-radius:12px; background:rgba(29,78,216,.07); border:1px solid rgba(29,78,216,.25);">
+        <span style="font-size:14px; font-weight:700; color:#1d4ed8;">📎 New documents received — check the files below</span>
+        <button type="button" class="btn btn-primary" style="padding:9px 16px;" onclick="acceptDocs('${jsq(accountId)}', () => openDocRequest('${jsq(accountId)}', '${type}', '${jsq(email)}', '${jsq(name)}'))">✓ Accept documents</button>
+      </div>` : ''}
       <h4 style="font:600 17px var(--serif); margin:0 0 8px;">Uploaded files</h4>
       ${filesHtml}
       <h4 style="font:600 17px var(--serif); margin:18px 0 8px;">Requests</h4>
       ${history}
-      <h4 style="font:600 17px var(--serif); margin:18px 0 8px;">Ask for documents</h4>
+      <h4 style="font:600 17px var(--serif); margin:18px 0 8px;">${mine.length ? 'Need something else? Ask again' : 'Ask for documents'}</h4>
       ${DOC_ITEMS.map((it, i) => `<label style="display:flex; gap:8px; align-items:flex-start; font-size:14px; text-transform:none; letter-spacing:0; font-weight:500; margin:6px 0; color:var(--wood);"><input type="checkbox" class="docItem" value="${e(it)}" style="width:auto; margin-top:3px;"> <span>${e(it)}</span></label>`).join('')}
       <textarea id="docNote" rows="3" placeholder="Note for the company (optional), e.g. why you need it" style="margin-top:8px;"></textarea>
       <p id="docErr" style="color:#b42318; font-size:13px; display:none; margin-top:8px;"></p>
@@ -158,6 +168,18 @@
       err.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Send request';
     }
+  };
+
+  // "✓ Accept": every received (submitted) request of this account → checked.
+  window.acceptDocs = async function (accountId, reopen) {
+    try {
+      const rows = await api(`doc_requests?account_id=eq.${accountId}&status=eq.submitted`, {
+        method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ status: 'closed' })
+      });
+      if (!rows || !rows.length) throw new Error('nothing was changed (no permission to update doc_requests?)');
+      await decorateDocBadges();
+      if (reopen) reopen();
+    } catch (ex) { alert('Could not mark as checked: ' + ex.message); }
   };
 
   window.closeDocRequest = async function (id, accountId, type, email, name) {
