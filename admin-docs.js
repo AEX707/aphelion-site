@@ -132,7 +132,10 @@
       </div>` : ''}
       <h4 style="font:600 17px var(--serif); margin:0 0 8px;">Uploaded files</h4>
       ${filesHtml}
-      <h4 style="font:600 17px var(--serif); margin:18px 0 8px;">Requests</h4>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin:18px 0 8px;">
+        <h4 style="font:600 17px var(--serif); margin:0;">Requests</h4>
+        ${mine.length ? `<button type="button" onclick="deleteAllDocRequests('${jsq(accountId)}', '${type}', '${jsq(email)}', '${jsq(name)}')" style="padding:5px 12px; border-radius:14px; border:1px solid #b42318; background:#fff; color:#b42318; font-size:12px; font-weight:700; cursor:pointer;">🗑 Delete all requests &amp; files</button>` : ''}
+      </div>
       ${history}
       <h4 style="font:600 17px var(--serif); margin:18px 0 8px;">${mine.length ? 'Need something else? Ask again' : 'Ask for documents'}</h4>
       ${DOC_ITEMS.map((it, i) => `<label style="display:flex; gap:8px; align-items:flex-start; font-size:14px; text-transform:none; letter-spacing:0; font-weight:500; margin:6px 0; color:var(--wood);"><input type="checkbox" class="docItem" value="${e(it)}" style="width:auto; margin-top:3px;"> <span>${e(it)}</span></label>`).join('')}
@@ -219,6 +222,26 @@
         if (error) throw error;
       }
       const rows = await api(`doc_requests?id=eq.${id}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+      if (!rows || !rows.length) throw new Error('not allowed — run doc-delete.sql in Supabase first');
+      await decorateDocBadges();
+      openDocRequest(accountId, type, email, name);
+    } catch (ex) { alert('Could not delete: ' + ex.message); }
+  };
+
+  // Clean slate for this company: every request and every file sent for them.
+  window.deleteAllDocRequests = async function (accountId, type, email, name) {
+    if (!confirm('Delete ALL document requests and ALL files of ' + name + '?\nThis cannot be undone.')) return;
+    try {
+      let paths = [];
+      try {
+        const { data: rows } = await supabaseClient.rpc('admin_doc_files', { p_account: accountId });
+        paths = (rows || []).map(r => r.path);
+      } catch (er) {}
+      if (paths.length) {
+        const { error } = await supabaseClient.storage.from('verification').remove(paths);
+        if (error) throw error;
+      }
+      const rows = await api(`doc_requests?account_id=eq.${accountId}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } });
       if (!rows || !rows.length) throw new Error('not allowed — run doc-delete.sql in Supabase first');
       await decorateDocBadges();
       openDocRequest(accountId, type, email, name);
