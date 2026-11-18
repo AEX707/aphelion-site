@@ -152,7 +152,7 @@
         inv.publish_reminder_at ? 'publish reminder sent ' + shortDate(inv.publish_reminder_at) : ''
       ].filter(Boolean).join(' · ');
       const tourLines = tours.length
-        ? tours.map(t => `<div>• <a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:var(--wood);">${esc(t.title)} ↗</a> — ¥${Number(t.price || 0).toLocaleString('ja-JP')} · ${t.awaiting_partner ? 'waiting for partner' : 'published'}</div>`).join('')
+        ? tours.map(t => `<div>• <a href="tour.html?id=${t.id}" target="_blank" rel="noopener" style="color:var(--wood);">${esc(t.title)} ↗</a> — ${Number(t.price) > 0 ? '¥' + Number(t.price).toLocaleString('ja-JP') : '<span style="color:#b45309;">no price yet (partner must set it before publishing)</span>'} · ${t.awaiting_partner ? 'waiting for partner' : 'published'}</div>`).join('')
         : '<div style="color:var(--muted);">No tours prepared yet.</div>';
       const open = inv.status === 'invited';
       return `
@@ -165,6 +165,7 @@
           <div class="actions">
             ${open ? `<button class="btn-edit" onclick="inviteAddTour('${inv.id}')">+ Add tour</button>` : ''}
             ${open ? `<button class="btn-go" onclick="inviteSend('${inv.id}')">${inv.invited_email_at ? 'Resend' : 'Send invitation'}</button>` : ''}
+            ${open ? `<button class="btn-edit" onclick="inviteEditEmail('${inv.id}')">Edit email</button>` : ''}
             ${open ? `<button class="btn-edit" onclick="inviteCopyLink('${inv.id}')">Copy link</button>` : ''}
             ${open ? `<button class="btn-delete" onclick="inviteCancel('${inv.id}')">Cancel</button>` : ''}
           </div>
@@ -218,6 +219,31 @@
       msg('Invitation sent to ' + inv.email + '. A reminder goes out automatically after 3 days if they don\'t register.', true);
       load();
     } catch (err) { msg('Could not send: ' + err.message, false); }
+  };
+
+  // Fix a wrong address (or contact name) before/after sending. The prepared
+  // tours stay linked to the invite; the partner registers with the new email.
+  window.inviteEditEmail = async function (id) {
+    const inv = INV.find(i => i.id === id);
+    if (!inv) return;
+    const email = prompt(`Email for ${inv.company_name}:`, inv.email || '');
+    if (email === null) return;
+    const clean = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) { msg('That email address does not look right.', false); return; }
+    const contact = prompt('Contact person (optional):', inv.contact_person || '');
+    if (contact === null) return;
+    const body = { email: clean, contact_person: contact.trim() || null };
+    if (clean === inv.email && body.contact_person === (inv.contact_person || null)) return;
+    try {
+      await api(`partner_invites?id=eq.${inv.id}`, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(body) });
+      Object.assign(inv, body);
+      render();
+      if (inv.invited_email_at && confirm(`Saved. Send the invitation again to ${clean}?`)) {
+        await inviteSend(inv.id);
+      } else {
+        msg('Saved: ' + clean + (inv.invited_email_at ? '' : ' — click "Send invitation" when ready.'), true);
+      }
+    } catch (err) { msg('Could not save: ' + err.message, false); }
   };
 
   window.inviteCopyLink = async function (id) {

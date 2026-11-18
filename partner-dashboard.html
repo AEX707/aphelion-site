@@ -105,6 +105,15 @@
   .founding-badge { display:inline-block; vertical-align:middle; margin-left:10px; font:700 11px var(--sans); letter-spacing:.8px; text-transform:uppercase; color:#7c4a03; background:#fde68a; border-radius:20px; padding:4px 12px; }
   .prepared-box { margin:0 0 18px; padding:16px 18px; border-radius:12px; background:rgba(46,125,91,.07); border:1px solid rgba(46,125,91,.35); font-size:14px; line-height:1.55; }
   .prepared-box .btn { margin-top:10px; }
+  .head-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .buyer-card { margin-top:28px; }
+  .buyer-card .buyer-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .buyer-card label.buyer-agree { display:flex; gap:8px; align-items:flex-start; font-size:14px; margin-top:12px; cursor:pointer; }
+  .buyer-card label.buyer-agree input { margin-top:3px; }
+  .buyer-state { display:inline-block; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; }
+  .buyer-state.pending { background:#fef3c7; color:#7a5b00; }
+  .buyer-state.approved { background:rgba(46,125,91,.12); color:#2E7D5B; }
+  .buyer-state.rejected { background:rgba(180,35,24,.08); color:#B42318; }
   .status-msg { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:20px; display:none; }
   .status-msg.ok { background:rgba(46,125,91,.10); border:1px solid rgba(46,125,91,.4); color:#2E7D5B; display:block; }
   .status-msg.err { background:rgba(180,35,24,.08); border:1px solid rgba(180,35,24,.35); color:#B42318; display:block; }
@@ -198,7 +207,10 @@
         <h1><span id="companyNameOut"></span><span id="foundingBadge" class="founding-badge" style="display:none;">★ Founding Partner</span></h1>
         <p>Partner dashboard · <span id="statusOut" class="status-pill"></span></p>
       </div>
-      <button class="btn btn-primary" onclick="showTab('tours'); openTourForm()">+ Add New Tour</button>
+      <div class="head-actions">
+        <button class="btn btn-outline" id="buyHeadBtn" onclick="buyHeadClick()">🛒 Buy tours</button>
+        <button class="btn btn-primary" onclick="showTab('tours'); openTourForm()">+ Add New Tour</button>
+      </div>
     </div>
 
     <div class="dash-tabs" role="tablist">
@@ -344,7 +356,7 @@
           <div class="price-grid">
             <div class="form-group">
               <label>Price per adult (JPY ¥, number only)</label>
-              <input type="number" step="1" min="0" id="t_price" required>
+              <input type="number" step="1" min="1" id="t_price" required>
               <div class="payout-line" id="t_price_payout"></div>
             </div>
             <div class="form-group">
@@ -446,6 +458,12 @@
         <div class="info-item"><div class="label">Country</div><div class="value" id="countryOut"></div></div>
       </div>
       <p style="color:var(--muted); font-size:14px; margin-top:20px;">To change these details, write to partners@aphelionexpeditions.com.</p>
+
+      <div class="dash-card buyer-card" id="buyerCard">
+        <h3>Also buy tours for your clients</h3>
+        <p class="sub">Book other partners' experiences at net prices, build day-by-day programs in the Trip Builder and pay for everything in one booking — with this same login. Your own listings stay exactly as they are.</p>
+        <div id="buyerBody"><p class="sub">Loading…</p></div>
+      </div>
     </section>
   </div>
 </div>
@@ -596,7 +614,101 @@
 
     await loadMyTours();
     loadStats();
+    loadBuyerAccess(profile);
   })();
+
+  // =================== BUYER ACCESS (partner also buys tours) ===================
+  // One login for both: the partner asks for buyer access, Aphelion approves it
+  // in the admin panel (Travel agencies list), and net prices + the Trip Builder
+  // open for this same account. Needs partner-buyer.sql to be run once.
+  let buyerStatus = null;
+  let buyerProfile = null;
+  async function loadBuyerAccess(profile) {
+    buyerProfile = profile || buyerProfile;
+    try {
+      const { data, error } = await supabaseClient.rpc('buyer_status');
+      if (error) throw error;
+      buyerStatus = data || null;
+    } catch (e) {
+      buyerStatus = 'unavailable';
+    }
+    renderBuyer();
+  }
+  function renderBuyer() {
+    const body = document.getElementById('buyerBody');
+    const head = document.getElementById('buyHeadBtn');
+    if (!body) return;
+    if (buyerStatus === 'unavailable') {
+      body.innerHTML = '<p class="sub">' + esc(tr('Coming soon.')) + '</p>';
+      head.style.display = 'none';
+      return;
+    }
+    head.style.display = '';
+    if (buyerStatus === 'approved') {
+      head.textContent = '🛒 ' + tr('Buy tours');
+      body.innerHTML = '<span class="buyer-state approved">✓ ' + esc(tr('Buyer access active')) + '</span>' +
+        '<div class="buyer-actions"><a class="btn btn-primary" href="tours.html#regions">' + esc(tr('Open the catalogue')) + '</a>' +
+        '<a class="btn btn-outline" href="trip.html">' + esc(tr('Trip Builder')) + '</a></div>';
+    } else if (buyerStatus === 'pending') {
+      head.textContent = '⏳ ' + tr('Buyer access pending');
+      body.innerHTML = '<span class="buyer-state pending">⏳ ' + esc(tr('Request sent')) + '</span>' +
+        '<p class="sub" style="margin-top:10px;">' + esc(tr('Our team usually approves it within one business day. We will email you as soon as net prices are open for your account.')) + '</p>';
+    } else if (buyerStatus === 'rejected') {
+      head.style.display = 'none';
+      body.innerHTML = '<span class="buyer-state rejected">' + esc(tr('Not available for this account')) + '</span>' +
+        '<p class="sub" style="margin-top:10px;">' + esc(tr('If you think this is a mistake, write to partners@aphelionexpeditions.com.')) + '</p>';
+    } else {
+      head.textContent = '🛒 ' + tr('Buy tours');
+      body.innerHTML =
+        '<label class="buyer-agree"><input type="checkbox" id="buyerAgree"> <span>' + esc(tr('I agree to the')) +
+        ' <a href="booking-terms.html" target="_blank" rel="noopener" style="color:var(--gold);">' + esc(tr('Booking Terms for agencies')) + '</a> ' + esc(tr('for the tours I book.')) + '</span></label>' +
+        '<div class="buyer-actions"><button class="btn btn-primary" id="buyerReqBtn" onclick="requestBuyerAccess()">' + esc(tr('Request buyer access')) + '</button></div>' +
+        '<div id="buyerMsg" class="status-msg" style="margin-top:12px;"></div>';
+    }
+  }
+  function buyHeadClick() {
+    if (buyerStatus === 'approved') { window.location.href = 'tours.html#regions'; return; }
+    showTab('account');
+    const card = document.getElementById('buyerCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  async function requestBuyerAccess() {
+    const msgEl = document.getElementById('buyerMsg');
+    const say = (t, ok) => { msgEl.textContent = t; msgEl.className = 'status-msg ' + (ok ? 'ok' : 'err'); };
+    if (!document.getElementById('buyerAgree').checked) { say(tr('Please tick the box to accept the Booking Terms.'), false); return; }
+    const btn = document.getElementById('buyerReqBtn');
+    btn.disabled = true;
+    try {
+      const { data, error } = await supabaseClient.rpc('request_buyer_access', { p_terms_version: '1.0' });
+      if (error) throw error;
+      buyerStatus = data || 'pending';
+      renderBuyer();
+      notifyBuyerRequest();
+    } catch (e) {
+      say(tr('Could not send the request:') + ' ' + (e.message || e), false);
+      btn.disabled = false;
+    }
+  }
+  // Heads-up email to Aphelion's inbox (never blocks the request).
+  async function notifyBuyerRequest() {
+    try {
+      const p = buyerProfile || {};
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const e = v => esc(v == null ? '' : v);
+      await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${session ? session.access_token : SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'info@aphelionexpeditions.com',
+          subject: `Buyer access request — ${p.company_name || 'partner'}`,
+          html: `<p><b>${e(p.company_name)}</b> (partner) asks to also buy tours on Aphelion.</p>
+                 <p>${e(p.contact_person)} · ${e(p.email)} · ${e(p.country)}</p>
+                 <p>Approve it in the admin panel → Travel agencies (marked “Partner”).</p>
+                 <p><a href="https://aphelionexpeditions.com/admin.html">Open admin panel</a></p>`
+        })
+      });
+    } catch (err) { console.error('Buyer request email failed:', err); }
+  }
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
@@ -793,6 +905,11 @@
   async function publishPrepared(ids) {
     const waiting = (myTours || []).filter(t => t.awaiting_partner && (!ids || ids.includes(t.id)));
     if (!waiting.length) return;
+    const noPrice = waiting.filter(t => !(Number(t.price) > 0));
+    if (noPrice.length) {
+      showTourStatus(tr('Please set a price before publishing:') + ' ' + noPrice.map(t => t.title).join(', ') + '. ' + tr('Click "Check & edit", enter your price and save.'), false);
+      return;
+    }
     const lines = waiting.map(t => '• ' + t.title + ' — ' + yen(t.price) + ' (' + tr('you receive') + ' ' + yen(payoutOf(t.price)) + ')').join('\n');
     if (!confirm(tr('Publish these listings? Agencies will see them right away.') + '\n\n' + lines)) return;
     const { data, error } = await supabaseClient.rpc('publish_prepared_tours', { p_ids: ids });
@@ -1132,6 +1249,7 @@
   document.getElementById('myTourForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!checkPrices()) { showTourStatus(tr('Please check the prices and group size.'), false); return; }
+    if (!(Number(document.getElementById('t_price').value) > 0)) { showTourStatus(tr('Please enter a price above ¥0.'), false); document.getElementById('t_price').focus(); return; }
     const saveBtn = document.getElementById('saveTourBtn');
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';

@@ -128,7 +128,14 @@
       if (error) throw error;
       // Travel agency -> back to the page it came from (or the tours);
       // tour operator (partner) -> partner dashboard.
+      // A tour operator who also buys tours (buyer access) has both a partner
+      // and an agency profile: they land on their partner dashboard first.
       let isAgency = false;
+      let isPartner = false;
+      try {
+        const p = await supabaseClient.from('partners').select('id').eq('id', data.user.id).maybeSingle();
+        isPartner = !!(p && p.data);
+      } catch (e) {}
       try {
         const r = await supabaseClient.from('agencies').select('id,status').eq('id', data.user.id).maybeSingle();
         isAgency = !!(r && r.data);
@@ -136,8 +143,9 @@
           try { sessionStorage.setItem('aex_agency_pending', '1'); } catch (e) {}
         }
       } catch (e) {}
-      if (isAgency) {
-        const next = new URLSearchParams(location.search).get('next') || '';
+      const nextParam = new URLSearchParams(location.search).get('next') || '';
+      if (isAgency && (!isPartner || nextParam)) {
+        const next = nextParam;
         window.location.href = /^[a-z0-9-]+\.html([?#].*)?$/i.test(next) ? next : 'tours.html#regions';
       } else {
         window.location.href = 'partner-dashboard.html';

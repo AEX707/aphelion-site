@@ -1194,12 +1194,13 @@
       if (res.status === 404) { list.innerHTML = '<p style="color:var(--muted);">Not switched on yet: run <b>agencies.sql</b> once in Supabase → SQL Editor.</p>'; return; }
       if (!res.ok) throw new Error('Status ' + res.status);
       const rows = await res.json();
+      window._agencyRows = rows;
       if (!rows.length) { list.innerHTML = '<p style="color:var(--muted);">No agencies registered yet.</p>'; return; }
       const q = v => String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       list.innerHTML = rows.map(a => `
         <div class="admin-row">
           <div class="info">
-            <h4>${esc(a.company_name)} <span class="status-pill ${esc(a.status)}">${esc(a.status)}</span></h4>
+            <h4>${esc(a.company_name)} ${a.source === 'partner' ? '<span class="an-tag" title="A tour operator on Aphelion who also wants to buy tours (same login)">Partner · buys tours</span>' : ''} <span class="status-pill ${esc(a.status)}">${esc(a.status)}</span></h4>
             <span>${esc(a.contact_person || '')} · ${esc(a.email || '')} · ${esc(a.country || '')}${a.website ? ` · <a href="${/^https?:\/\//.test(a.website) ? esc(a.website) : 'https://' + esc(a.website)}" target="_blank" rel="noopener" style="color:var(--gold-soft);">${esc(a.website)} ↗</a>` : ''} · registered ${fmtDate(a.created_at)}</span>
             <span class="doc-badge" data-acc="${a.id}"></span>
           </div>
@@ -1227,7 +1228,16 @@
       const changed = await res.json();
       if (!changed.length) throw new Error('not allowed');
       showAgencyStatus('Agency status updated to "' + status + '".', true);
-      if (email && (status === 'approved' || status === 'rejected')) {
+      const row = (window._agencyRows || []).find(r => r.id === id) || {};
+      if (email && status === 'approved' && row.source === 'partner') {
+        // Partner who also buys tours: same login, net prices now open.
+        sendNotificationEmail(email, 'Buyer access approved — you can now book tours on Aphelion Expeditions',
+          mailLayout('BUYER ACCESS', 'You can now buy tours on Aphelion',
+            `<p>Dear ${esc(companyName)},</p><p>Your buyer access is approved. With your usual partner login you can now see net prices for all experiences, build day-by-day programs in the Trip Builder and book tours from other partners for your own clients — all in one booking.</p>
+             <p>Your own listings and partner dashboard stay exactly as they are.</p>
+             <p style="margin:18px 0;"><a href="https://aphelionexpeditions.com/tours.html#regions" style="display:inline-block; background:${AEX_MAIL.navy}; color:#fff; text-decoration:none; padding:12px 22px; border-radius:24px; font-size:13px; font-weight:700; letter-spacing:1px;">OPEN THE CATALOGUE</a></p>
+             <p>Kind regards,<br>Aphelion Expeditions</p>`, ''));
+      } else if (email && (status === 'approved' || status === 'rejected')) {
         const html = status === 'approved'
           ? mailLayout('AGENCY ACCOUNT', 'Your agency account is approved',
               `<p>Dear ${esc(companyName)},</p><p>Your Aphelion Expeditions agency account has been approved. Log in to see net prices for all experiences, build itineraries with the Trip Builder and download them as a PDF under your own brand.</p>
