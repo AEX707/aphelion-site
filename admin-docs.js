@@ -70,15 +70,24 @@
     let filesHtml = '<p style="color:var(--muted); font-size:13px;">No files uploaded yet.</p>';
     let fileCount = {};   // request id -> number of files uploaded for it
     try {
-      const { data, error } = await supabaseClient.storage.from('verification').list(accountId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
-      if (error) throw error;
-      const files = (data || []).filter(f => f.name && !f.name.startsWith('.') && f.id);
+      // All files for this company's requests, from any folder (doc-files.sql).
+      // Fallback: just the company's own folder.
+      let files = null;
+      try {
+        const { data: rows, error: rerr } = await supabaseClient.rpc('admin_doc_files', { p_account: accountId });
+        if (!rerr && Array.isArray(rows)) files = rows.map(r => ({ path: r.path, name: r.path.split('/').slice(1).join('/'), created_at: r.created_at }));
+      } catch (er) {}
+      if (!files) {
+        const { data, error } = await supabaseClient.storage.from('verification').list(accountId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+        if (error) throw error;
+        files = (data || []).filter(f => f.name && !f.name.startsWith('.') && f.id).map(f => ({ path: accountId + '/' + f.name, name: f.name, created_at: f.created_at }));
+      }
       files.forEach(f => { const m = /^(\d+)-/.exec(f.name); if (m) fileCount[m[1]] = (fileCount[m[1]] || 0) + 1; });
       if (files.length) {
         // Signed links made up front (valid 1 hour): photos are shown right
         // here as previews, other files (PDF…) open with a plain link, so
         // the browser's pop-up blocker never gets in the way.
-        const paths = files.map(f => accountId + '/' + f.name);
+        const paths = files.map(f => f.path);
         let urls = {};
         try {
           const { data: signed } = await supabaseClient.storage.from('verification').createSignedUrls(paths, 3600);
@@ -87,7 +96,7 @@
         const isImg = n => /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(n);
         const isPdf = n => /\.pdf$/i.test(n);
         filesHtml = `<p style="font-size:13px; color:var(--muted); margin:0 0 8px;">${files.length} file${files.length > 1 ? 's' : ''} in total</p>` + '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">' + files.map(f => {
-          const path = accountId + '/' + f.name;
+          const path = f.path;
           const url = urls[path];
           const label = e(f.name.replace(/^\d+-\d+-/, ''));
           const date = f.created_at ? new Date(f.created_at).toLocaleDateString('en-GB') : '';
