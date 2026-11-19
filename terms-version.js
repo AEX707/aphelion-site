@@ -10,7 +10,6 @@
 const PARTNER_TERMS_VERSION = '2.1';
 const PARTNER_TERMS_SUMMARY = [
   "Aphelion's commission is now 15%, still included in your price. The price you enter is the final price agencies pay; you receive 85% of it.",
-  "For partners who joined before this update, the new rate applies from 17 December 2026 (30 days' notice).",
   "Agencies can now pay by bank transfer against our invoice, or online.",
   "New Founding Partner benefits: we set up your listings for you, a Founding Partner badge, and the 15% rate fixed for 24 months."
 ];
