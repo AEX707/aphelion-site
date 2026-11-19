@@ -679,7 +679,7 @@
     const btn = document.getElementById('buyerReqBtn');
     btn.disabled = true;
     try {
-      const { data, error } = await supabaseClient.rpc('request_buyer_access', { p_terms_version: '1.0' });
+      const { data, error } = await supabaseClient.rpc('request_buyer_access', { p_terms_version: '1.1' });
       if (error) throw error;
       buyerStatus = data || 'pending';
       renderBuyer();
